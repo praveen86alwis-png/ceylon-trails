@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+proxy/node_modules/
+
+# Environment files — NEVER commit these
+.env
+proxy/.env
+*.env
+
+# Build output
+dist/
+.vercel/
+
+# OS files
+.DS_Store
+Thumbs.db
