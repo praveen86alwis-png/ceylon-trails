@@ -161,7 +161,70 @@ function Btn({ onClick, children, variant="teal", full, style:xtra={} }) {
   );
 }
 
-// ─── WIKIPEDIA IMAGE HOOK ────────────────────────────────────────────────────
+// ─── UNSPLASH IMAGE HELPER ───────────────────────────────────────────────────
+// Curated search keywords per destination for high-quality results
+const UNSPLASH_KEYWORDS = {
+  // Beaches
+  "Mirissa":        "mirissa-beach-sri-lanka",
+  "Unawatuna":      "unawatuna-beach-sri-lanka",
+  "Hikkaduwa":      "hikkaduwa-beach-sri-lanka",
+  "Tangalle":       "tangalle-beach-sri-lanka",
+  "Arugam Bay":     "arugam-bay-surfing-sri-lanka",
+  "Nilaveli":       "nilaveli-beach-trincomalee",
+  // Hills
+  "Ella":           "ella-sri-lanka-mountains",
+  "Kandy":          "kandy-sri-lanka-temple",
+  "Nuwara Eliya":   "nuwara-eliya-tea-plantation",
+  "Haputale":       "haputale-sri-lanka-misty",
+  "Horton Plains":  "horton-plains-sri-lanka",
+  "Knuckles Range": "knuckles-mountain-sri-lanka",
+  // Cultural
+  "Sigiriya":       "sigiriya-rock-fortress-sri-lanka",
+  "Anuradhapura":   "anuradhapura-ancient-city-sri-lanka",
+  "Polonnaruwa":    "polonnaruwa-ruins-sri-lanka",
+  "Dambulla Cave Temple":"dambulla-cave-temple-sri-lanka",
+  "Galle Fort":     "galle-fort-sri-lanka",
+  "Jaffna":         "jaffna-sri-lanka",
+  // Wildlife
+  "Yala National Park":     "yala-leopard-safari-sri-lanka",
+  "Wilpattu National Park": "wilpattu-national-park-sri-lanka",
+  "Udawalawe":              "udawalawe-elephants-sri-lanka",
+  "Sinharaja Rainforest":   "sinharaja-rainforest-sri-lanka",
+  "Minneriya":              "minneriya-elephants-gathering",
+  "Bundala":                "bundala-wetlands-flamingos",
+  // Adventure
+  "Adam's Peak":            "adams-peak-sri-lanka-pilgrimage",
+  "Ella Rock Hike":         "ella-rock-hike-sri-lanka",
+  "Kitulgala White Water":  "kitulgala-white-water-rafting",
+  "Pidurutalagala":         "sri-lanka-mountain-peak",
+  "Kite Surfing, Kalpitiya":"kalpitiya-kite-surfing-sri-lanka",
+  "Knuckles Camping":       "knuckles-range-trekking-sri-lanka",
+  // Rural
+  "Knuckles Villages":      "sri-lanka-village-rural-life",
+  "Weligama Fisher Village":"weligama-stilt-fishermen-sri-lanka",
+  "Dambulla Farming Village":"sri-lanka-paddy-field-farming",
+  "Mahiyanganaya":          "sri-lanka-indigenous-village",
+  "Belihuloya Valley":      "sri-lanka-river-valley-nature",
+  "Tangalle Village Coast": "tangalle-fishing-village-sri-lanka",
+};
+
+// Get a beautiful Unsplash image URL for a place
+function getUnsplashUrl(placeName, width=800, height=500) {
+  const keyword = UNSPLASH_KEYWORDS[placeName]
+    || placeName.toLowerCase().replace(/\s+/g,"-") + "-sri-lanka";
+  return `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(keyword)}`;
+}
+
+// Get multiple Unsplash gallery images with slight variation
+function getUnsplashGallery(placeName, count=6) {
+  const keyword = UNSPLASH_KEYWORDS[placeName]
+    || placeName.toLowerCase().replace(/\s+/g,"-") + "-sri-lanka";
+  return Array.from({length:count}, (_,i) =>
+    `https://source.unsplash.com/800x500/?${encodeURIComponent(keyword)}&sig=${i}`
+  );
+}
+
+// ─── WIKIPEDIA IMAGE HOOK (kept as fallback for activity rows) ───────────────
 function useWikiImages(title, count=6) {
   const [imgs, setImgs] = useState([]);
   const [thumb, setThumb] = useState(null);
@@ -169,31 +232,12 @@ function useWikiImages(title, count=6) {
 
   useEffect(() => {
     if (!title) return;
-    if (cache.current[title]) { const c=cache.current[title]; setThumb(c.thumb); setImgs(c.imgs); return; }
-    let alive = true;
-    async function load() {
-      try {
-        // Get page images
-        const r = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=images|pageimages&imlimit=20&pithumbsize=600&format=json&origin=*`);
-        const d = await r.json();
-        const page = Object.values(d?.query?.pages||{})[0];
-        const th = page?.thumbnail?.source || null;
-        const imgTitles = (page?.images||[]).filter(i=>!i.title.match(/flag|icon|logo|map|svg|wikimedia/i)).slice(0,count).map(i=>i.title);
-        // Fetch image URLs
-        let urls = [];
-        if (imgTitles.length) {
-          const r2 = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(imgTitles.join("|"))}&prop=imageinfo&iiprop=url&iiurlwidth=800&format=json&origin=*`);
-          const d2 = await r2.json();
-          urls = Object.values(d2?.query?.pages||{}).map(p=>p?.imageinfo?.[0]?.thumburl||p?.imageinfo?.[0]?.url).filter(Boolean);
-        }
-        if (th && !urls.includes(th)) urls.unshift(th);
-        if (!alive) return;
-        cache.current[title] = { thumb:th, imgs:urls };
-        setThumb(th); setImgs(urls);
-      } catch { /* silent */ }
-    }
-    load();
-    return ()=>{ alive=false; };
+    // Use Unsplash first if we have a curated keyword
+    const unsplashThumb = getUnsplashUrl(title);
+    const unsplashImgs  = getUnsplashGallery(title, count);
+    setThumb(unsplashThumb);
+    setImgs(unsplashImgs);
+    cache.current[title] = { thumb:unsplashThumb, imgs:unsplashImgs };
   }, [title]);
 
   return { thumb, imgs };
@@ -673,25 +717,12 @@ function ActivityRow({ act, isLast, hideBorder }) {
 
   const handleExpand = async () => {
     const next = !open; setOpen(next);
-    if (next && photo===null && act.mapQuery) {
-      setPhoto("loading");
-      try {
-        const q = act.mapQuery.split(",")[0].trim();
-        const r = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(q)}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
-        const d = await r.json();
-        const page = Object.values(d?.query?.pages||{})[0];
-        const th = page?.thumbnail?.source;
-        if (th) { setPhoto(th); return; }
-        const r2 = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q+" Sri Lanka")}&format=json&origin=*`);
-        const d2 = await r2.json();
-        const pid = d2?.query?.search?.[0]?.pageid;
-        if (pid) {
-          const r3 = await fetch(`https://en.wikipedia.org/w/api.php?action=query&pageids=${pid}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
-          const d3 = await r3.json();
-          const p3 = Object.values(d3?.query?.pages||{})[0];
-          setPhoto(p3?.thumbnail?.source || "error");
-        } else setPhoto("error");
-      } catch { setPhoto("error"); }
+    if (next && photo===null) {
+      // Use Unsplash for beautiful photos — extract place name for keyword
+      const placeName = act.place || act.mapQuery?.split(",")?.[0] || "";
+      const keyword = UNSPLASH_KEYWORDS[placeName]
+        || (act.mapQuery || placeName).toLowerCase().replace(/\s+/g,"-");
+      setPhoto(`https://source.unsplash.com/800x400/?${encodeURIComponent(keyword + "-sri-lanka")}`);
     }
   };
 
@@ -711,9 +742,7 @@ function ActivityRow({ act, isLast, hideBorder }) {
       {open&&(
         <div style={{ marginLeft:64, marginBottom:14, borderRadius:14, border:`1.5px solid ${meta.border}`, background:meta.color, overflow:"hidden" }}>
           <div style={{ height:180, background:`linear-gradient(135deg,${C.teal},#147856)`, position:"relative", overflow:"hidden" }}>
-            {photo==="loading"&&<div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:8 }}><div style={{ width:28, height:28, border:"2px solid rgba(255,255,255,.3)", borderTopColor:"#fff", borderRadius:"50%", animation:"spin .8s linear infinite" }}/><span style={{ fontSize:11, color:"rgba(255,255,255,.7)" }}>Loading photo…</span></div>}
-            {photo&&photo!=="loading"&&photo!=="error"&&<img src={photo} alt={act.place} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={()=>setPhoto("error")}/>}
-            {photo==="error"&&<div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:6 }}><span style={{ fontSize:32, opacity:.5 }}>{meta.emoji}</span><span style={{ fontSize:11, color:"rgba(255,255,255,.6)" }}>Photo unavailable</span></div>}
+            {photo && <img src={photo} alt={act.place} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
             {act.place&&<div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 14px", background:"linear-gradient(to top,rgba(0,0,0,.6),transparent)" }}><div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff" }}>{act.place}</div>{act.area&&<div style={{ fontSize:11, color:"rgba(255,255,255,.75)", marginTop:2 }}>📍 {act.area}</div>}</div>}
           </div>
           <div style={{ padding:"14px 16px" }}>
@@ -1009,14 +1038,17 @@ function OptBtn({ sel, onClick, icon, label, sub }) {
   );
 }
 function StepDots({ cur, total }) {
+  const pct = Math.round((cur / (total - 1)) * 100);
   return (
-    <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:28 }}>
-      {Array(total).fill(0).map((_,i)=>(
-        <div key={i} style={{ display:"flex", alignItems:"center", flex:i<total-1?"1":undefined, gap:6 }}>
-          <div style={{ width:28, height:28, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, fontFamily:sans, background:i<cur?C.tealLight:i===cur?C.teal:C.surface, color:i<cur?C.teal:i===cur?"#fff":C.inkSoft, border:`2px solid ${i<cur?"#9FE1CB":i===cur?C.teal:C.border}` }}>{i<cur?"✓":i+1}</div>
-          {i<total-1&&<div style={{ flex:1, height:2, background:i<cur?C.tealLight:C.border, borderRadius:2 }}/>}
-        </div>
-      ))}
+    <div style={{ marginBottom:22 }}>
+      {/* Progress bar — works on any screen width */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+        <span style={{ fontSize:11, fontWeight:600, color:C.teal }}>Step {cur + 1} of {total}</span>
+        <span style={{ fontSize:11, color:C.inkSoft }}>{pct}% complete</span>
+      </div>
+      <div style={{ height:6, background:C.border, borderRadius:6, overflow:"hidden" }}>
+        <div style={{ height:"100%", width:`${pct}%`, background:`linear-gradient(90deg,${C.teal},${C.tealMid})`, borderRadius:6, transition:"width .3s ease" }}/>
+      </div>
     </div>
   );
 }
@@ -1264,8 +1296,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     // 0: Starting point
     <>
       <StepDots cur={0} total={STEPS_TOTAL}/>
-      <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Step 2 of {STEPS_TOTAL}</div>
-      <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>Where does your trip start?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>Where does your trip start?</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>We'll plan your first day transfer from here</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10 }}>
         {START_OPTS.map(o=><OptBtn key={o.v} sel={ans.startCity===o.v} onClick={()=>upd("startCity",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
@@ -1277,8 +1308,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     </>,
     <>
       <StepDots cur={0} total={STEPS_TOTAL}/>
-      <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Step 2 of {STEPS_TOTAL}</div>
-      <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:24 }}>How long is your trip?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:24 }}>How long is your trip?</h2>
       <div style={{ display:"flex", alignItems:"center", gap:20, padding:"18px 0", borderBottom:`1px solid ${C.border}` }}>
         <span style={{ flex:1, fontSize:14, fontWeight:500, color:C.ink }}>📅 Days in Sri Lanka</span>
         <div style={{ display:"flex", alignItems:"center", gap:16 }}>
@@ -1299,8 +1329,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     // 1: Travel style
     <>
       <StepDots cur={1} total={STEPS_TOTAL}/>
-      <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Step 3 of {STEPS_TOTAL}</div>
-      <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:24 }}>What kind of travel excites you?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:24 }}>What kind of travel excites you?</h2>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
         {TRAVEL_OPTS.map(o=><OptBtn key={o.v} sel={ans.travel===o.v} onClick={()=>upd("travel",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
       </div>
@@ -1309,8 +1338,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     // 2: Activities
     <>
       <StepDots cur={2} total={STEPS_TOTAL}/>
-      <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Step 4 of {STEPS_TOTAL}</div>
-      <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>What activities do you enjoy?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>What activities do you enjoy?</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick any that apply</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
         {ACT_OPTS.map(o=><OptBtn key={o.v} sel={ans.activities.includes(o.v)} onClick={()=>tog("activities",o.v)} icon={o.i} label={o.l}/>)}
@@ -1321,8 +1349,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     // 3: Food
     <>
       <StepDots cur={3} total={STEPS_TOTAL}/>
-      <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Step 5 of {STEPS_TOTAL}</div>
-      <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>What food do you enjoy?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>What food do you enjoy?</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick any that apply</p>
       <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
         {FOOD_OPTS.map(f=>{ const s=ans.food.includes(f); return <button key={f} onClick={()=>tog("food",f)} style={{ padding:"8px 16px", borderRadius:30, fontSize:13, fontWeight:500, cursor:"pointer", border:`1.5px solid ${s?C.amberMid:C.border}`, background:s?C.amberLight:C.surface, color:s?C.amber:C.inkSoft, fontFamily:sans }}>{f}</button>; })}
@@ -1332,8 +1359,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     // 4: Group & budget
     <>
       <StepDots cur={4} total={STEPS_TOTAL}/>
-      <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Step 6 of {STEPS_TOTAL}</div>
-      <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:18 }}>Who's going & what's your budget?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:18 }}>Who's going & what's your budget?</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:10 }}>Group type</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
         {GROUP_OPTS.map(o=><OptBtn key={o.v} sel={ans.group===o.v} onClick={()=>upd("group",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
@@ -1347,8 +1373,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     // 5: Transport
     <>
       <StepDots cur={5} total={STEPS_TOTAL}/>
-      <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Step 7 of {STEPS_TOTAL}</div>
-      <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>How do you want to get around?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>How do you want to get around?</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Your AI itinerary will be built around your transport choice</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
         {TRANSPORT_OPTS.map(o=><OptBtn key={o.v} sel={ans.transport===o.v} onClick={()=>upd("transport",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
@@ -1358,8 +1383,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     // 6: Pace
     <>
       <StepDots cur={6} total={STEPS_TOTAL}/>
-      <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Step 8 of {STEPS_TOTAL}</div>
-      <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>What pace do you prefer?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>What pace do you prefer?</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>This shapes how many activities per day we plan</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10 }}>
         {PACE_OPTS.map(o=><OptBtn key={o.v} sel={ans.pace===o.v} onClick={()=>upd("pace",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
@@ -1369,8 +1393,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     // 7: Custom places
     <>
       <StepDots cur={7} total={STEPS_TOTAL}/>
-      <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Step 9 of {STEPS_TOTAL}</div>
-      <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:6 }}>Any specific places you want to visit?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:6 }}>Any specific places you want to visit?</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20, lineHeight:1.6 }}>
         If you already know a place in Sri Lanka you want to include — a temple, a waterfall, a town, a restaurant — add it here and we'll fit it into your itinerary.
       </p>
@@ -1416,8 +1439,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     // 8: Rural experience opt-in (only shown if rural selected, else skipped visually)
     <>
       <StepDots cur={8} total={STEPS_TOTAL}/>
-      <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Step 10 of {STEPS_TOTAL}</div>
-      <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>
         {ans.travel==="rural" ? "What rural experiences interest you?" : "Almost done — any final touches?"}
       </h2>
       {ans.travel==="rural" ? (
