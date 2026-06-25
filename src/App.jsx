@@ -659,7 +659,10 @@ function DestinationsPage({ setPage, onGuideOpen }) {
 // ─── API HELPER ──────────────────────────────────────────────────────────────
 // Points to the local Gemini proxy (server.js).
 // Sends { prompt, temperature } → receives { text } back.
-const PROXY_URL = "http://localhost:3001/api/generate";
+
+const PROXY_URL = import.meta.env.PROD
+  ? "/api/generate"
+  : "http://localhost:3001/api/generate";
 
 async function callClaude(body) {
   // Extract the prompt text from the Anthropic-style messages array
