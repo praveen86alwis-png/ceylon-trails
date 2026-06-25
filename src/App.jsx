@@ -299,21 +299,98 @@ function GalleryLightbox({ place, onClose }) {
   );
 }
 
+// ─── MOBILE CSS INJECTION ────────────────────────────────────────────────────
+const MOBILE_CSS = `
+  * { box-sizing: border-box; }
+
+  /* Desktop nav links hidden on mobile — hamburger shows instead */
+  .desktop-nav { display: flex !important; }
+
+  @media (max-width: 768px) {
+    .desktop-nav { display: none !important; }
+    .services-grid { grid-template-columns: 1fr !important; }
+    .dest-grid-5 { grid-template-columns: 1fr 1fr !important; }
+    .dest-grid-4 { grid-template-columns: 1fr 1fr !important; }
+    .why-grid { grid-template-columns: 1fr 1fr !important; }
+    .footer-top { flex-direction: column !important; }
+    .footer-links { flex-wrap: wrap !important; gap: 1.5rem !important; }
+    .hero-stats { flex-wrap: wrap !important; gap: 1.5rem !important; justify-content: center !important; }
+    .guide-drawer { width: 100% !important; }
+    .opt-grid-2 { grid-template-columns: 1fr !important; }
+    .info-2col { grid-template-columns: 1fr !important; }
+    .cheat-grid { grid-template-columns: 1fr !important; }
+    .itin-banner-row { flex-direction: column !important; }
+  }
+
+  @media (max-width: 480px) {
+    .dest-grid-5 { grid-template-columns: 1fr !important; }
+    .why-grid { grid-template-columns: 1fr !important; }
+    .hero-stats { gap: 1rem !important; }
+  }
+
+  /* Bigger touch targets on mobile */
+  @media (max-width: 768px) {
+    button { min-height: 44px; }
+    input, select { min-height: 44px; font-size: 16px !important; }
+  }
+
+  html { scroll-behavior: smooth; }
+`;
+
+function MobileStyles() {
+  return <style>{MOBILE_CSS}</style>;
+}
+
 // ─── NAV ─────────────────────────────────────────────────────────────────────
 function Nav({ page, setPage, onGuideOpen }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
+
   return (
-    <nav style={{ position:"sticky", top:0, zIndex:400, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 2.5rem", height:64, background:"rgba(255,255,255,0.93)", backdropFilter:"blur(14px)", borderBottom:`1px solid rgba(0,0,0,0.06)` }}>
-      <div onClick={()=>setPage("home")} style={{ cursor:"pointer", fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink }}>
-        Ceylon<span style={{ color:C.tealMid }}>Trails</span>
-        <sup style={{ fontFamily:sans, fontSize:9, color:C.amber, letterSpacing:1, textTransform:"uppercase", verticalAlign:"super", marginLeft:1 }}>LK</sup>
-      </div>
-      <div style={{ display:"flex", gap:"2rem" }}>
-        {[["home","Home"],["destinations","Destinations"],["journey","Plan a trip"],["guides","Find a Guide"]].map(([p,l])=>(
-          <span key={p} onClick={()=>p==="guides"?onGuideOpen():setPage(p)} style={{ fontSize:14, color:page===p?C.teal:C.inkSoft, fontWeight:page===p?600:400, cursor:"pointer", borderBottom:page===p?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, transition:"color .2s" }}>{l}</span>
-        ))}
-      </div>
-      <button onClick={()=>setPage("journey")} style={{ padding:"9px 22px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:500, cursor:"pointer", fontFamily:sans }}>Plan my trip</button>
-    </nav>
+    <>
+      <nav style={{ position:"sticky", top:0, zIndex:400, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 1.5rem", height:64, background:"rgba(255,255,255,0.96)", backdropFilter:"blur(14px)", borderBottom:`1px solid rgba(0,0,0,0.06)` }}>
+        {/* Logo */}
+        <div onClick={()=>{ setPage("home"); setMenuOpen(false); }} style={{ cursor:"pointer", fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, flexShrink:0 }}>
+          Ceylon<span style={{ color:C.tealMid }}>Trails</span>
+          <sup style={{ fontFamily:sans, fontSize:9, color:C.amber, letterSpacing:1, textTransform:"uppercase", verticalAlign:"super", marginLeft:1 }}>LK</sup>
+        </div>
+
+        {/* Desktop nav links */}
+        <div style={{ display:"flex", gap:"1.8rem", "@media(max-width:768px)":{display:"none"} }} className="desktop-nav">
+          {[["home","Home"],["destinations","Destinations"],["journey","Plan a trip"],["guides","Find a Guide"]].map(([p,l])=>(
+            <span key={p} onClick={()=>{ p==="guides"?onGuideOpen():setPage(p); setMenuOpen(false); }} style={{ fontSize:14, color:page===p?C.teal:C.inkSoft, fontWeight:page===p?600:400, cursor:"pointer", borderBottom:page===p?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, transition:"color .2s", whiteSpace:"nowrap" }}>{l}</span>
+          ))}
+        </div>
+
+        {/* Right side */}
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <button onClick={()=>setPage("journey")} style={{ padding:"9px 18px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>
+            Plan my trip
+          </button>
+          {/* Hamburger — shown on mobile via inline media detection */}
+          <button onClick={()=>setMenuOpen(o=>!o)} style={{ display:"flex", flexDirection:"column", gap:5, padding:8, background:"none", border:`1px solid ${C.border}`, borderRadius:10, cursor:"pointer" }} aria-label="Menu">
+            <span style={{ width:20, height:2, background:menuOpen?C.teal:C.ink, borderRadius:2, transition:"background .2s" }}/>
+            <span style={{ width:20, height:2, background:menuOpen?C.teal:C.ink, borderRadius:2, transition:"background .2s" }}/>
+            <span style={{ width:20, height:2, background:menuOpen?C.teal:C.ink, borderRadius:2, transition:"background .2s" }}/>
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile dropdown menu */}
+      {menuOpen && (
+        <div style={{ position:"fixed", top:64, left:0, right:0, zIndex:399, background:"#fff", borderBottom:`1px solid ${C.border}`, boxShadow:"0 8px 24px rgba(0,0,0,.1)", padding:"1rem 1.5rem 1.5rem" }}>
+          {[["home","🏠 Home"],["destinations","🗺️ Destinations"],["journey","✨ Plan a trip"],["guides","🧭 Find a Guide"]].map(([p,l])=>(
+            <div key={p} onClick={()=>{ p==="guides"?onGuideOpen():setPage(p); setMenuOpen(false); }}
+              style={{ padding:"14px 0", fontSize:16, fontWeight:page===p?600:400, color:page===p?C.teal:C.ink, cursor:"pointer", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:10 }}>
+              {l}
+            </div>
+          ))}
+          <button onClick={()=>{ setPage("journey"); setMenuOpen(false); }} style={{ marginTop:14, width:"100%", padding:"14px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
+            ✨ Create my journey
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -377,7 +454,7 @@ function HomePage({ setPage, onGuideOpen }) {
             <button onClick={()=>setPage("journey")} style={{ padding:"14px 32px", background:C.amberMid, color:"#2C1800", fontSize:15, fontWeight:600, border:"none", borderRadius:12, cursor:"pointer", boxShadow:"0 4px 20px rgba(232,168,37,.4)", fontFamily:sans }}>✨ Create my journey</button>
             <button onClick={onGuideOpen} style={{ padding:"14px 32px", background:"rgba(255,255,255,.1)", color:"#fff", fontSize:15, fontWeight:500, border:"1px solid rgba(255,255,255,.35)", borderRadius:12, cursor:"pointer", backdropFilter:"blur(8px)", fontFamily:sans }}>Browse guides</button>
           </div>
-          <div style={{ display:"flex", justifyContent:"center", gap:"3rem", marginTop:"4rem", paddingTop:"2.5rem", borderTop:"1px solid rgba(255,255,255,.12)" }}>
+          <div className="hero-stats" style={{ display:"flex", justifyContent:"center", gap:"3rem", marginTop:"4rem", paddingTop:"2.5rem", borderTop:"1px solid rgba(255,255,255,.12)" }}>
             {[["200+","Destinations"],["150+","Certified guides"],["4.9★","Avg rating"],["12K+","Travellers"]].map(([n,l])=>(
               <div key={l} style={{ textAlign:"center" }}>
                 <div style={{ fontFamily:serif, fontSize:28, fontWeight:700, color:C.amberMid, lineHeight:1 }}>{n}</div>
@@ -394,7 +471,7 @@ function HomePage({ setPage, onGuideOpen }) {
           <div style={{ fontSize:11, fontWeight:600, color:C.tealMid, textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Our services</div>
           <h2 style={{ fontFamily:serif, fontSize:"clamp(28px,4vw,42px)", fontWeight:700, color:C.ink, marginBottom:14 }}>How would you like to explore?</h2>
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem", maxWidth:900, margin:"0 auto" }}>
+        <div className="services-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem", maxWidth:900, margin:"0 auto" }}>
           <div onClick={()=>setPage("journey")} style={{ borderRadius:24, padding:"3rem 2.5rem", cursor:"pointer", background:"linear-gradient(145deg,#E6F8F2,#C8EFE2)", border:"1px solid #B2E5D0", transition:"transform .2s,box-shadow .2s" }}
             onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.boxShadow="0 12px 40px rgba(0,0,0,.12)"; }}
             onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
@@ -426,7 +503,7 @@ function HomePage({ setPage, onGuideOpen }) {
             </div>
             <button onClick={()=>setPage("destinations")} style={{ padding:"10px 22px", border:`1.5px solid ${C.border}`, borderRadius:12, background:C.white, color:C.teal, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Explore all destinations →</button>
           </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"1rem" }}>
+          <div className="dest-grid-5" style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"1rem" }}>
             {DEST_CATS.map(cat=>(
               <div key={cat.id} onClick={()=>setPage("destinations")} style={{ borderRadius:20, overflow:"hidden", position:"relative", cursor:"pointer", paddingBottom:"130%" }}
                 onMouseEnter={e=>e.currentTarget.querySelector(".di").style.transform="scale(1.05)"}
@@ -452,7 +529,7 @@ function HomePage({ setPage, onGuideOpen }) {
             <div style={{ fontSize:11, fontWeight:600, color:C.tealMid, textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Why CeylonTrails</div>
             <h2 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,38px)", fontWeight:700, color:C.ink }}>Everything in one place</h2>
           </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1.5rem" }}>
+          <div className="why-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1.5rem" }}>
             {[{i:"🤖",t:"AI itinerary builder",s:"Real AI crafts a unique plan with named restaurants, trails and hotels."},{i:"🛡️",t:"Verified guides",s:"Every guide is SLTDA-certified. We verify credentials before listing."},{i:"💬",t:"Bid & compare",s:"Submit your itinerary and collect price bids. No obligation."},{i:"🌿",t:"Responsible tourism",s:"We partner only with eco-conscious guides and sustainable operators."}].map(w=>(
               <div key={w.t} style={{ padding:"1.8rem 1.5rem", border:`1px solid ${C.border}`, borderRadius:20, transition:"border-color .2s" }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor=C.tealMid}
@@ -518,7 +595,7 @@ function DestinationsPage({ setPage, onGuideOpen }) {
         <p style={{ fontSize:13, color:C.inkSoft, marginBottom:24 }}>
           {places.length} destinations · <span style={{ color:C.teal, fontWeight:500 }}>Click any card to see a photo gallery</span>
         </p>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.2rem" }}>
+        <div className="dest-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.2rem" }}>
           {places.map(p=>(
             <PlaceCard key={p.name} p={p} catColor={cat.color} onGallery={setGallery} onPlanTrip={()=>setPage("journey")} />
           ))}
@@ -538,9 +615,8 @@ function DestinationsPage({ setPage, onGuideOpen }) {
 // ─── API HELPER ──────────────────────────────────────────────────────────────
 // Points to the local Gemini proxy (server.js).
 // Sends { prompt, temperature } → receives { text } back.
-const PROXY_URL = import.meta.env.PROD
-  ? "/api/generate"
-  : "http://localhost:3001/api/generate";
+const PROXY_URL = "http://localhost:3001/api/generate";
+
 async function callClaude(body) {
   // Extract the prompt text from the Anthropic-style messages array
   const prompt = body.messages?.[0]?.content || "";
@@ -676,7 +752,7 @@ function LocalCheatSheet({ location }) {
       </button>
       {open && (
         <div style={{ borderTop:`1px solid ${C.border}`, padding:"16px 20px" }}>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+          <div className="cheat-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
             {CHEAT_SHEET.map((item,i)=>(
               <div key={i} style={{ background:C.surface, borderRadius:12, padding:"12px 14px", border:`1px solid ${C.border}` }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
@@ -1545,6 +1621,7 @@ export default function App() {
   const openGuide = useCallback(()=>setGuide(true), []);
   return (
     <div style={{ fontFamily:sans, color:C.ink, background:C.white, minHeight:"100vh" }}>
+      <MobileStyles/>
       <Nav page={page} setPage={setPage} onGuideOpen={openGuide}/>
       {page==="home"         && <HomePage         setPage={setPage} onGuideOpen={openGuide}/>}
       {page==="destinations" && <DestinationsPage setPage={setPage} onGuideOpen={openGuide}/>}
