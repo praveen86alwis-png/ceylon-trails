@@ -1,5 +1,9 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/generate",        "destination": "/api/generate" },
+    { "source": "/api/places/search",   "destination": "/api/places" },
+    { "source": "/api/places/details",  "destination": "/api/places" },
+    { "source": "/api/places/photo",    "destination": "/api/places" },
+    { "source": "/api/places/(.*)",     "destination": "/api/places" }
   ]
 }
