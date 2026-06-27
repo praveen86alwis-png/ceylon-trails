@@ -666,46 +666,274 @@ function HomePage({ setPage, onGuideOpen }) {
 }
 
 // ─── DESTINATIONS PAGE ───────────────────────────────────────────────────────
-function DestinationsPage({ setPage, onGuideOpen }) {
-  const [activeTab, setActiveTab] = useState("beaches");
-  const [gallery, setGallery] = useState(null);
-  const places = DESTINATIONS[activeTab] || [];
-  const cat = DEST_CATS.find(c=>c.id===activeTab);
+// ─── WISHLIST PANEL (floating) ────────────────────────────────────────────────
+function WishlistPanel({ wishlist, savedItin, setSavedItin }) {
+  const [open, setOpen] = useState(false);
+
+  const addToItin = (place) => {
+    if (!savedItin) { alert("Create an itinerary first from 'Plan a trip'."); return; }
+    const newAct = {
+      time:"10:00", type:"sightseeing",
+      place: place.name, area: place.formatted_address||"Sri Lanka",
+      text: `Visit ${place.name}`, why:"From your wishlist",
+      hours:"", price: place.price_level?"$".repeat(place.price_level):"",
+      mapQuery:`${place.name}, Sri Lanka`,
+    };
+    setSavedItin({ ...savedItin, days: savedItin.days.map((d,i)=>i===0?{...d,activities:[...d.activities,newAct]}:d) });
+    alert(`✅ Added ${place.name} to Day 1 of your itinerary!`);
+  };
 
   return (
-    <div>
-      <GalleryLightbox place={gallery} onClose={()=>setGallery(null)} />
-      <div style={{ background:"linear-gradient(160deg,#04322A 0%,#0B6B52 70%,#147856 100%)", padding:"4rem 2rem 3rem", position:"relative", overflow:"hidden" }}>
-        <HeroArt />
-        <div style={{ position:"relative", zIndex:2, maxWidth:800, margin:"0 auto", textAlign:"center" }}>
-          <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:12 }}>Explore Sri Lanka</div>
-          <h1 style={{ fontFamily:serif, fontSize:"clamp(30px,5vw,50px)", fontWeight:700, color:"#fff", marginBottom:14 }}>Where would you like to go?</h1>
-          <p style={{ fontSize:16, color:"rgba(255,255,255,.7)", lineHeight:1.7, maxWidth:520, margin:"0 auto", fontWeight:300 }}>From coral reefs to cloud forest, ancient ruins to wildlife safaris — every corner of Sri Lanka has a story.</p>
-        </div>
-      </div>
-      <div style={{ position:"sticky", top:64, zIndex:300, background:C.white, borderBottom:`1px solid ${C.border}`, padding:"0 2rem" }}>
-        <div style={{ maxWidth:1100, margin:"0 auto", display:"flex", gap:0, overflowX:"auto" }}>
-          {DEST_CATS.map(c=>(
-            <button key={c.id} onClick={()=>setActiveTab(c.id)} style={{ padding:"16px 22px", border:"none", background:"transparent", fontSize:14, fontWeight:activeTab===c.id?600:400, color:activeTab===c.id?C.teal:C.inkSoft, cursor:"pointer", borderBottom:activeTab===c.id?`2.5px solid ${C.teal}`:"2.5px solid transparent", whiteSpace:"nowrap", fontFamily:sans, transition:"color .2s" }}>{c.label}</button>
-          ))}
-        </div>
-      </div>
-      <div style={{ maxWidth:1100, margin:"0 auto", padding:"3rem 2rem 5rem" }}>
-        <p style={{ fontSize:13, color:C.inkSoft, marginBottom:24 }}>
-          {places.length} destinations · <span style={{ color:C.teal, fontWeight:500 }}>Click any card to see a photo gallery</span>
-        </p>
-        <div className="dest-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.2rem" }}>
-          {places.map(p=>(
-            <PlaceCard key={p.name} p={p} catColor={cat.color} onGallery={setGallery} onPlanTrip={()=>setPage("journey")} />
-          ))}
-        </div>
-        <div style={{ textAlign:"center", marginTop:"3rem" }}>
-          <p style={{ fontSize:14, color:C.inkSoft, marginBottom:16 }}>Ready to plan your visit?</p>
-          <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
-            <Btn onClick={()=>setPage("journey")}>✨ Create AI itinerary</Btn>
-            <Btn variant="amber" onClick={onGuideOpen}>Find a local guide →</Btn>
+    <>
+      {/* Floating button */}
+      <button onClick={()=>setOpen(o=>!o)} style={{
+        position:"fixed", bottom:24, right:24, zIndex:500,
+        width:56, height:56, borderRadius:"50%",
+        background: open ? C.amber : C.white,
+        color: open ? "#fff" : C.amber,
+        border:`2px solid ${C.amber}`,
+        fontSize:22, cursor:"pointer",
+        boxShadow:"0 4px 20px rgba(0,0,0,.2)",
+        display:"flex", alignItems:"center", justifyContent:"center",
+        transition:"all .2s",
+      }}>
+        {open ? "✕" : "♡"}
+        {wishlist.items.length>0 && !open && (
+          <span style={{ position:"absolute", top:-4, right:-4, width:20, height:20, background:C.coral, color:"#fff", borderRadius:"50%", fontSize:10, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", border:"2px solid #fff" }}>
+            {wishlist.items.length}
+          </span>
+        )}
+      </button>
+
+      {/* Panel */}
+      {open && (
+        <div style={{ position:"fixed", bottom:90, right:24, zIndex:500, width:340, maxWidth:"calc(100vw - 48px)", background:"#fff", borderRadius:20, boxShadow:"0 12px 48px rgba(0,0,0,.2)", border:`1px solid ${C.border}`, display:"flex", flexDirection:"column", maxHeight:"60vh" }}>
+          <div style={{ padding:"14px 16px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+            <div>
+              <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:C.ink }}>♡ Wishlist</div>
+              <div style={{ fontSize:11, color:C.inkSoft, marginTop:2 }}>{wishlist.items.length} saved {wishlist.items.length===1?"place":"places"}</div>
+            </div>
+            {wishlist.items.length>0 && <button onClick={()=>{ if(window.confirm("Clear wishlist?")) wishlist.items.forEach(i=>wishlist.remove(i.place_id)); }} style={{ fontSize:11, color:C.coral, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>Clear all</button>}
+          </div>
+          <div style={{ flex:1, overflowY:"auto", padding:12 }}>
+            {wishlist.items.length===0 ? (
+              <div style={{ textAlign:"center", padding:"2rem 1rem", color:C.inkSoft }}>
+                <div style={{ fontSize:36, marginBottom:10 }}>♡</div>
+                <p style={{ fontSize:13, lineHeight:1.6 }}>No saved places yet.<br/>Browse destinations and tap ♡ to save.</p>
+              </div>
+            ) : wishlist.items.map(p=>(
+              <div key={p.place_id} style={{ display:"flex", gap:10, padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
+                <div style={{ width:56, height:56, borderRadius:10, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#147856)` }}>
+                  {p.photos?.[0] && <img src={`${import.meta.env.PROD?"/api/places":"http://localhost:3001/api/places"}/photo?ref=${encodeURIComponent(p.photos[0].photo_reference)}&maxwidth=120`} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</div>
+                  <div style={{ fontSize:11, color:C.inkSoft, marginBottom:6 }}>{p.rating}★ · {(p.formatted_address||"").split(",").slice(-2).join(",")}</div>
+                  <div style={{ display:"flex", gap:6 }}>
+                    <button onClick={()=>addToItin(p)} style={{ fontSize:11, fontWeight:600, padding:"4px 10px", background:C.teal, color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontFamily:sans }}>+ Itinerary</button>
+                    <button onClick={()=>wishlist.remove(p.place_id)} style={{ fontSize:11, fontWeight:600, padding:"4px 10px", background:"none", color:C.coral, border:`1px solid ${C.coral}`, borderRadius:8, cursor:"pointer", fontFamily:sans }}>Remove</button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      )}
+    </>
+  );
+}
+
+// ─── UNIFIED DESTINATIONS PAGE ───────────────────────────────────────────────
+// Merges region cards (Beaches, Hill Country etc) + Google Places (Hotels, Restaurants etc)
+const ALL_TABS = [
+  { id:"hotels",      label:"🏨 Hotels",           type:"places" },
+  { id:"restaurants", label:"🍛 Restaurants",       type:"places" },
+  { id:"places",      label:"📸 Places to Visit",   type:"places" },
+  { id:"adventure",   label:"🧗 Adventure",         type:"places" },
+  { id:"beaches",     label:"🏖️ Beaches",           type:"regions" },
+  { id:"hills",       label:"⛰️ Hill Country",      type:"regions" },
+  { id:"cultural",    label:"🏛️ Cultural",          type:"regions" },
+  { id:"wildlife",    label:"🐘 Wildlife",           type:"regions" },
+  { id:"rural",       label:"🌾 Rural",             type:"regions" },
+];
+
+function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
+  const init = sessionStorage.getItem("explorecat") || "beaches";
+  const [activeTab, setActiveTab] = useState(init);
+  const [gallery, setGallery]     = useState(null);
+  const [places, setPlaces]       = useState([]);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState("");
+  const [selected, setSelected]   = useState(null);
+  const [addedToast, setToast]    = useState(false);
+  const wishlist = useWishlist();
+
+  const tab = ALL_TABS.find(t=>t.id===activeTab) || ALL_TABS[0];
+
+  // Load Google Places when switching to a places tab
+  useEffect(()=>{
+    if (tab.type==="places") loadPlaces(activeTab);
+  }, [activeTab]);
+
+  const loadPlaces = async (catId) => {
+    setLoading(true); setError(""); setPlaces([]);
+    try {
+      const query = GPLACES_CAT_QUERIES[catId];
+      const data  = await placesSearch(query);
+      if (data.error==="no_key") { setError("no_key"); setLoading(false); return; }
+      if (data.status==="REQUEST_DENIED") { setError("denied"); setLoading(false); return; }
+      setPlaces(data.results||[]);
+    } catch(e) { setError(e.message); }
+    setLoading(false);
+  };
+
+  const switchTab = (id) => {
+    setActiveTab(id); setSelected(null); setError(""); setPlaces([]);
+    sessionStorage.setItem("explorecat", id);
+  };
+
+  const addToItin = (place) => {
+    const newAct = {
+      time:"10:00", type:"sightseeing",
+      place:place.name, area:place.formatted_address||"Sri Lanka",
+      text:`Visit ${place.name} — rated ${place.rating||"N/A"}★`,
+      why:"Added from Destinations", hours:"", price:place.price_level?"$".repeat(place.price_level):"",
+      mapQuery:`${place.name}, Sri Lanka`,
+    };
+    if (savedItin) {
+      setSavedItin({...savedItin, days:savedItin.days.map((d,i)=>i===0?{...d,activities:[...d.activities,newAct]}:d)});
+      setToast(true); setTimeout(()=>setToast(false),2500);
+    } else { alert("Create an itinerary first from 'Plan a trip', then come back to add places."); }
+  };
+
+  // Region data
+  const regionPlaces = DESTINATIONS[activeTab] || [];
+  const destCat = DEST_CATS.find(c=>c.id===activeTab);
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.surface }}>
+      <GalleryLightbox place={gallery} onClose={()=>setGallery(null)}/>
+
+      {/* Toast */}
+      {addedToast && (
+        <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", background:C.teal, color:"#fff", padding:"12px 24px", borderRadius:30, fontSize:14, fontWeight:600, zIndex:800, boxShadow:"0 4px 20px rgba(0,0,0,.2)", whiteSpace:"nowrap" }}>
+          ✅ Added to Day 1 of your itinerary!
+        </div>
+      )}
+
+      {/* Hero */}
+      <div style={{ background:"linear-gradient(160deg,#04322A 0%,#0B6B52 70%,#147856 100%)", padding:"3rem 2rem 2.5rem", position:"relative", overflow:"hidden" }}>
+        <HeroArt/>
+        <div style={{ position:"relative", zIndex:2, maxWidth:800, margin:"0 auto", textAlign:"center" }}>
+          <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Explore Sri Lanka</div>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(28px,5vw,46px)", fontWeight:700, color:"#fff", marginBottom:12 }}>Where would you like to go?</h1>
+          <p style={{ fontSize:15, color:"rgba(255,255,255,.7)", lineHeight:1.7, maxWidth:520, margin:"0 auto", fontWeight:300 }}>Hotels, restaurants, beaches, ruins and hidden villages — all in one place.</p>
+        </div>
+      </div>
+
+      {/* Sticky tab bar */}
+      <div style={{ position:"sticky", top:64, zIndex:300, background:C.white, borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ maxWidth:1100, margin:"0 auto", display:"flex", overflowX:"auto", padding:"0 1rem" }}>
+          {ALL_TABS.map(t=>(
+            <button key={t.id} onClick={()=>switchTab(t.id)} style={{
+              padding:"14px 18px", border:"none", background:"transparent",
+              fontSize:13, fontWeight:activeTab===t.id?700:400,
+              color:activeTab===t.id?C.teal:C.inkSoft, cursor:"pointer",
+              borderBottom:activeTab===t.id?`2.5px solid ${C.teal}`:"2.5px solid transparent",
+              whiteSpace:"nowrap", fontFamily:sans, flexShrink:0,
+            }}>{t.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"2rem 2rem 5rem" }}>
+
+        {/* ── PLACES TABS (Google Places) ── */}
+        {tab.type==="places" && (
+          <>
+            {error==="no_key" && (
+              <div style={{ background:C.amberLight, border:`1.5px solid #F0D48A`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
+                <div style={{ fontSize:32, marginBottom:10 }}>🔑</div>
+                <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>Google Places API key needed</h3>
+                <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, maxWidth:440, margin:"0 auto 14px" }}>Add <code style={{ background:"rgba(0,0,0,.08)", padding:"2px 6px", borderRadius:4 }}>GOOGLE_PLACES_KEY</code> to your proxy <code>.env</code> and Vercel environment variables.</p>
+              </div>
+            )}
+            {error==="denied" && (
+              <div style={{ background:C.coralLight, border:`1.5px solid #EFBAA8`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
+                <p style={{ fontSize:14, color:C.coral }}>⚠️ API key rejected — make sure <strong>Places API</strong> is enabled in Google Cloud Console.</p>
+              </div>
+            )}
+            {error && error!=="no_key" && error!=="denied" && (
+              <div style={{ textAlign:"center", padding:"2rem" }}>
+                <p style={{ color:C.coral, fontSize:14 }}>{error}</p>
+                <Btn onClick={()=>loadPlaces(activeTab)} style={{ marginTop:10 }}>Try again</Btn>
+              </div>
+            )}
+            {loading && (
+              <div style={{ textAlign:"center", padding:"4rem" }}>
+                <div style={{ width:44, height:44, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto 14px" }}/>
+                <p style={{ fontSize:14, color:C.inkSoft }}>Finding the best places in Sri Lanka…</p>
+              </div>
+            )}
+            {!loading && !error && places.length>0 && (
+              <div className="dest-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.2rem" }}>
+                {places.map(p=>(
+                  <div key={p.place_id} onClick={()=>setSelected(p)} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, cursor:"pointer", transition:"transform .2s,box-shadow .2s" }}
+                    onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,.1)"; }}
+                    onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
+                    <div style={{ height:160, background:`linear-gradient(135deg,${C.teal},#147856)`, overflow:"hidden", position:"relative" }}>
+                      {p.photos?.[0]
+                        ? <img src={photoUrl(p.photos[0].photo_reference)} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>
+                        : <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:40, opacity:.25 }}>{tab.label.split(" ")[0]}</div>
+                      }
+                      <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"8px 12px", background:"linear-gradient(to top,rgba(0,0,0,.65),transparent)" }}>
+                        <div style={{ fontFamily:serif, fontSize:15, fontWeight:700, color:"#fff" }}>{p.name}</div>
+                      </div>
+                      {wishlist.has(p.place_id) && <div style={{ position:"absolute", top:8, right:8, background:C.amber, color:"#fff", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:20 }}>♥</div>}
+                    </div>
+                    <div style={{ padding:"12px 14px" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+                        <span style={{ fontSize:12, color:C.amberMid }}>{"★".repeat(Math.round(p.rating||0))}<span style={{ color:C.inkSoft }}> {p.rating} ({(p.user_ratings_total||0).toLocaleString()})</span></span>
+                        {p.price_level && <span style={{ fontSize:12, color:C.teal, fontWeight:600 }}>{"$".repeat(p.price_level)}</span>}
+                      </div>
+                      <p style={{ fontSize:11, color:C.inkSoft, lineHeight:1.5, margin:0 }}>{(p.formatted_address||"").split(",").slice(-3).join(", ")}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!loading && !error && places.length===0 && !error && (
+              <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}>
+                <div style={{ fontSize:40, marginBottom:10 }}>🔍</div>
+                <p>No results found.</p>
+              </div>
+            )}
+            {/* Place detail drawer */}
+            {selected && (
+              <PlaceDetailPanel place={selected} wishlist={wishlist} onAddToItin={()=>{ addToItin(selected); setSelected(null); }} onClose={()=>setSelected(null)}/>
+            )}
+          </>
+        )}
+
+        {/* ── REGION TABS (curated destinations) ── */}
+        {tab.type==="regions" && destCat && (
+          <>
+            <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20 }}>
+              {regionPlaces.length} destinations · <span style={{ color:C.teal, fontWeight:500 }}>Click any card to see a photo gallery</span>
+            </p>
+            <div className="dest-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.2rem" }}>
+              {regionPlaces.map(p=>(
+                <PlaceCard key={p.name} p={p} catColor={destCat.color} onGallery={setGallery} onPlanTrip={()=>setPage("journey")}/>
+              ))}
+            </div>
+            <div style={{ textAlign:"center", marginTop:"2.5rem" }}>
+              <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
+                <Btn onClick={()=>setPage("journey")}>✨ Create AI itinerary</Btn>
+                <Btn variant="amber" onClick={onGuideOpen}>Find a local guide →</Btn>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -773,24 +1001,36 @@ function ActivityRow({ act, isLast, hideBorder }) {
   const handleExpand = async () => {
     const next = !open; setOpen(next);
     if (next && photo===null) {
-      // Use Unsplash for beautiful photos — extract place name for keyword
-      const placeName = act.place || act.mapQuery?.split(",")?.[0] || "";
-      const keyword = UNSPLASH_KEYWORDS[placeName]
-        || (act.mapQuery || placeName).toLowerCase().replace(/\s+/g,"-");
-      setPhoto(`https://source.unsplash.com/800x400/?${encodeURIComponent(keyword + "-sri-lanka")}`);
+      // Use unsplashQuery from AI if available, else build from place name
+      const query = act.unsplashQuery
+        || UNSPLASH_KEYWORDS[act.place]
+        || (act.mapQuery || act.place || "").toLowerCase().replace(/[,]/g,"").replace(/\s+/g,"-");
+      setPhoto(`https://source.unsplash.com/800x400/?${encodeURIComponent(query)}`);
     }
   };
 
+  // Thumbnail for collapsed row — uses unsplashQuery too
+  const thumbQuery = act.unsplashQuery
+    || UNSPLASH_KEYWORDS[act.place]
+    || (act.place||"sri lanka").toLowerCase().replace(/\s+/g,"-");
+  const thumbUrl = `https://source.unsplash.com/80x80/?${encodeURIComponent(thumbQuery)}`;
+
   return (
     <div style={{ borderBottom:hideBorder||isLast?"none":`1px solid ${C.border}` }}>
-      <div onClick={handleExpand} style={{ display:"flex", alignItems:"center", gap:14, padding:"12px 0", cursor:"pointer" }}
+      <div onClick={handleExpand} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 0", cursor:"pointer" }}
         onMouseEnter={e=>e.currentTarget.style.background="#FAFAF8"}
         onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-        <span style={{ fontSize:11, color:C.inkSoft, minWidth:50, fontWeight:600, flexShrink:0 }}>{act.time}</span>
-        <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:20, flexShrink:0, background:meta.color, color:meta.text, border:`1px solid ${meta.border}`, whiteSpace:"nowrap" }}>{meta.emoji} {meta.label}</span>
+        {/* Thumbnail always visible */}
+        <div style={{ width:44, height:44, borderRadius:8, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#147856)`, position:"relative" }}>
+          <img src={thumbUrl} alt={act.place||""} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>
+          <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,.1)" }}/>
+        </div>
+        <span style={{ fontSize:11, color:C.inkSoft, minWidth:44, fontWeight:600, flexShrink:0 }}>{act.time}</span>
+        <span style={{ fontSize:10, fontWeight:700, padding:"2px 7px", borderRadius:20, flexShrink:0, background:meta.color, color:meta.text, border:`1px solid ${meta.border}`, whiteSpace:"nowrap" }}>{meta.emoji} {meta.label}</span>
         <div style={{ flex:1, minWidth:0 }}>
-          {act.place&&<div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:1 }}>{act.place}</div>}
-          <div style={{ fontSize:12, color:C.inkSoft, lineHeight:1.5, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:open?"normal":"nowrap" }}>{act.text}</div>
+          {act.place&&<div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{act.place}</div>}
+          <div style={{ fontSize:11, color:C.inkSoft, lineHeight:1.5, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{act.text}</div>
+          {act.travelFromPrev&&<div style={{ fontSize:10, color:C.teal, marginTop:1, fontWeight:500 }}>↳ {act.travelFromPrev}</div>}
         </div>
         <span style={{ fontSize:12, color:C.inkSoft, flexShrink:0, transform:open?"rotate(180deg)":"none", transition:"transform .2s" }}>▾</span>
       </div>
@@ -1200,14 +1440,28 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen }) {
       ? `\nMUST-VISIT PLACES (tourist requested these specifically — include each one on an appropriate day):\n${ans.customPlaces.map((p,i)=>`${i+1}. ${p}`).join("\n")}`
       : "";
 
-    // Starting point
-    const startNote = ans.startCity==="airport"
-      ? "Day 1 starts at Bandaranaike International Airport, Katunayake (30km north of Colombo). First activity should be airport → first destination transfer with estimated drive time."
-      : ans.startCity==="colombo"
-      ? "Day 1 starts in Colombo city centre."
-      : ans.startCity==="custom" && ans.customStart
-      ? `Day 1 starts at: ${ans.customStart}.`
-      : "Day 1 starts at Bandaranaike International Airport, Katunayake.";
+    // ── STARTING POINT — this overrides everything else ──────────────────────
+    const customStart = ans.startCity==="custom" && ans.customStart
+      ? ans.customStart.trim()
+      : ans.startCity==="colombo" ? "Colombo"
+      : ans.startCity==="airport" ? "Bandaranaike International Airport, Katunayake (30km north of Colombo)"
+      : ans.customStart?.trim() || "Colombo";
+
+    // If user set a custom start city, add it to allowed cities so it isn't blocked
+    const allowedCities = [...cities.allowed];
+    if (ans.startCity==="custom" && ans.customStart) {
+      allowedCities.unshift(ans.customStart.trim() + " (starting point — always allowed)");
+    }
+
+    const startNote = `IMPORTANT: Day 1 MUST start at "${customStart}". The very first activity of Day 1 must be in or departing from ${customStart}. Do NOT start from Negombo, Colombo or the airport unless that is the starting point specified above.`;
+
+    const busNote = ans.transport==="bus"
+      ? `\nBUS TRANSPORT RULES: Since the tourist is using public buses, for every inter-city transport activity include:
+- The specific bus number or route name (e.g. "CTB Bus 15 Kandy–Colombo")
+- Departure point (bus stand name and city)
+- Approximate journey time and frequency
+- Ticket price in LKR`
+      : "";
 
     const actsPerDay = ans.pace==="relaxed" ? 3 : ans.pace==="packed" ? 5 : 4;
 
@@ -1219,29 +1473,32 @@ TRIP DETAILS:
 - Food: ${ans.food.join(", ")||"open to anything"}
 - Activities: ${ans.activities.join(", ")||"general sightseeing"}
 - Transport: ${ans.transport||"private-car"} | Pace: ${ans.pace||"balanced"}
-- Starting point: ${startNote}
 ${customNote}
+${busNote}
 
-ROUTE FOR ${styleKey.toUpperCase()} STYLE:
+⚠️ STARTING POINT — HIGHEST PRIORITY RULE:
+${startNote}
+
+ROUTE FOR ${styleKey.toUpperCase()} STYLE (after leaving starting point):
 ${ROUTE_NARRATIVE[styleKey] || ROUTE_NARRATIVE.mixed}
 
-⛔ LOCATION ENFORCEMENT — MOST IMPORTANT RULE:
-ALLOWED cities/regions: ${cities.allowed.join(", ")}
+⛔ LOCATION ENFORCEMENT:
+ALLOWED cities/regions: ${allowedCities.join(", ")}
 FORBIDDEN cities (NEVER use): ${cities.forbidden.length ? cities.forbidden.join(", ") : "none"}
 
 MANDATORY RULES:
 1. Return EXACTLY ${N} day objects numbered 1 to ${N}. Every single day must be included.
-2. Each day MUST have EXACTLY ${actsPerDay} activities — not 2, not 1, exactly ${actsPerDay}.
+2. Each day MUST have EXACTLY ${actsPerDay} activities.
 3. Every activity: REAL specific named place. NEVER "a local café" or "nearby restaurant".
-4. GROUP activities by proximity — morning activities near each other, afternoon activities near each other. NEVER put a beach in the morning and a museum 30km away in the evening without a transport activity between them.
-5. Add a "travelFromPrev" field to every activity (except the first of each day) showing estimated travel time from the previous activity. Example: "15 min walk", "25 min drive", "2 hr train".
-6. Include at least one transport/travel activity per day if moving between towns.
+4. GROUP activities by proximity — never put places far apart in the same half-day without a transport activity.
+5. Add "travelFromPrev" to every activity (except first of each day): e.g. "15 min walk", "45 min drive", "2 hr train", ${ans.transport==="bus"?"\"Bus 15 — 2 hr journey from Kandy Bus Stand\"":"\"25 min tuk-tuk\""}.
+6. Add "unsplashQuery" field to every activity — a 3-5 word Unsplash search query for a beautiful photo of that specific place. E.g. "Sigiriya rock fortress Sri Lanka", "Kandy lake temple", "Mirissa beach whale".
 7. Return ONLY raw JSON — no markdown, no backticks, nothing before or after.
 ${ans.customPlaces.length ? `8. MUST include: ${ans.customPlaces.join(", ")} — fit them into the route logically.` : ""}
 
 JSON schema:
-{"title":"...","tagline":"...","highlights":["...","...","..."],"days":[{"day":1,"location":"City, Sri Lanka","theme":"Evocative day theme","activities":[{"time":"07:30","type":"breakfast","place":"Exact Real Name","area":"Street, City","text":"One sentence","why":"Why recommended","hours":"7am–11am","price":"$3–6","mapQuery":"Place Name, City, Sri Lanka","travelFromPrev":"10 min walk"}]}]}
-Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|checkin|sunset|activity|rural`;
+{"title":"...","tagline":"...","highlights":["...","...","..."],"days":[{"day":1,"location":"City, Sri Lanka","theme":"Evocative day theme","activities":[{"time":"07:30","type":"breakfast","place":"Exact Real Name","area":"Street, City","text":"One sentence","why":"Why recommended","hours":"7am–11am","price":"$3–6","mapQuery":"Place Name, City, Sri Lanka","travelFromPrev":"10 min walk","unsplashQuery":"place name Sri Lanka"}]}]}
+Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|checkin|sunset|activity|rural|bus`;
 
     try {
       const data = await callClaude({
@@ -1320,11 +1577,31 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
             <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Your AI itinerary</div>
             <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:10 }}>🗺️ {itin.title}</h1>
             <p style={{ fontSize:15, color:"rgba(255,255,255,.75)", marginBottom:16 }}>{itin.tagline}</p>
-            <p style={{ fontSize:13, color:"rgba(255,255,255,.65)", marginBottom:16 }}>📅 {ans.days} days · {ans.nights} nights · {ans.group||"solo"} · {ans.budget||"mid-range"} budget</p>
+            <p style={{ fontSize:13, color:"rgba(255,255,255,.65)", marginBottom:16 }}>📅 {ans.days} days · {ans.nights} nights · {ans.group||"solo"} · {ans.budget||"mid-range"} budget · Starting: {customStart}</p>
             {itin.highlights&&<div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16 }}>{itin.highlights.map((h,i)=><span key={i} style={{ fontSize:12, fontWeight:500, padding:"4px 12px", borderRadius:20, background:"rgba(255,255,255,.15)", color:"rgba(255,255,255,.9)", border:"1px solid rgba(255,255,255,.25)" }}>✓ {h}</span>)}</div>}
             <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
               <button onClick={downloadPDF} style={{ padding:"10px 20px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>📄 Download PDF</button>
-              <p style={{ fontSize:12, color:"rgba(255,255,255,.5)", margin:0 }}>💡 Tap any activity to see photo, hours & map</p>
+              {/* Google Maps multi-waypoint route */}
+              <button onClick={()=>{
+                // Build Google Maps directions URL with all unique day locations as waypoints
+                const stops = [];
+                (itinDays||itin.days).forEach(d=>{
+                  // Add each unique place that has a mapQuery
+                  d.activities.filter(a=>a.mapQuery&&a.type!=="transport").forEach(a=>{
+                    if (!stops.includes(a.mapQuery)) stops.push(a.mapQuery);
+                  });
+                });
+                if (stops.length < 2) { alert("Not enough stops to build a route."); return; }
+                const origin   = encodeURIComponent(stops[0]);
+                const dest     = encodeURIComponent(stops[stops.length-1]);
+                const waypoints= stops.slice(1,-1).map(s=>encodeURIComponent(s)).join("|");
+                const mode = ans.transport==="train"?"transit":ans.transport==="bus"?"transit":"driving";
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}${waypoints?`&waypoints=${waypoints}`:""}&travelmode=${mode}`;
+                window.open(url,"_blank");
+              }} style={{ padding:"10px 20px", background:"#4285F4", color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, display:"flex", alignItems:"center", gap:6 }}>
+                🗺️ Open full route in Google Maps
+              </button>
+              <p style={{ fontSize:12, color:"rgba(255,255,255,.5)", margin:0 }}>💡 Tap any activity row to see photo, hours & map</p>
             </div>
           </div>
         </div>
@@ -1993,190 +2270,286 @@ function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose }) {
 
 // ─── SRI LANKA MAP PAGE ───────────────────────────────────────────────────────
 const MAP_PINS = [
-  { id:"yala",       x:68,  y:82,  emoji:"🐆", name:"Yala National Park",     fact:"Highest leopard density on earth",        color:"#C45230" },
-  { id:"sigiriya",   x:52,  y:38,  emoji:"🏰", name:"Sigiriya",               fact:"5th-century Lion Rock fortress",           color:"#B87318" },
-  { id:"kandy",      x:45,  y:52,  emoji:"🌿", name:"Kandy",                  fact:"Temple of the Tooth & tea country",        color:"#0B6B52" },
-  { id:"ella",       x:52,  y:65,  emoji:"🚂", name:"Ella",                   fact:"Scenic train & Nine Arch Bridge",          color:"#0B6B52" },
-  { id:"mirissa",    x:42,  y:88,  emoji:"🐋", name:"Mirissa",                fact:"Blue whale watching capital",              color:"#185FA5" },
-  { id:"colombo",    x:28,  y:62,  emoji:"🏙️", name:"Colombo",                fact:"Commercial capital & cultural hub",        color:"#3D3D3D" },
-  { id:"galle",      x:32,  y:84,  emoji:"🏰", name:"Galle Fort",             fact:"17th-century Dutch colonial fortress",     color:"#B87318" },
-  { id:"anuradhapura",x:42, y:22,  emoji:"🏛️", name:"Anuradhapura",           fact:"Ancient sacred city, 2300-year-old Bo tree",color:"#B87318"},
-  { id:"trinco",     x:70,  y:28,  emoji:"🤿", name:"Trincomalee",            fact:"Natural harbour & coral reef snorkelling", color:"#185FA5" },
-  { id:"udawalawe",  x:52,  y:76,  emoji:"🐘", name:"Udawalawe",              fact:"Largest elephant herds in Sri Lanka",       color:"#7A4A0A" },
-  { id:"nuwaraeliya",x:46,  y:60,  emoji:"☕", name:"Nuwara Eliya",           fact:"Tea capital at 1868m elevation",           color:"#0B6B52" },
-  { id:"arugambay",  x:80,  y:70,  emoji:"🏄", name:"Arugam Bay",             fact:"World-class surf point break",             color:"#185FA5" },
-  { id:"dambulla",   x:48,  y:35,  emoji:"🕌", name:"Dambulla Cave Temple",   fact:"5 caves of ancient Buddhist murals",       color:"#B87318" },
-  { id:"wilpattu",   x:30,  y:28,  emoji:"🦁", name:"Wilpattu National Park", fact:"Largest park, secret leopard sightings",   color:"#C45230" },
-  { id:"kalpitiya",  x:22,  y:35,  emoji:"🪁", name:"Kalpitiya",              fact:"Best kite surfing in Asia",                color:"#185FA5" },
+  { id:"yala",        lat:6.37,  lng:81.52, emoji:"🐆", name:"Yala National Park",      fact:"Highest leopard density on earth — also home to sloth bears, crocodiles & 200+ bird species.",        color:"#C45230" },
+  { id:"sigiriya",    lat:7.95,  lng:80.76, emoji:"🏰", name:"Sigiriya",                fact:"5th-century Lion Rock fortress rising 200m from the jungle — ancient frescoes and mirror wall.",       color:"#B87318" },
+  { id:"kandy",       lat:7.29,  lng:80.63, emoji:"🌿", name:"Kandy",                   fact:"Cultural heartland — Temple of the Tooth, botanical gardens, traditional Kandyan dance.",              color:"#0B6B52" },
+  { id:"ella",        lat:6.87,  lng:81.05, emoji:"🚂", name:"Ella",                    fact:"Misty mountain village — Nine Arch Bridge, Little Adam's Peak, and the iconic scenic train.",          color:"#0B6B52" },
+  { id:"mirissa",     lat:5.95,  lng:80.46, emoji:"🐋", name:"Mirissa",                 fact:"Blue whale watching capital of Sri Lanka — best sightings November to April.",                        color:"#185FA5" },
+  { id:"colombo",     lat:6.92,  lng:79.86, emoji:"🏙️", name:"Colombo",                 fact:"Commercial capital — Pettah market, Galle Face Green, Ministry of Crab, and the Fort district.",      color:"#3D3D3D" },
+  { id:"galle",       lat:6.05,  lng:80.22, emoji:"🏛️", name:"Galle Fort",              fact:"UNESCO 17th-century Dutch fort — cobbled streets, boutique cafés and the best sunset rampart walk.", color:"#B87318" },
+  { id:"anuradhapura",lat:8.34,  lng:80.38, emoji:"🛕", name:"Anuradhapura",            fact:"Ancient sacred city — 2,300-year-old Sri Maha Bodhi tree, massive stupas, and ancient tanks.",       color:"#B87318" },
+  { id:"trinco",      lat:8.59,  lng:81.23, emoji:"🤿", name:"Trincomalee",             fact:"Natural deep harbour — Pigeon Island coral reef, Nilaveli beach, and whale watching.",               color:"#185FA5" },
+  { id:"udawalawe",   lat:6.47,  lng:80.90, emoji:"🐘", name:"Udawalawe",               fact:"Best place to see wild Asian elephants — herds of 30–50 cross the grasslands at dusk.",              color:"#7A4A0A" },
+  { id:"nuwaraeliya", lat:6.97,  lng:80.78, emoji:"☕", name:"Nuwara Eliya",            fact:"Tea capital at 1868m — colonial bungalows, rose gardens and the Gregory Lake valley in morning mist.", color:"#0B6B52" },
+  { id:"arugambay",   lat:6.84,  lng:81.83, emoji:"🏄", name:"Arugam Bay",              fact:"World-class surf point break on the east coast — dry and warm when the west is wet.",                color:"#185FA5" },
+  { id:"dambulla",    lat:7.87,  lng:80.65, emoji:"🕌", name:"Dambulla Cave Temple",    fact:"Five cave temples painted floor-to-ceiling with Buddhist murals and 153 golden statues.",             color:"#B87318" },
+  { id:"wilpattu",    lat:8.45,  lng:80.03, emoji:"🦁", name:"Wilpattu National Park",  fact:"Sri Lanka's largest park — secretive leopards, sloth bears and natural lakes (villus).",             color:"#C45230" },
+  { id:"kalpitiya",   lat:8.23,  lng:79.76, emoji:"🪁", name:"Kalpitiya",               fact:"Best kite surfing in Asia — 15–25 knot winds for 9 months, plus spinner dolphin watching.",          color:"#185FA5" },
 ];
 
-const GEO_LABELS = [
-  { x:50, y:10, text:"Northern Province", size:10, opacity:.5 },
-  { x:18, y:50, text:"Western Coast", size:9, opacity:.45, rotate:-90 },
-  { x:82, y:50, text:"Eastern Coast", size:9, opacity:.45, rotate:90 },
-  { x:50, y:95, text:"Indian Ocean", size:10, opacity:.4, italic:true },
-  { x:50, y:55, text:"Central Highlands", size:9, opacity:.4 },
-];
 
 function SriLankaMapPage({ setPage }) {
-  const [hoveredPin, setHoveredPin] = useState(null);
+  const mapRef       = useRef(null);
+  const mapObj       = useRef(null);
   const [selectedPin, setSelectedPin] = useState(null);
+  const [mapReady,    setMapReady]    = useState(false);
+  const GKEY = import.meta.env.VITE_GOOGLE_MAPS_KEY || "";
+
+  // Load Google Maps JS API
+  useEffect(()=>{
+    if (!GKEY) { setMapReady(false); return; }
+    if (window.google?.maps) { setMapReady(true); return; }
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GKEY}&libraries=marker`;
+    script.async = true;
+    script.onload = ()=>setMapReady(true);
+    document.head.appendChild(script);
+    return ()=>{ /* leave script — reuse on revisit */ };
+  },[GKEY]);
+
+  // Init map once ready
+  useEffect(()=>{
+    if (!mapReady||!mapRef.current||mapObj.current) return;
+    mapObj.current = new window.google.maps.Map(mapRef.current, {
+      center:{ lat:7.87, lng:80.77 },
+      zoom:7,
+      mapTypeId:"terrain",
+      disableDefaultUI:false,
+      zoomControl:true,
+      mapTypeControl:false,
+      streetViewControl:false,
+      fullscreenControl:true,
+      styles:[
+        { featureType:"water",      elementType:"geometry", stylers:[{color:"#a8d8ea"}] },
+        { featureType:"landscape",  elementType:"geometry", stylers:[{color:"#d4edda"}] },
+        { featureType:"road",       elementType:"geometry", stylers:[{color:"#ffffff"}] },
+        { featureType:"poi.park",   elementType:"geometry", stylers:[{color:"#b7e4c7"}] },
+        { featureType:"administrative", elementType:"labels.text.fill", stylers:[{color:"#444"}] },
+      ],
+    });
+    // Add animated markers
+    MAP_PINS.forEach(pin=>{
+      const el = document.createElement("div");
+      el.className = `map-pin-${pin.id}`;
+      el.style.cssText = `
+        width:44px;height:44px;border-radius:50%;
+        background:${pin.color};border:3px solid #fff;
+        display:flex;align-items:center;justify-content:center;
+        font-size:20px;cursor:pointer;
+        box-shadow:0 2px 12px rgba(0,0,0,.3);
+        animation:mapPinBounce 2s ease-in-out infinite;
+        transition:transform .2s;
+      `;
+      el.textContent = pin.emoji;
+      el.title = pin.name;
+      el.addEventListener("mouseenter",()=>{ el.style.transform="scale(1.2)"; el.style.zIndex="999"; });
+      el.addEventListener("mouseleave",()=>{ el.style.transform="scale(1)"; el.style.zIndex=""; });
+      el.addEventListener("click",()=>setSelectedPin(pin));
+
+      const marker = new window.google.maps.marker.AdvancedMarkerElement({
+        map:mapObj.current,
+        position:{ lat:pin.lat, lng:pin.lng },
+        content:el,
+        title:pin.name,
+      });
+    });
+  },[mapReady]);
 
   return (
-    <div style={{ minHeight:"100vh", background:"linear-gradient(160deg,#0A2A3A,#0B4A6B,#0A3A50)" }}>
+    <div style={{ minHeight:"100vh", background:C.surface }}>
       <style>{`
-        @keyframes elephantWalk {
-          0%,100% { transform: translateX(0px); }
-          50% { transform: translateX(6px); }
-        }
-        @keyframes whaleTail {
-          0%,100% { transform: rotate(-8deg); }
-          50% { transform: rotate(8deg); }
-        }
-        @keyframes birdFly {
-          0%,100% { transform: translate(0,0) rotate(0deg); }
-          25% { transform: translate(4px,-3px) rotate(-5deg); }
-          75% { transform: translate(-4px,-3px) rotate(5deg); }
-        }
-        @keyframes waveMove {
-          0%,100% { transform: translateX(0) scaleY(1); }
-          50% { transform: translateX(4px) scaleY(1.2); }
-        }
-        @keyframes pinPulse {
-          0%,100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(255,255,255,.3)); }
-          50% { transform: scale(1.15); filter: drop-shadow(0 0 8px rgba(255,255,255,.6)); }
-        }
-        @keyframes trainMove {
-          0%,100% { transform: translateX(0); }
-          50% { transform: translateX(5px); }
-        }
-        @keyframes kiteFloat {
-          0%,100% { transform: translate(0,0) rotate(-5deg); }
-          50% { transform: translate(3px,-5px) rotate(5deg); }
-        }
-        @keyframes surfWave {
-          0%,100% { transform: scaleX(1); }
-          50% { transform: scaleX(1.2) translateX(3px); }
+        @keyframes mapPinBounce {
+          0%,100% { transform:translateY(0); }
+          50% { transform:translateY(-4px); }
         }
       `}</style>
 
-      {/* Page header */}
-      <div style={{ padding:"2.5rem 2rem 1rem", textAlign:"center" }}>
-        <div style={{ fontSize:11, color:"rgba(255,255,255,.5)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Interactive</div>
-        <h1 style={{ fontFamily:serif, fontSize:"clamp(28px,5vw,48px)", fontWeight:700, color:"#fff", marginBottom:10 }}>Sri Lanka</h1>
-        <p style={{ fontSize:14, color:"rgba(255,255,255,.6)", marginBottom:0 }}>Tap any icon to explore what makes each place magical</p>
+      {/* Header */}
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2rem 2rem 1.5rem" }}>
+        <div style={{ maxWidth:1100, margin:"0 auto" }}>
+          <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>Interactive</div>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:6 }}>Sri Lanka Map</h1>
+          <p style={{ fontSize:14, color:"rgba(255,255,255,.7)" }}>Click any marker to explore what makes each place special</p>
+        </div>
       </div>
 
-      <div style={{ maxWidth:800, margin:"0 auto", padding:"0 1.5rem 3rem", position:"relative" }}>
-        {/* Map container */}
-        <div style={{ position:"relative", width:"100%", paddingBottom:"130%", background:"rgba(255,255,255,.04)", borderRadius:24, border:"1px solid rgba(255,255,255,.08)", overflow:"hidden" }}>
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"1.5rem 2rem 3rem" }}>
+        <div style={{ display:"grid", gridTemplateColumns: selectedPin?"1fr 320px":"1fr", gap:16, alignItems:"start" }}>
 
-          {/* Ocean background */}
-          <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at center, rgba(24,95,165,.25) 0%, transparent 70%)" }}/>
-
-          {/* Sri Lanka SVG outline */}
-          <svg style={{ position:"absolute", inset:0, width:"100%", height:"100%" }} viewBox="0 0 100 130" preserveAspectRatio="xMidYMid meet">
-            {/* Island body */}
-            <path d="M38,8 Q42,6 46,7 Q52,6 58,9 Q64,12 68,18 Q74,25 76,33 Q78,40 77,48 Q78,56 76,63 Q74,70 72,76 Q68,83 64,88 Q58,93 52,95 Q46,97 40,95 Q34,92 29,87 Q24,81 21,74 Q18,66 18,58 Q17,50 18,42 Q19,34 22,26 Q26,18 30,13 Q34,10 38,8 Z"
-              fill="#1A6B4A" stroke="rgba(255,255,255,.15)" strokeWidth=".5"/>
-            {/* Highland region */}
-            <ellipse cx="48" cy="58" rx="12" ry="14" fill="#0B5A3A" opacity=".6"/>
-            {/* Northern peninsula */}
-            <path d="M46,7 Q48,2 50,1 Q52,2 54,7" fill="#1A6B4A" stroke="rgba(255,255,255,.1)" strokeWidth=".3"/>
-            {/* Rivers */}
-            <path d="M48,40 Q50,50 52,60 Q53,68 50,75" stroke="rgba(100,180,220,.4)" strokeWidth=".6" fill="none"/>
-            <path d="M38,40 Q36,50 35,60 Q34,68 36,74" stroke="rgba(100,180,220,.3)" strokeWidth=".4" fill="none"/>
-
-            {/* Geographic labels */}
-            {GEO_LABELS.map((l,i)=>(
-              <text key={i} x={l.x} y={l.y} textAnchor="middle" fontSize={l.size} fill={`rgba(255,255,255,${l.opacity})`} fontStyle={l.italic?"italic":"normal"} transform={l.rotate?`rotate(${l.rotate},${l.x},${l.y})`:undefined} fontFamily="Georgia,serif">{l.text}</text>
-            ))}
-
-            {/* Animated waves on coast */}
-            <path d="M18,58 Q15,56 12,58 Q9,60 12,62" stroke="rgba(100,180,220,.5)" strokeWidth=".8" fill="none" style={{ animation:"waveMove 2s ease-in-out infinite" }}/>
-            <path d="M76,48 Q79,46 82,48 Q85,50 82,52" stroke="rgba(100,180,220,.5)" strokeWidth=".8" fill="none" style={{ animation:"waveMove 2.3s ease-in-out infinite" }}/>
-            <path d="M40,95 Q40,99 44,101 Q48,103 52,101" stroke="rgba(100,180,220,.6)" strokeWidth="1" fill="none" style={{ animation:"waveMove 1.8s ease-in-out infinite" }}/>
-
-            {/* Animated animal icons on map */}
-            {/* Elephant near Udawalawe */}
-            <text x="50" y="77" fontSize="6" style={{ animation:"elephantWalk 2s ease-in-out infinite" }}>🐘</text>
-            {/* Whale near Mirissa */}
-            <text x="38" y="90" fontSize="5" style={{ animation:"whaleTail 2.5s ease-in-out infinite" }}>🐋</text>
-            {/* Leopard near Yala */}
-            <text x="65" y="83" fontSize="5" style={{ animation:"pinPulse 3s ease-in-out infinite" }}>🐆</text>
-            {/* Bird near Wilpattu */}
-            <text x="26" y="30" fontSize="5" style={{ animation:"birdFly 2s ease-in-out infinite" }}>🦜</text>
-            {/* Train near Ella */}
-            <text x="48" y="67" fontSize="5" style={{ animation:"trainMove 1.5s ease-in-out infinite" }}>🚂</text>
-            {/* Kite near Kalpitiya */}
-            <text x="20" y="37" fontSize="5" style={{ animation:"kiteFloat 2.2s ease-in-out infinite" }}>🪁</text>
-            {/* Surf near Arugam */}
-            <text x="76" y="71" fontSize="5" style={{ animation:"surfWave 1.8s ease-in-out infinite" }}>🏄</text>
-          </svg>
-
-          {/* Clickable pins */}
-          {MAP_PINS.map(pin=>(
-            <div key={pin.id}
-              onClick={()=>setSelectedPin(selectedPin?.id===pin.id?null:pin)}
-              onMouseEnter={()=>setHoveredPin(pin.id)}
-              onMouseLeave={()=>setHoveredPin(null)}
-              style={{
-                position:"absolute",
-                left:`${pin.x}%`, top:`${pin.y}%`,
-                transform:"translate(-50%,-50%)",
-                cursor:"pointer", zIndex:10,
-                animation: hoveredPin===pin.id||selectedPin?.id===pin.id ? "pinPulse 1s ease-in-out infinite" : "none",
-              }}>
-              <div style={{
-                width:36, height:36, borderRadius:"50%",
-                background: selectedPin?.id===pin.id ? pin.color : "rgba(255,255,255,.15)",
-                border:`2px solid ${pin.color}`,
-                display:"flex", alignItems:"center", justifyContent:"center",
-                fontSize:16, backdropFilter:"blur(4px)",
-                transition:"all .2s",
-                boxShadow: selectedPin?.id===pin.id ? `0 0 20px ${pin.color}80` : "none",
-              }}>
-                {pin.emoji}
+          {/* Map */}
+          <div style={{ position:"relative", borderRadius:16, overflow:"hidden", boxShadow:"0 4px 24px rgba(0,0,0,.12)", border:`1px solid ${C.border}` }}>
+            {!GKEY ? (
+              <div style={{ height:600, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:C.surface, gap:16, padding:"2rem", textAlign:"center" }}>
+                <div style={{ fontSize:40 }}>🗺️</div>
+                <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink }}>Google Maps key needed</h3>
+                <p style={{ fontSize:13, color:C.inkSoft, maxWidth:360, lineHeight:1.7 }}>
+                  Add <code style={{ background:"rgba(0,0,0,.08)", padding:"2px 6px", borderRadius:4 }}>VITE_GOOGLE_MAPS_KEY</code> to your <code>.env</code> and Vercel environment variables. Enable <strong>Maps JavaScript API</strong> and <strong>Maps Embed API</strong> in Google Cloud Console.
+                </p>
               </div>
-              {/* Hover tooltip */}
-              {hoveredPin===pin.id && selectedPin?.id!==pin.id && (
-                <div style={{ position:"absolute", bottom:"calc(100% + 8px)", left:"50%", transform:"translateX(-50%)", background:"rgba(0,0,0,.85)", color:"#fff", fontSize:11, fontWeight:600, padding:"5px 10px", borderRadius:8, whiteSpace:"nowrap", pointerEvents:"none", backdropFilter:"blur(8px)" }}>
-                  {pin.name}
-                </div>
-              )}
-            </div>
-          ))}
+            ) : (
+              <div ref={mapRef} style={{ height:600, width:"100%" }}/>
+            )}
+          </div>
 
           {/* Selected pin info panel */}
           {selectedPin && (
-            <div style={{ position:"absolute", bottom:16, left:16, right:16, background:"rgba(10,20,30,.9)", backdropFilter:"blur(16px)", borderRadius:16, padding:"14px 16px", border:"1px solid rgba(255,255,255,.15)", zIndex:20 }}>
-              <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                <div style={{ width:44, height:44, borderRadius:12, background:selectedPin.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>
-                  {selectedPin.emoji}
+            <div style={{ background:C.white, borderRadius:16, border:`1.5px solid ${C.border}`, overflow:"hidden", boxShadow:"0 4px 20px rgba(0,0,0,.08)" }}>
+              <div style={{ height:140, background:selectedPin.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:56, position:"relative" }}>
+                {selectedPin.emoji}
+                <button onClick={()=>setSelectedPin(null)} style={{ position:"absolute", top:10, right:10, width:30, height:30, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.3)", color:"#fff", fontSize:14, cursor:"pointer" }}>✕</button>
+              </div>
+              <div style={{ padding:"16px" }}>
+                <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:6 }}>{selectedPin.name}</h3>
+                <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.6, marginBottom:14 }}>{selectedPin.fact}</p>
+                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                  <Btn onClick={()=>{ setPage("journey"); sessionStorage.setItem("suggestDest", selectedPin.name); }} style={{ width:"100%" }}>
+                    ✨ Plan a trip here
+                  </Btn>
+                  <a href={`https://maps.google.com/?q=${encodeURIComponent(selectedPin.name+", Sri Lanka")}`} target="_blank" rel="noopener noreferrer"
+                    style={{ display:"block", textAlign:"center", padding:"10px", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.teal, textDecoration:"none", fontWeight:600 }}>
+                    📍 Open in Google Maps
+                  </a>
                 </div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff", marginBottom:3 }}>{selectedPin.name}</div>
-                  <div style={{ fontSize:12, color:"rgba(255,255,255,.65)", lineHeight:1.5 }}>{selectedPin.fact}</div>
-                </div>
-                <button onClick={()=>{ setPage("journey"); sessionStorage.setItem("suggestDest", selectedPin.name); }} style={{ flexShrink:0, padding:"8px 14px", background:C.tealMid, color:"#fff", border:"none", borderRadius:10, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>
-                  Plan trip →
-                </button>
               </div>
             </div>
           )}
         </div>
 
         {/* Legend */}
-        <div style={{ marginTop:16, display:"flex", flexWrap:"wrap", gap:8, justifyContent:"center" }}>
-          {[{e:"🐘",l:"Wildlife"},{e:"🏰",l:"Heritage"},{e:"🏄",l:"Water sports"},{e:"☕",l:"Hill country"},{e:"🐋",l:"Marine life"},{e:"🏙️",l:"Cities"}].map(({e,l})=>(
-            <div key={l} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 12px", background:"rgba(255,255,255,.08)", borderRadius:20, border:"1px solid rgba(255,255,255,.12)" }}>
-              <span style={{ fontSize:14 }}>{e}</span>
-              <span style={{ fontSize:11, color:"rgba(255,255,255,.7)" }}>{l}</span>
-            </div>
+        <div style={{ marginTop:16, display:"flex", flexWrap:"wrap", gap:8 }}>
+          {MAP_PINS.map(pin=>(
+            <button key={pin.id} onClick={()=>setSelectedPin(pin)} style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", background:selectedPin?.id===pin.id?pin.color:"#fff", border:`1.5px solid ${selectedPin?.id===pin.id?pin.color:C.border}`, borderRadius:20, cursor:"pointer", fontFamily:sans, transition:"all .15s" }}>
+              <span>{pin.emoji}</span>
+              <span style={{ fontSize:12, fontWeight:600, color:selectedPin?.id===pin.id?"#fff":C.ink }}>{pin.name}</span>
+            </button>
           ))}
         </div>
       </div>
     </div>
+  );
+}
+
+
+// ─── EMERGENCY INFO BUTTON ────────────────────────────────────────────────────
+const EMERGENCY_DATA = [
+  { category:"🚨 Emergency Services", items:[
+    { label:"Police",                  number:"119",            note:"National emergency" },
+    { label:"Ambulance",               number:"110",            note:"Medical emergency" },
+    { label:"Fire & Rescue",           number:"111",            note:"Fire department" },
+    { label:"Tourist Police",          number:"+94 11 242 1052",note:"Colombo — English speaking" },
+    { label:"Tourist Police Hotline",  number:"1912",           note:"24/7 tourist assistance" },
+  ]},
+  { category:"🏥 Medical", items:[
+    { label:"National Hospital Colombo",number:"+94 11 269 1111",note:"Largest public hospital" },
+    { label:"Nawaloka Hospital",        number:"+94 11 254 4444",note:"Private — Colombo" },
+    { label:"Lanka Hospitals",          number:"+94 11 553 0000",note:"Private — Colombo" },
+    { label:"Kandy General Hospital",   number:"+94 81 222 2261",note:"Main hospital — Kandy" },
+    { label:"Galle General Hospital",   number:"+94 91 222 2261",note:"Main hospital — Galle" },
+  ]},
+  { category:"🏛️ Embassies (Colombo)", items:[
+    { label:"British High Commission",  number:"+94 11 539 0639",note:"Emergency consular" },
+    { label:"US Embassy",               number:"+94 11 249 8500",note:"Emergency line" },
+    { label:"Australian High Commission",number:"+94 11 246 3200",note:"Emergency consular" },
+    { label:"Indian High Commission",   number:"+94 11 253 2788",note:"Colombo" },
+    { label:"German Embassy",           number:"+94 11 258 0431",note:"Colombo" },
+  ]},
+  { category:"🚗 Transport Help", items:[
+    { label:"PickMe (taxi app)",        number:"*711",           note:"Dial from any SL mobile" },
+    { label:"Kangaroo Cabs",            number:"+94 11 258 8588",note:"24hr taxi — Colombo" },
+    { label:"Sri Lanka Railways",       number:"+94 11 243 5838",note:"Train enquiries" },
+    { label:"SLTB (Bus enquiries)",     number:"+94 11 232 8081",note:"Public bus information" },
+  ]},
+  { category:"🏨 Lost / Safety", items:[
+    { label:"SLTDA (Tourism Authority)",number:"+94 11 243 7059",note:"Official tourism body" },
+    { label:"Customs & Immigration",    number:"+94 11 244 7970",note:"Colombo airport" },
+    { label:"Lost Passport — Police",   number:"119",            note:"Report then contact embassy" },
+    { label:"Accident Helpline",        number:"+94 11 269 4000",note:"Emergency road assistance" },
+  ]},
+];
+
+function EmergencyButton() {
+  const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+
+  return (
+    <>
+      {/* Floating SOS button */}
+      <button onClick={()=>setOpen(o=>!o)} style={{
+        position:"fixed", bottom:24, left:24, zIndex:500,
+        width:52, height:52, borderRadius:"50%",
+        background: open ? "#C45230" : "#fff",
+        color: open ? "#fff" : "#C45230",
+        border:"2px solid #C45230",
+        fontSize:open?16:18, cursor:"pointer",
+        boxShadow:"0 4px 20px rgba(196,82,48,.3)",
+        display:"flex", alignItems:"center", justifyContent:"center",
+        fontWeight:700, fontFamily:sans,
+        transition:"all .2s",
+      }}>
+        {open ? "✕" : "🆘"}
+      </button>
+
+      {/* Emergency panel */}
+      {open && (
+        <div style={{
+          position:"fixed", bottom:88, left:24, zIndex:500,
+          width:360, maxWidth:"calc(100vw - 48px)",
+          background:"#fff", borderRadius:20,
+          boxShadow:"0 12px 48px rgba(0,0,0,.2)",
+          border:"1.5px solid #EFBAA8",
+          display:"flex", flexDirection:"column",
+          maxHeight:"70vh",
+        }}>
+          {/* Header */}
+          <div style={{ padding:"14px 16px", background:"#C45230", borderRadius:"18px 18px 0 0", flexShrink:0 }}>
+            <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff" }}>🆘 Emergency & Important Numbers</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,.75)", marginTop:3 }}>Sri Lanka — tap any number to call</div>
+          </div>
+
+          {/* Category tabs */}
+          <div style={{ display:"flex", overflowX:"auto", borderBottom:"1px solid #E4E4E4", flexShrink:0 }}>
+            {EMERGENCY_DATA.map((cat,i)=>(
+              <button key={i} onClick={()=>setActiveTab(i)} style={{
+                padding:"10px 12px", border:"none", background:"transparent",
+                fontSize:11, fontWeight:activeTab===i?700:400,
+                color:activeTab===i?"#C45230":C.inkSoft, cursor:"pointer",
+                borderBottom:activeTab===i?"2.5px solid #C45230":"2.5px solid transparent",
+                whiteSpace:"nowrap", fontFamily:sans, flexShrink:0,
+              }}>{cat.category.split(" ")[0]}</button>
+            ))}
+          </div>
+
+          {/* Items */}
+          <div style={{ flex:1, overflowY:"auto", padding:"8px 0" }}>
+            <div style={{ padding:"6px 16px", fontSize:11, fontWeight:700, color:"#C45230", textTransform:"uppercase", letterSpacing:.8 }}>
+              {EMERGENCY_DATA[activeTab].category}
+            </div>
+            {EMERGENCY_DATA[activeTab].items.map((item,i)=>(
+              <div key={i} style={{ padding:"10px 16px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", gap:10 }}>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:2 }}>{item.label}</div>
+                  <div style={{ fontSize:11, color:C.inkSoft }}>{item.note}</div>
+                </div>
+                <a href={`tel:${item.number.replace(/\s/g,"")}`} style={{
+                  flexShrink:0, padding:"6px 12px",
+                  background:"#C45230", color:"#fff",
+                  borderRadius:10, fontSize:12, fontWeight:700,
+                  textDecoration:"none", fontFamily:sans,
+                  display:"flex", alignItems:"center", gap:4,
+                }}>
+                  📞 {item.number}
+                </a>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer tip */}
+          <div style={{ padding:"10px 16px", background:C.surface, borderRadius:"0 0 18px 18px", fontSize:11, color:C.inkSoft, flexShrink:0, borderTop:`1px solid ${C.border}` }}>
+            💡 Save these numbers offline before your trip. Emergency services (119/110/111) work even without credit.
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -2185,16 +2558,19 @@ export default function App() {
   const [guideOpen, setGuide] = useState(false);
   const [savedItin, setSaved] = useState(null);
   const openGuide = useCallback(()=>setGuide(true), []);
+  const wishlist  = useWishlist();
+
   return (
     <div style={{ fontFamily:sans, color:C.ink, background:C.white, minHeight:"100vh" }}>
       <MobileStyles/>
       <Nav page={page} setPage={setPage} onGuideOpen={openGuide}/>
       {page==="home"         && <HomePage         setPage={setPage} onGuideOpen={openGuide}/>}
-      {page==="destinations" && <DestinationsPage setPage={setPage} onGuideOpen={openGuide}/>}
-      {page==="explore"      && <ExplorePage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved}/>}
+      {page==="destinations" && <DestinationsPage setPage={setPage} onGuideOpen={openGuide} savedItin={savedItin} setSavedItin={setSaved}/>}
       {page==="journey"      && <JourneyPage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} onGuideOpen={openGuide}/>}
       {page==="srilankamap" && <SriLankaMapPage  setPage={setPage}/>}
       <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin}/>
+      <WishlistPanel wishlist={wishlist} savedItin={savedItin} setSavedItin={setSaved}/>
+      <EmergencyButton/>
     </div>
   );
 }
