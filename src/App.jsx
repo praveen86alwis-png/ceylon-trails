@@ -1717,6 +1717,279 @@ const GPLACES_CAT_LABELS = {
   adventure:"Adventure Sites", beaches:"Beaches", cultural:"Cultural Sites",
 };
 
+// API base — local proxy in dev, Vercel function in prod
+const PLACES_BASE = import.meta.env.PROD ? "/api/places" : "http://localhost:3001/api/places";
+
+async function placesSearch(query) {
+  const res = await fetch(`${PLACES_BASE}/search?query=${encodeURIComponent(query)}`);
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error||"Search failed"); }
+  return res.json();
+}
+async function placesDetails(place_id) {
+  const res = await fetch(`${PLACES_BASE}/details?place_id=${encodeURIComponent(place_id)}`);
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error||"Details failed"); }
+  return res.json();
+}
+function photoUrl(ref, maxwidth=800) {
+  return `${PLACES_BASE}/photo?ref=${encodeURIComponent(ref)}&maxwidth=${maxwidth}`;
+}
+
+function ExplorePage({ setPage, savedItin, setSavedItin }) {
+  const catId   = sessionStorage.getItem("explorecat") || "hotels";
+  const [cat, setCat]           = useState(catId);
+  const [places, setPlaces]     = useState([]);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+  const [selected, setSelected] = useState(null);
+  const [addedToast, setToast]  = useState(false);
+  const wishlist = useWishlist();
+
+  useEffect(() => {
+    const c = sessionStorage.getItem("explorecat") || "hotels";
+    setCat(c); loadPlaces(c);
+  }, []);
+
+  const loadPlaces = async (catId) => {
+    setLoading(true); setError(""); setPlaces([]);
+    try {
+      const query = GPLACES_CAT_QUERIES[catId];
+      const data  = await placesSearch(query);
+      if (data.error === "no_key") { setError("no_key"); setLoading(false); return; }
+      if (data.status === "REQUEST_DENIED") { setError("denied"); setLoading(false); return; }
+      setPlaces(data.results || []);
+    } catch(e) {
+      setError(e.message);
+    }
+    setLoading(false);
+  };
+
+  const switchCat = (id) => {
+    setCat(id); sessionStorage.setItem("explorecat", id);
+    setSelected(null); loadPlaces(id);
+  };
+
+  const addToItin = (place) => {
+    const newAct = {
+      time:"10:00", type:"sightseeing",
+      place: place.name,
+      area:  place.formatted_address || "Sri Lanka",
+      text:  `Visit ${place.name} — rated ${place.rating||"N/A"}★ by ${place.user_ratings_total||0} visitors`,
+      why:   "Added from your Explore list",
+      hours: place.opening_hours?.open_now ? "Currently open" : "Check Google Maps for hours",
+      price: place.price_level ? "$".repeat(place.price_level) : "",
+      mapQuery: `${place.name}, Sri Lanka`,
+    };
+    if (savedItin) {
+      const updated = { ...savedItin, days: savedItin.days.map((d,i) => i===0 ? {...d, activities:[...d.activities, newAct]} : d) };
+      setSavedItin(updated);
+      setToast(true); setTimeout(()=>setToast(false), 2500);
+    } else {
+      alert("Create an itinerary first from 'Plan a trip', then come back to add places.");
+    }
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.surface }}>
+      {/* Toast */}
+      {addedToast && (
+        <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", background:C.teal, color:"#fff", padding:"12px 24px", borderRadius:30, fontSize:14, fontWeight:600, zIndex:800, boxShadow:"0 4px 20px rgba(0,0,0,.2)", whiteSpace:"nowrap" }}>
+          ✅ Added to Day 1 of your itinerary!
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2.5rem 2rem 2rem" }}>
+        <div style={{ maxWidth:1100, margin:"0 auto" }}>
+          <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>Explore Sri Lanka</div>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:16 }}>{GPLACES_CAT_LABELS[cat]}</h1>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            {NAV_DEST_CATS.map(c=>(
+              <button key={c.id} onClick={()=>switchCat(c.id)} style={{ padding:"8px 16px", borderRadius:20, border:"none", cursor:"pointer", fontSize:13, fontWeight:600, fontFamily:sans, background:cat===c.id?"#fff":"rgba(255,255,255,.15)", color:cat===c.id?C.teal:"rgba(255,255,255,.85)", transition:"all .15s" }}>
+                {c.icon} {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"2rem" }}>
+        {/* No key */}
+        {error==="no_key" && (
+          <div style={{ background:C.amberLight, border:`1.5px solid #F0D48A`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
+            <div style={{ fontSize:32, marginBottom:12 }}>🔑</div>
+            <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>Google Places API key needed</h3>
+            <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, maxWidth:480, margin:"0 auto 16px" }}>
+              Add your key to <code style={{ background:"rgba(0,0,0,.08)", padding:"2px 6px", borderRadius:4 }}>GOOGLE_PLACES_KEY</code> in your proxy <code>.env</code> file and Vercel environment variables.
+            </p>
+            <div style={{ background:"rgba(255,255,255,.7)", borderRadius:12, padding:"14px", fontSize:13, color:C.ink, textAlign:"left", maxWidth:480, margin:"0 auto" }}>
+              <p style={{ fontWeight:700, marginBottom:8 }}>proxy/.env — add this line:</p>
+              <code style={{ background:"#f0f0f0", padding:"8px 12px", borderRadius:8, display:"block", fontSize:12 }}>GOOGLE_PLACES_KEY=AIzaYourKeyHere</code>
+            </div>
+          </div>
+        )}
+
+        {/* API denied */}
+        {error==="denied" && (
+          <div style={{ background:C.coralLight, border:`1.5px solid #EFBAA8`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
+            <div style={{ fontSize:32, marginBottom:12 }}>⚠️</div>
+            <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>API key not authorised</h3>
+            <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7 }}>Your Google key was rejected. Make sure <strong>Places API</strong> is enabled in Google Cloud Console for your project.</p>
+          </div>
+        )}
+
+        {/* Other error */}
+        {error && error!=="no_key" && error!=="denied" && (
+          <div style={{ background:C.coralLight, border:`1.5px solid #EFBAA8`, borderRadius:16, padding:"1.5rem", textAlign:"center" }}>
+            <p style={{ fontSize:14, color:C.coral }}>Error: {error}</p>
+            <button onClick={()=>loadPlaces(cat)} style={{ marginTop:10, padding:"8px 20px", background:C.teal, color:"#fff", border:"none", borderRadius:10, cursor:"pointer", fontSize:13, fontFamily:sans }}>Try again</button>
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div style={{ textAlign:"center", padding:"4rem" }}>
+            <div style={{ width:48, height:48, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto 16px" }}/>
+            <p style={{ fontSize:14, color:C.inkSoft }}>Finding the best {GPLACES_CAT_LABELS[cat].toLowerCase()} in Sri Lanka…</p>
+          </div>
+        )}
+
+        {/* Results grid */}
+        {!loading && !error && places.length > 0 && (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.2rem" }} className="dest-grid-4">
+            {places.map(p=>(
+              <div key={p.place_id} onClick={()=>setSelected(p)} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, cursor:"pointer", transition:"transform .2s,box-shadow .2s" }}
+                onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,.1)"; }}
+                onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
+                <div style={{ height:160, background:`linear-gradient(135deg,${C.teal},#147856)`, overflow:"hidden", position:"relative" }}>
+                  {p.photos?.[0]
+                    ? <img src={photoUrl(p.photos[0].photo_reference)} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>{ e.target.style.display="none"; }}/>
+                    : <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:40, opacity:.3 }}>{NAV_DEST_CATS.find(c=>c.id===cat)?.icon||"📍"}</div>
+                  }
+                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"8px 12px", background:"linear-gradient(to top,rgba(0,0,0,.65),transparent)" }}>
+                    <div style={{ fontFamily:serif, fontSize:15, fontWeight:700, color:"#fff" }}>{p.name}</div>
+                  </div>
+                  {wishlist.has(p.place_id) && (
+                    <div style={{ position:"absolute", top:8, right:8, background:C.amber, color:"#fff", fontSize:10, fontWeight:700, padding:"3px 8px", borderRadius:20 }}>♥ Saved</div>
+                  )}
+                </div>
+                <div style={{ padding:"12px 14px" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                      <span style={{ color:C.amberMid, fontSize:12 }}>{"★".repeat(Math.round(p.rating||0))}</span>
+                      <span style={{ fontSize:11, color:C.inkSoft }}>{p.rating} ({(p.user_ratings_total||0).toLocaleString()})</span>
+                    </div>
+                    {p.price_level && <span style={{ fontSize:12, color:C.teal, fontWeight:600 }}>{"$".repeat(p.price_level)}</span>}
+                  </div>
+                  <p style={{ fontSize:11, color:C.inkSoft, lineHeight:1.5, margin:0 }}>{(p.formatted_address||"").split(",").slice(-3).join(", ")}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* No results */}
+        {!loading && !error && places.length===0 && (
+          <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}>
+            <div style={{ fontSize:40, marginBottom:12 }}>🔍</div>
+            <p>No results found. Try a different category.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Detail panel */}
+      {selected && (
+        <PlaceDetailPanel
+          place={selected}
+          wishlist={wishlist}
+          onAddToItin={()=>{ addToItin(selected); setSelected(null); }}
+          onClose={()=>setSelected(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose }) {
+  const [details, setDetails]   = useState(null);
+  const [photoIdx, setPhotoIdx] = useState(0);
+  const [loadingD, setLoadingD] = useState(true);
+
+  useEffect(()=>{
+    placesDetails(p.place_id)
+      .then(d=>{ setDetails(d.result); setLoadingD(false); })
+      .catch(()=>setLoadingD(false));
+  },[p.place_id]);
+
+  const d = details || p;
+  const photos = d.photos || p.photos || [];
+
+  return (
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.55)", zIndex:700, display:"flex", justifyContent:"flex-end", backdropFilter:"blur(3px)" }}>
+      <div style={{ width:480, maxWidth:"100vw", height:"100%", background:C.white, overflowY:"auto", boxShadow:"-8px 0 48px rgba(0,0,0,.2)" }}>
+        {/* Photo gallery */}
+        <div style={{ height:240, background:`linear-gradient(135deg,${C.teal},#147856)`, position:"relative", flexShrink:0 }}>
+          {photos.length>0 && <img src={photoUrl(photos[photoIdx]?.photo_reference)} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
+          <button onClick={onClose} style={{ position:"absolute", top:12, right:12, width:36, height:36, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.45)", color:"#fff", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+          {photos.length>1&&<>
+            <button onClick={()=>setPhotoIdx(i=>Math.max(0,i-1))} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", width:34, height:34, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.4)", color:"#fff", fontSize:18, cursor:"pointer" }}>‹</button>
+            <button onClick={()=>setPhotoIdx(i=>Math.min(photos.length-1,i+1))} style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", width:34, height:34, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.4)", color:"#fff", fontSize:18, cursor:"pointer" }}>›</button>
+            <div style={{ position:"absolute", bottom:8, right:12, fontSize:11, color:"rgba(255,255,255,.8)", background:"rgba(0,0,0,.3)", padding:"2px 8px", borderRadius:10 }}>{photoIdx+1}/{photos.length}</div>
+          </>}
+        </div>
+
+        <div style={{ padding:"1.2rem 1.4rem" }}>
+          {loadingD && <div style={{ textAlign:"center", padding:"1rem" }}><div style={{ width:28, height:28, border:`2px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto" }}/></div>}
+
+          <h2 style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink, marginBottom:4 }}>{p.name}</h2>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+            <span style={{ color:C.amberMid }}>{"★".repeat(Math.round(p.rating||0))}</span>
+            <span style={{ fontSize:13, color:C.inkSoft }}>{p.rating} · {(p.user_ratings_total||0).toLocaleString()} reviews</span>
+          </div>
+          <p style={{ fontSize:13, color:C.inkSoft, marginBottom:14 }}>📍 {p.formatted_address}</p>
+
+          {d.opening_hours?.weekday_text && (
+            <div style={{ background:C.surface, borderRadius:10, padding:"10px 14px", marginBottom:14 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:C.ink, marginBottom:6 }}>⏰ Opening hours</div>
+              {d.opening_hours.weekday_text.map((t,i)=><div key={i} style={{ fontSize:11, color:C.inkSoft, marginBottom:2 }}>{t}</div>)}
+            </div>
+          )}
+
+          {d.formatted_phone_number && <p style={{ fontSize:13, color:C.ink, marginBottom:8 }}>📞 {d.formatted_phone_number}</p>}
+          {d.website && <a href={d.website} target="_blank" rel="noopener noreferrer" style={{ fontSize:13, color:C.teal, display:"block", marginBottom:14, wordBreak:"break-all" }}>🌐 {d.website}</a>}
+
+          {/* Reviews */}
+          {d.reviews?.length>0 && <>
+            <p style={{ fontSize:12, fontWeight:700, color:C.ink, textTransform:"uppercase", letterSpacing:.8, marginBottom:8 }}>Reviews</p>
+            {d.reviews.slice(0,2).map((r,i)=>(
+              <div key={i} style={{ padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
+                <div style={{ display:"flex", justifyContent:"space-between", fontSize:13, fontWeight:600, color:C.ink, marginBottom:4 }}>
+                  <span>{r.author_name}</span><span style={{ color:C.amberMid }}>{"★".repeat(r.rating)}</span>
+                </div>
+                <p style={{ fontSize:12, color:C.inkSoft, lineHeight:1.6, margin:0 }}>{r.text?.slice(0,200)}{r.text?.length>200?"…":""}</p>
+              </div>
+            ))}
+          </>}
+
+          {/* Action buttons */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:16 }}>
+            <button onClick={onAddToItin} style={{ padding:"12px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
+              ➕ Add to itinerary
+            </button>
+            <button onClick={()=>wishlist.has(p.place_id)?wishlist.remove(p.place_id):wishlist.add(p)}
+              style={{ padding:"12px", background:wishlist.has(p.place_id)?C.amberLight:C.surface, color:wishlist.has(p.place_id)?C.amber:C.ink, border:`1.5px solid ${wishlist.has(p.place_id)?"#F0D48A":C.border}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
+              {wishlist.has(p.place_id) ? "♥ Saved" : "♡ Wishlist"}
+            </button>
+          </div>
+          <a href={`https://maps.google.com/?q=${encodeURIComponent(p.name+", Sri Lanka")}`} target="_blank" rel="noopener noreferrer"
+            style={{ display:"block", textAlign:"center", marginTop:10, padding:"10px", border:`1px solid ${C.border}`, borderRadius:10, fontSize:12, color:C.teal, textDecoration:"none", fontWeight:600 }}>
+            📍 Open in Google Maps
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ExplorePage({ setPage, savedItin, setSavedItin }) {
   const catId   = sessionStorage.getItem("explorecat") || "hotels";
   const [cat, setCat]         = useState(catId);
