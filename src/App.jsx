@@ -1380,8 +1380,9 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen }) {
   const [ans, setAns]      = useState({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", customPlaces:[], startCity:"airport" });
   const [loading, setLoad] = useState(false);
   const [itin, setItin]    = useState(savedItin||null);
-  const [itinDays, setItinDays] = useState(savedItin?.days||null); // editable days for drag/drop
+  const [itinDays, setItinDays] = useState(savedItin?.days||null);
   const [placeInput, setPlaceInput] = useState("");
+  const [startLabel, setStartLabel] = useState("Sri Lanka"); // readable start for result page
 
   const upd = (k,v) => setAns(a=>({...a,[k]:v}));
   const tog = (k,v) => setAns(a=>{ const arr=a[k], i=arr.indexOf(v); return {...a,[k]:i>-1?arr.filter(x=>x!==v):[...arr,v]}; });
@@ -1444,8 +1445,10 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen }) {
     const customStart = ans.startCity==="custom" && ans.customStart
       ? ans.customStart.trim()
       : ans.startCity==="colombo" ? "Colombo"
-      : ans.startCity==="airport" ? "Bandaranaike International Airport, Katunayake (30km north of Colombo)"
+      : ans.startCity==="airport" ? "Bandaranaike International Airport, Katunayake"
       : ans.customStart?.trim() || "Colombo";
+
+    setStartLabel(customStart); // save to state so result page can read it
 
     // If user set a custom start city, add it to allowed cities so it isn't blocked
     const allowedCities = [...cities.allowed];
@@ -1577,7 +1580,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
             <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Your AI itinerary</div>
             <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:10 }}>🗺️ {itin.title}</h1>
             <p style={{ fontSize:15, color:"rgba(255,255,255,.75)", marginBottom:16 }}>{itin.tagline}</p>
-            <p style={{ fontSize:13, color:"rgba(255,255,255,.65)", marginBottom:16 }}>📅 {ans.days} days · {ans.nights} nights · {ans.group||"solo"} · {ans.budget||"mid-range"} budget · Starting: {customStart}</p>
+            <p style={{ fontSize:13, color:"rgba(255,255,255,.65)", marginBottom:16 }}>📅 {ans.days} days · {ans.nights} nights · {ans.group||"solo"} · {ans.budget||"mid-range"} budget · Starting: {startLabel}</p>
             {itin.highlights&&<div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16 }}>{itin.highlights.map((h,i)=><span key={i} style={{ fontSize:12, fontWeight:500, padding:"4px 12px", borderRadius:20, background:"rgba(255,255,255,.15)", color:"rgba(255,255,255,.9)", border:"1px solid rgba(255,255,255,.25)" }}>✓ {h}</span>)}</div>}
             <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
               <button onClick={downloadPDF} style={{ padding:"10px 20px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>📄 Download PDF</button>
@@ -1614,7 +1617,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
             <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
               <Btn variant="amber" onClick={onGuideOpen}>Find a guide & request bid →</Btn>
               <Btn variant="outline" onClick={downloadPDF}>📄 Download PDF</Btn>
-              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", customPlaces:[], startCity:"airport" }); }}>↺ New itinerary</Btn>
+              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", customPlaces:[], startCity:"airport" }); }}>↺ New itinerary</Btn>
             </div>
           </div>
         </div>
@@ -2289,78 +2292,87 @@ const MAP_PINS = [
 
 
 function SriLankaMapPage({ setPage }) {
-  const mapRef       = useRef(null);
-  const mapObj       = useRef(null);
+  const mapRef    = useRef(null);
+  const mapObj    = useRef(null);
   const [selectedPin, setSelectedPin] = useState(null);
-  const [mapReady,    setMapReady]    = useState(false);
-  const GKEY = import.meta.env.VITE_GOOGLE_MAPS_KEY || "";
 
-  // Load Google Maps JS API
   useEffect(()=>{
-    if (!GKEY) { setMapReady(false); return; }
-    if (window.google?.maps) { setMapReady(true); return; }
+    if (mapObj.current || !mapRef.current) return;
+
+    // Dynamically load Leaflet CSS + JS (free, no key needed)
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    document.head.appendChild(link);
+
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GKEY}&libraries=marker`;
-    script.async = true;
-    script.onload = ()=>setMapReady(true);
-    document.head.appendChild(script);
-    return ()=>{ /* leave script — reuse on revisit */ };
-  },[GKEY]);
-
-  // Init map once ready
-  useEffect(()=>{
-    if (!mapReady||!mapRef.current||mapObj.current) return;
-    mapObj.current = new window.google.maps.Map(mapRef.current, {
-      center:{ lat:7.87, lng:80.77 },
-      zoom:7,
-      mapTypeId:"terrain",
-      disableDefaultUI:false,
-      zoomControl:true,
-      mapTypeControl:false,
-      streetViewControl:false,
-      fullscreenControl:true,
-      styles:[
-        { featureType:"water",      elementType:"geometry", stylers:[{color:"#a8d8ea"}] },
-        { featureType:"landscape",  elementType:"geometry", stylers:[{color:"#d4edda"}] },
-        { featureType:"road",       elementType:"geometry", stylers:[{color:"#ffffff"}] },
-        { featureType:"poi.park",   elementType:"geometry", stylers:[{color:"#b7e4c7"}] },
-        { featureType:"administrative", elementType:"labels.text.fill", stylers:[{color:"#444"}] },
-      ],
-    });
-    // Add animated markers
-    MAP_PINS.forEach(pin=>{
-      const el = document.createElement("div");
-      el.className = `map-pin-${pin.id}`;
-      el.style.cssText = `
-        width:44px;height:44px;border-radius:50%;
-        background:${pin.color};border:3px solid #fff;
-        display:flex;align-items:center;justify-content:center;
-        font-size:20px;cursor:pointer;
-        box-shadow:0 2px 12px rgba(0,0,0,.3);
-        animation:mapPinBounce 2s ease-in-out infinite;
-        transition:transform .2s;
-      `;
-      el.textContent = pin.emoji;
-      el.title = pin.name;
-      el.addEventListener("mouseenter",()=>{ el.style.transform="scale(1.2)"; el.style.zIndex="999"; });
-      el.addEventListener("mouseleave",()=>{ el.style.transform="scale(1)"; el.style.zIndex=""; });
-      el.addEventListener("click",()=>setSelectedPin(pin));
-
-      const marker = new window.google.maps.marker.AdvancedMarkerElement({
-        map:mapObj.current,
-        position:{ lat:pin.lat, lng:pin.lng },
-        content:el,
-        title:pin.name,
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    script.onload = () => {
+      const L = window.L;
+      const map = L.map(mapRef.current, {
+        center: [7.87, 80.77],
+        zoom: 7,
+        zoomControl: true,
+        scrollWheelZoom: true,
       });
-    });
-  },[mapReady]);
+
+      // OpenStreetMap tiles — completely free
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18,
+      }).addTo(map);
+
+      mapObj.current = map;
+
+      // Add animated emoji markers
+      MAP_PINS.forEach(pin => {
+        const icon = L.divIcon({
+          html: `<div style="
+            width:44px;height:44px;border-radius:50%;
+            background:${pin.color};border:3px solid #fff;
+            display:flex;align-items:center;justify-content:center;
+            font-size:20px;cursor:pointer;
+            box-shadow:0 3px 14px rgba(0,0,0,.35);
+            animation:mapPinBounce 2s ease-in-out infinite;
+            transition:transform .2s;
+          ">${pin.emoji}</div>`,
+          className: "",
+          iconSize: [44, 44],
+          iconAnchor: [22, 22],
+          popupAnchor: [0, -24],
+        });
+
+        const marker = L.marker([pin.lat, pin.lng], { icon })
+          .addTo(map)
+          .bindTooltip(pin.name, { permanent: false, direction: "top", className: "leaflet-tooltip-custom" });
+
+        marker.on("click", () => {
+          setSelectedPin(pin);
+        });
+      });
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      if (mapObj.current) {
+        mapObj.current.remove();
+        mapObj.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div style={{ minHeight:"100vh", background:C.surface }}>
       <style>{`
         @keyframes mapPinBounce {
           0%,100% { transform:translateY(0); }
-          50% { transform:translateY(-4px); }
+          50% { transform:translateY(-5px); }
+        }
+        .leaflet-tooltip-custom {
+          background:#fff; border:1px solid ${C.border};
+          border-radius:8px; padding:4px 10px;
+          font-size:12px; font-weight:600; color:${C.ink};
+          box-shadow:0 2px 8px rgba(0,0,0,.12);
         }
       `}</style>
 
@@ -2374,38 +2386,29 @@ function SriLankaMapPage({ setPage }) {
       </div>
 
       <div style={{ maxWidth:1100, margin:"0 auto", padding:"1.5rem 2rem 3rem" }}>
-        <div style={{ display:"grid", gridTemplateColumns: selectedPin?"1fr 320px":"1fr", gap:16, alignItems:"start" }}>
+        <div style={{ display:"grid", gridTemplateColumns:selectedPin?"1fr 300px":"1fr", gap:16, alignItems:"start" }}>
 
           {/* Map */}
-          <div style={{ position:"relative", borderRadius:16, overflow:"hidden", boxShadow:"0 4px 24px rgba(0,0,0,.12)", border:`1px solid ${C.border}` }}>
-            {!GKEY ? (
-              <div style={{ height:600, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:C.surface, gap:16, padding:"2rem", textAlign:"center" }}>
-                <div style={{ fontSize:40 }}>🗺️</div>
-                <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink }}>Google Maps key needed</h3>
-                <p style={{ fontSize:13, color:C.inkSoft, maxWidth:360, lineHeight:1.7 }}>
-                  Add <code style={{ background:"rgba(0,0,0,.08)", padding:"2px 6px", borderRadius:4 }}>VITE_GOOGLE_MAPS_KEY</code> to your <code>.env</code> and Vercel environment variables. Enable <strong>Maps JavaScript API</strong> and <strong>Maps Embed API</strong> in Google Cloud Console.
-                </p>
-              </div>
-            ) : (
-              <div ref={mapRef} style={{ height:600, width:"100%" }}/>
-            )}
+          <div style={{ borderRadius:16, overflow:"hidden", boxShadow:"0 4px 24px rgba(0,0,0,.12)", border:`1px solid ${C.border}` }}>
+            <div ref={mapRef} style={{ height:580, width:"100%" }}/>
           </div>
 
-          {/* Selected pin info panel */}
+          {/* Selected pin info */}
           {selectedPin && (
-            <div style={{ background:C.white, borderRadius:16, border:`1.5px solid ${C.border}`, overflow:"hidden", boxShadow:"0 4px 20px rgba(0,0,0,.08)" }}>
-              <div style={{ height:140, background:selectedPin.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:56, position:"relative" }}>
-                {selectedPin.emoji}
-                <button onClick={()=>setSelectedPin(null)} style={{ position:"absolute", top:10, right:10, width:30, height:30, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.3)", color:"#fff", fontSize:14, cursor:"pointer" }}>✕</button>
+            <div style={{ background:C.white, borderRadius:16, border:`1.5px solid ${C.border}`, overflow:"hidden", boxShadow:"0 4px 20px rgba(0,0,0,.08)", position:"sticky", top:80 }}>
+              <div style={{ height:120, background:selectedPin.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:52, position:"relative" }}>
+                <span style={{ animation:"mapPinBounce 2s ease-in-out infinite", display:"inline-block" }}>{selectedPin.emoji}</span>
+                <button onClick={()=>setSelectedPin(null)} style={{ position:"absolute", top:10, right:10, width:28, height:28, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.3)", color:"#fff", fontSize:14, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
               </div>
               <div style={{ padding:"16px" }}>
-                <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:6 }}>{selectedPin.name}</h3>
-                <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.6, marginBottom:14 }}>{selectedPin.fact}</p>
+                <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>{selectedPin.name}</h3>
+                <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.65, marginBottom:16 }}>{selectedPin.fact}</p>
                 <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                  <Btn onClick={()=>{ setPage("journey"); sessionStorage.setItem("suggestDest", selectedPin.name); }} style={{ width:"100%" }}>
+                  <Btn onClick={()=>{ setPage("journey"); sessionStorage.setItem("suggestDest", selectedPin.name); }} style={{ width:"100%", justifyContent:"center" }}>
                     ✨ Plan a trip here
                   </Btn>
-                  <a href={`https://maps.google.com/?q=${encodeURIComponent(selectedPin.name+", Sri Lanka")}`} target="_blank" rel="noopener noreferrer"
+                  <a href={`https://maps.google.com/?q=${encodeURIComponent(selectedPin.name+", Sri Lanka")}`}
+                    target="_blank" rel="noopener noreferrer"
                     style={{ display:"block", textAlign:"center", padding:"10px", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.teal, textDecoration:"none", fontWeight:600 }}>
                     📍 Open in Google Maps
                   </a>
@@ -2415,10 +2418,13 @@ function SriLankaMapPage({ setPage }) {
           )}
         </div>
 
-        {/* Legend */}
+        {/* Clickable legend */}
         <div style={{ marginTop:16, display:"flex", flexWrap:"wrap", gap:8 }}>
           {MAP_PINS.map(pin=>(
-            <button key={pin.id} onClick={()=>setSelectedPin(pin)} style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", background:selectedPin?.id===pin.id?pin.color:"#fff", border:`1.5px solid ${selectedPin?.id===pin.id?pin.color:C.border}`, borderRadius:20, cursor:"pointer", fontFamily:sans, transition:"all .15s" }}>
+            <button key={pin.id} onClick={()=>{
+              setSelectedPin(pin);
+              if (mapObj.current) mapObj.current.setView([pin.lat, pin.lng], 9, { animate:true });
+            }} style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 14px", background:selectedPin?.id===pin.id?pin.color:"#fff", border:`1.5px solid ${selectedPin?.id===pin.id?pin.color:C.border}`, borderRadius:20, cursor:"pointer", fontFamily:sans, transition:"all .15s" }}>
               <span>{pin.emoji}</span>
               <span style={{ fontSize:12, fontWeight:600, color:selectedPin?.id===pin.id?"#fff":C.ink }}>{pin.name}</span>
             </button>
@@ -2429,43 +2435,6 @@ function SriLankaMapPage({ setPage }) {
   );
 }
 
-
-// ─── EMERGENCY INFO BUTTON ────────────────────────────────────────────────────
-const EMERGENCY_DATA = [
-  { category:"🚨 Emergency Services", items:[
-    { label:"Police",                  number:"119",            note:"National emergency" },
-    { label:"Ambulance",               number:"110",            note:"Medical emergency" },
-    { label:"Fire & Rescue",           number:"111",            note:"Fire department" },
-    { label:"Tourist Police",          number:"+94 11 242 1052",note:"Colombo — English speaking" },
-    { label:"Tourist Police Hotline",  number:"1912",           note:"24/7 tourist assistance" },
-  ]},
-  { category:"🏥 Medical", items:[
-    { label:"National Hospital Colombo",number:"+94 11 269 1111",note:"Largest public hospital" },
-    { label:"Nawaloka Hospital",        number:"+94 11 254 4444",note:"Private — Colombo" },
-    { label:"Lanka Hospitals",          number:"+94 11 553 0000",note:"Private — Colombo" },
-    { label:"Kandy General Hospital",   number:"+94 81 222 2261",note:"Main hospital — Kandy" },
-    { label:"Galle General Hospital",   number:"+94 91 222 2261",note:"Main hospital — Galle" },
-  ]},
-  { category:"🏛️ Embassies (Colombo)", items:[
-    { label:"British High Commission",  number:"+94 11 539 0639",note:"Emergency consular" },
-    { label:"US Embassy",               number:"+94 11 249 8500",note:"Emergency line" },
-    { label:"Australian High Commission",number:"+94 11 246 3200",note:"Emergency consular" },
-    { label:"Indian High Commission",   number:"+94 11 253 2788",note:"Colombo" },
-    { label:"German Embassy",           number:"+94 11 258 0431",note:"Colombo" },
-  ]},
-  { category:"🚗 Transport Help", items:[
-    { label:"PickMe (taxi app)",        number:"*711",           note:"Dial from any SL mobile" },
-    { label:"Kangaroo Cabs",            number:"+94 11 258 8588",note:"24hr taxi — Colombo" },
-    { label:"Sri Lanka Railways",       number:"+94 11 243 5838",note:"Train enquiries" },
-    { label:"SLTB (Bus enquiries)",     number:"+94 11 232 8081",note:"Public bus information" },
-  ]},
-  { category:"🏨 Lost / Safety", items:[
-    { label:"SLTDA (Tourism Authority)",number:"+94 11 243 7059",note:"Official tourism body" },
-    { label:"Customs & Immigration",    number:"+94 11 244 7970",note:"Colombo airport" },
-    { label:"Lost Passport — Police",   number:"119",            note:"Report then contact embassy" },
-    { label:"Accident Helpline",        number:"+94 11 269 4000",note:"Emergency road assistance" },
-  ]},
-];
 
 function EmergencyButton() {
   const [open, setOpen] = useState(false);
