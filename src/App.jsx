@@ -1317,23 +1317,26 @@ function AnimatedJourneyMap({ days, transport, startLabel }) {
   };
   const pathD = buildPath();
 
-  // Get point on path at fraction t using the SVG path (approximate via stops)
+  // Helper: midpoint y interpolation (must be defined before getPosAtProgress)
+  const midY = (y0, y1) => (y0 + y1) / 2;
+
+  // Get point on path at fraction t (approximate via stop interpolation)
   const getPosAtProgress = (t) => {
     if (N <= 1) return { x:getStopX(0), y:getStopY(0) };
     const total = N - 1;
     const fIdx  = t * total;
     const i     = Math.min(Math.floor(fIdx), total-1);
     const frac  = fIdx - i;
-    // Interpolate between stop i and i+1 using bezier midpoint
-    const x0=getStopX(i), y0=getStopY(i);
+    const x0=getStopX(i),   y0=getStopY(i);
     const x1=getStopX(i+1), y1=getStopY(i+1);
     const cx=(x0+x1)/2;
-    // Cubic bezier at frac
+    const my0 = midY(y0, y0); // = y0
+    const my1 = midY(y0, y1);
+    const my2 = midY(y1, y1); // = y1
     const bx = (1-frac)**3*x0 + 3*(1-frac)**2*frac*cx + 3*(1-frac)*frac**2*cx + frac**3*x1;
-    const by = (1-frac)**3*y0 + 3*(1-frac)**2*frac*cy(y0,y0,y1) + 3*(1-frac)*frac**2*cy(y0,y1,y1) + frac**3*y1;
+    const by = (1-frac)**3*y0 + 3*(1-frac)**2*frac*my0 + 3*(1-frac)*frac**2*my1 + frac**3*y1;
     return { x:bx, y:by };
   };
-  const cy=(y0,cy1,y1)=>y0+(cy1-y0)*0.5; // simplified
 
   // Smooth animation
   const DURATION = N * 1800; // ms total
