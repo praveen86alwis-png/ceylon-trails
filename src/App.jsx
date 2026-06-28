@@ -1250,13 +1250,318 @@ function ActivityRow({ act, isLast, hideBorder }) {
   );
 }
 
-// ─── LOCAL CHEAT SHEET PANEL ─────────────────────────────────────────────────
 // ─── ANIMATED JOURNEY MAP ────────────────────────────────────────────────────
+const DAY_COLORS = ["#2563EB","#16A34A","#EA580C","#7C3AED","#DC2626","#0891B2","#D97706","#BE185D","#065F46","#1D4ED8"];
+
 function AnimatedJourneyMap({ days, transport, startLabel }) {
-  const [vehiclePos, setVehiclePos] = useState(0); // 0 to stops.length-1
-  const [animating, setAnimating]   = useState(false);
-  const [playing, setPlaying]       = useState(false);
-  const intervalRef = useRef(null);
+  const [progress,    setProgress]   = useState(0);   // 0..1 along path
+  const [playing,     setPlaying]    = useState(false);
+  const [selectedStop,setSelected]   = useState(null); // stop detail overlay
+  const [photoLoaded, setPhotoLoaded]= useState({});
+  const animRef  = useRef(null);
+  const startRef = useRef(0);
+  const lastRef  = useRef(0);
+
+  // Build stops from all days
+  const stops = [];
+  if (startLabel) stops.push({ label:startLabel, type:"start", dayIdx:-1, icon:"🏁", color:"#64748B", place:startLabel, activity:"Your journey begins here", travel:"", query:startLabel+" Sri Lanka" });
+  days.forEach((d,di)=>{
+    const color = DAY_COLORS[di % DAY_COLORS.length];
+    const typeIcons = { breakfast:"☕",lunch:"🍛",dinner:"🍽️",sightseeing:"🏛️",hike:"🥾",safari:"🐘",beach:"🏖️",sunset:"🌅",checkin:"🏨",transport:"🚗",activity:"🎯",rural:"🌾",cafe:"☕",cultural:"🏛️" };
+    d.activities?.filter(a=>a.type!=="transport").forEach((a,ai)=>{
+      if (ai < 3) { // max 3 stops per day to keep map readable
+        stops.push({
+          label: a.place || d.location,
+          sublabel: d.location,
+          type:"stop", dayIdx:di, day:d.day,
+          icon: typeIcons[a.type]||"📍",
+          color,
+          place: a.place||d.location,
+          activity: a.text||"",
+          why: a.why||"",
+          travel: a.travelFromPrev||"",
+          hours: a.hours||"",
+          price: a.price||"",
+          query: a.unsplashQuery || a.mapQuery?.split(",")[0] || (a.place+" Sri Lanka"),
+        });
+      }
+    });
+  });
+
+  const N = stops.length;
+  const STOP_GAP = 200; // px between stops
+  const W = N * STOP_GAP + 100;
+  const H = 300;
+  const ROAD_Y = H / 2;
+  const AMP = 55; // wave amplitude
+
+  // Generate winding SVG path
+  const getStopX = i => 60 + i * STOP_GAP;
+  const getStopY = i => {
+    if (i===0) return ROAD_Y;
+    // Alternating wave — each stop goes up or down
+    return ROAD_Y + (i%2===0 ? AMP : -AMP);
+  };
+
+  // Build smooth cubic bezier path through all stops
+  const buildPath = () => {
+    if (N===0) return "";
+    let d = `M ${getStopX(0)} ${getStopY(0)}`;
+    for (let i=1; i<N; i++) {
+      const x0=getStopX(i-1), y0=getStopY(i-1);
+      const x1=getStopX(i),   y1=getStopY(i);
+      const cx = (x0+x1)/2;
+      d += ` C ${cx} ${y0} ${cx} ${y1} ${x1} ${y1}`;
+    }
+    return d;
+  };
+  const pathD = buildPath();
+
+  // Get point on path at fraction t using the SVG path (approximate via stops)
+  const getPosAtProgress = (t) => {
+    if (N <= 1) return { x:getStopX(0), y:getStopY(0) };
+    const total = N - 1;
+    const fIdx  = t * total;
+    const i     = Math.min(Math.floor(fIdx), total-1);
+    const frac  = fIdx - i;
+    // Interpolate between stop i and i+1 using bezier midpoint
+    const x0=getStopX(i), y0=getStopY(i);
+    const x1=getStopX(i+1), y1=getStopY(i+1);
+    const cx=(x0+x1)/2;
+    // Cubic bezier at frac
+    const bx = (1-frac)**3*x0 + 3*(1-frac)**2*frac*cx + 3*(1-frac)*frac**2*cx + frac**3*x1;
+    const by = (1-frac)**3*y0 + 3*(1-frac)**2*frac*cy(y0,y0,y1) + 3*(1-frac)*frac**2*cy(y0,y1,y1) + frac**3*y1;
+    return { x:bx, y:by };
+  };
+  const cy=(y0,cy1,y1)=>y0+(cy1-y0)*0.5; // simplified
+
+  // Smooth animation
+  const DURATION = N * 1800; // ms total
+  const animate = (ts) => {
+    if (!startRef.current) startRef.current = ts;
+    const elapsed = ts - startRef.current;
+    const t = Math.min(elapsed / DURATION, 1);
+    setProgress(t);
+    if (t < 1) { animRef.current = requestAnimationFrame(animate); }
+    else { setPlaying(false); startRef.current = 0; }
+  };
+  const play = () => {
+    if (playing) { cancelAnimationFrame(animRef.current); setPlaying(false); startRef.current=0; return; }
+    setProgress(0); setPlaying(true);
+    startRef.current = 0;
+    animRef.current = requestAnimationFrame(animate);
+  };
+  const reset = () => { cancelAnimationFrame(animRef.current); setPlaying(false); setProgress(0); startRef.current=0; };
+  useEffect(()=>()=>cancelAnimationFrame(animRef.current), []);
+
+  const vehicle = transport==="train"?"🚂":transport==="bus"?"🚌":transport==="tuk-tuk"?"🛺":"🚗";
+  const vPos = getPosAtProgress(progress);
+
+  // Which stop is active
+  const activeStopIdx = Math.round(progress * (N-1));
+
+  return (
+    <div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:20, overflow:"hidden", marginTop:16 }}>
+      <style>{`
+        @keyframes pinDrop { 0%{transform:translateY(-12px);opacity:0} 60%{transform:translateY(3px)} 100%{transform:translateY(0);opacity:1} }
+        @keyframes vehicleRide { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+        @keyframes roadDash { to{stroke-dashoffset:-20} }
+      `}</style>
+
+      {/* Stop detail overlay */}
+      {selectedStop && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(6px)" }}
+          onClick={e=>e.target===e.currentTarget&&setSelected(null)}>
+          <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:480, overflow:"hidden", boxShadow:"0 24px 80px rgba(0,0,0,.3)", animation:"pinDrop .3s ease" }}>
+            {/* Photo header */}
+            <div style={{ height:220, position:"relative", background:`linear-gradient(135deg,${selectedStop.color},${selectedStop.color}cc)`, overflow:"hidden" }}>
+              <img
+                src={`https://source.unsplash.com/800x500/?${encodeURIComponent(selectedStop.query)}`}
+                alt={selectedStop.place}
+                style={{ width:"100%", height:"100%", objectFit:"cover", opacity:.85 }}
+                onLoad={()=>setPhotoLoaded(p=>({...p,[selectedStop.place]:true}))}
+              />
+              <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 50%)" }}/>
+              {/* Back button */}
+              <button onClick={()=>setSelected(null)} style={{ position:"absolute", top:14, left:14, width:36, height:36, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.4)", color:"#fff", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>←</button>
+              {/* Day badge */}
+              {selectedStop.day && (
+                <div style={{ position:"absolute", top:14, right:14, background:selectedStop.color, color:"#fff", fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Day {selectedStop.day}</div>
+              )}
+              {/* Icon overlay */}
+              <div style={{ position:"absolute", bottom:16, left:16, display:"flex", alignItems:"center", gap:10 }}>
+                <div style={{ width:44, height:44, borderRadius:12, background:selectedStop.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, boxShadow:"0 2px 8px rgba(0,0,0,.3)" }}>{selectedStop.icon}</div>
+                <div>
+                  <div style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:"#fff" }}>{selectedStop.place}</div>
+                  {selectedStop.sublabel && selectedStop.sublabel!==selectedStop.place && (
+                    <div style={{ fontSize:12, color:"rgba(255,255,255,.75)" }}>📍 {selectedStop.sublabel}</div>
+                  )}
+                </div>
+              </div>
+            </div>
+            {/* Details */}
+            <div style={{ padding:"1.2rem 1.4rem" }}>
+              {selectedStop.activity && <p style={{ fontSize:14, color:C.ink, lineHeight:1.65, marginBottom:12 }}>{selectedStop.activity}</p>}
+              {selectedStop.why && <div style={{ background:C.tealPale, borderLeft:`3px solid ${C.teal}`, borderRadius:"0 8px 8px 0", padding:"8px 12px", fontSize:12, color:C.ink, marginBottom:12, lineHeight:1.5 }}>💡 {selectedStop.why}</div>}
+              <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:12 }}>
+                {selectedStop.hours && <span style={{ fontSize:11, fontWeight:600, padding:"4px 10px", borderRadius:20, background:C.tealLight, color:C.teal }}>🕐 {selectedStop.hours}</span>}
+                {selectedStop.price && <span style={{ fontSize:11, fontWeight:600, padding:"4px 10px", borderRadius:20, background:C.amberLight, color:C.amber }}>💰 {selectedStop.price}</span>}
+                {selectedStop.travel && <span style={{ fontSize:11, fontWeight:600, padding:"4px 10px", borderRadius:20, background:"#F0F0F0", color:C.inkSoft }}>🚗 {selectedStop.travel}</span>}
+              </div>
+              {selectedStop.query && (
+                <a href={`https://maps.google.com/?q=${encodeURIComponent(selectedStop.place+", Sri Lanka")}`} target="_blank" rel="noopener noreferrer"
+                  style={{ display:"block", textAlign:"center", padding:"10px", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.teal, textDecoration:"none", fontWeight:600 }}>
+                  📍 Open in Google Maps
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Map header */}
+      <div style={{ padding:"16px 20px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
+        <div>
+          <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:C.ink }}>🗺️ Journey Route</div>
+          <div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>{N} stops · {days.length} days · {vehicle} {transport||"private car"} · Tap any pin to explore</div>
+        </div>
+        <div style={{ display:"flex", gap:8 }}>
+          <button onClick={play} style={{ padding:"8px 16px", background:playing?C.coral:C.teal, color:"#fff", border:"none", borderRadius:10, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
+            {playing?"⏸ Pause":"▶ Play"}
+          </button>
+          <button onClick={reset} style={{ padding:"8px 14px", background:"none", color:C.inkSoft, border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:12, cursor:"pointer", fontFamily:sans }}>↺</button>
+        </div>
+      </div>
+
+      {/* Winding road SVG */}
+      <div style={{ overflowX:"auto", background:"#F8F9FA", padding:"10px 0" }}>
+        <div style={{ width:W, height:H, position:"relative", flexShrink:0 }}>
+          <svg width={W} height={H} style={{ position:"absolute", top:0, left:0 }}>
+            {/* Road shadow */}
+            <path d={pathD} fill="none" stroke="rgba(0,0,0,.12)" strokeWidth={22} strokeLinecap="round" strokeLinejoin="round"/>
+            {/* Road surface */}
+            <path d={pathD} fill="none" stroke="#2D3436" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round"/>
+            {/* Road edge lines */}
+            <path d={pathD} fill="none" stroke="#fff" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" opacity={0.3}/>
+            {/* Dashed centre line */}
+            <path d={pathD} fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeDasharray="12 10"
+              style={{ animation:"roadDash 0.8s linear infinite" }}/>
+            {/* Coloured progress overlay */}
+            {progress > 0 && days.map((d,di)=>{
+              const color = DAY_COLORS[di % DAY_COLORS.length];
+              // Stops belonging to this day
+              const dayStops = stops.filter(s=>s.dayIdx===di);
+              if (!dayStops.length) return null;
+              const firstIdx = stops.indexOf(dayStops[0]);
+              const lastIdx  = stops.indexOf(dayStops[dayStops.length-1]);
+              const tStart   = firstIdx/(N-1||1);
+              const tEnd     = Math.min(lastIdx/(N-1||1), progress);
+              if (tEnd <= tStart) return null;
+              // Draw coloured segment — simplified as overlay
+              const x0 = getStopX(firstIdx), y0 = getStopY(firstIdx);
+              const x1 = getStopX(Math.round(tEnd*(N-1))), y1 = getStopY(Math.round(tEnd*(N-1)));
+              return (
+                <line key={di} x1={x0} y1={y0} x2={x1} y2={y1} stroke={color} strokeWidth={4} strokeLinecap="round" opacity={0.7}/>
+              );
+            })}
+          </svg>
+
+          {/* Stop pins */}
+          {stops.map((stop,i)=>{
+            const sx = getStopX(i);
+            const sy = getStopY(i);
+            const pinUp = i%2===0; // alternate pins above/below
+            const isActive = i===activeStopIdx && progress>0;
+            const isPassed = i < activeStopIdx;
+
+            return (
+              <div key={i} onClick={()=>setSelected(stop)} style={{
+                position:"absolute",
+                left: sx-22, top: pinUp ? sy-90 : sy+14,
+                cursor:"pointer",
+                animation: `pinDrop .4s ease ${i*0.08}s both`,
+                zIndex: isActive?20:10,
+                transition:"transform .2s",
+                transform: isActive?"scale(1.15)":"scale(1)",
+              }}>
+                {/* Pin shape */}
+                <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
+                  <div style={{
+                    width:44, height:44, borderRadius:"50% 50% 50% 0",
+                    transform:"rotate(-45deg)",
+                    background: isPassed||isActive ? stop.color : "#fff",
+                    border:`3px solid ${stop.color}`,
+                    boxShadow: isActive?`0 4px 20px ${stop.color}60`:"0 2px 8px rgba(0,0,0,.2)",
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                  }}>
+                    <span style={{ transform:"rotate(45deg)", fontSize:18 }}>{stop.icon}</span>
+                  </div>
+                  {pinUp && <div style={{ width:2, height:20, background:stop.color, opacity:.6 }}/>}
+                </div>
+                {!pinUp && <div style={{ width:2, height:20, background:stop.color, opacity:.6, marginBottom:0, order:-1 }}/>}
+
+                {/* Label */}
+                <div style={{
+                  marginTop: pinUp?4:0, marginBottom: pinUp?0:4,
+                  background:"#fff", borderRadius:8, padding:"3px 8px",
+                  fontSize:10, fontWeight:700, color:stop.color,
+                  border:`1.5px solid ${stop.color}22`,
+                  boxShadow:"0 1px 4px rgba(0,0,0,.1)",
+                  maxWidth:90, textAlign:"center", lineHeight:1.3,
+                  whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
+                  order: pinUp?1:-1,
+                }}>
+                  {stop.label.length>12 ? stop.label.slice(0,10)+"…" : stop.label}
+                </div>
+
+                {/* Travel time tag */}
+                {stop.travel && i>0 && (
+                  <div style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", top: pinUp ? "auto" : -18, bottom: pinUp ? -18 : "auto", background:C.white, border:`1px solid ${C.border}`, borderRadius:10, padding:"1px 6px", fontSize:9, color:C.inkSoft, whiteSpace:"nowrap", fontWeight:600 }}>
+                    {stop.travel.split(" ").slice(0,3).join(" ")}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Vehicle */}
+          <div style={{
+            position:"absolute",
+            left: vPos.x - 14,
+            top:  vPos.y - 14,
+            fontSize:26,
+            animation:"vehicleRide .8s ease-in-out infinite",
+            filter:"drop-shadow(0 3px 6px rgba(0,0,0,.4))",
+            zIndex:30,
+            transition:"left .05s linear, top .05s linear",
+            pointerEvents:"none",
+          }}>
+            {vehicle}
+          </div>
+        </div>
+      </div>
+
+      {/* Day colour legend */}
+      <div style={{ padding:"10px 20px 14px", display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+        <span style={{ fontSize:11, color:C.inkSoft, fontWeight:600, marginRight:4 }}>Days:</span>
+        {days.map((d,i)=>(
+          <div key={i} style={{ display:"flex", alignItems:"center", gap:5 }}>
+            <div style={{ width:12, height:12, borderRadius:"50%", background:DAY_COLORS[i%DAY_COLORS.length], flexShrink:0 }}/>
+            <span style={{ fontSize:11, color:C.inkSoft }}>Day {d.day} · {d.location}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Progress */}
+      <div style={{ padding:"0 20px 14px", display:"flex", alignItems:"center", gap:10 }}>
+        <div style={{ flex:1, height:4, background:C.border, borderRadius:4, overflow:"hidden" }}>
+          <div style={{ height:"100%", width:`${progress*100}%`, background:`linear-gradient(90deg,${DAY_COLORS[0]},${DAY_COLORS[1]||DAY_COLORS[0]})`, borderRadius:4, transition:"width .1s" }}/>
+        </div>
+        <span style={{ fontSize:11, color:C.inkSoft, fontWeight:600, flexShrink:0 }}>{Math.round(progress*100)}%</span>
+      </div>
+    </div>
+  );
+}
 
   // Build stop list — one per unique day location + start point
   const stops = [];
@@ -1279,179 +1584,7 @@ function AnimatedJourneyMap({ days, transport, startLabel }) {
     }
   });
 
-  // Vehicle emoji based on transport
-  const vehicle = transport==="train"?"🚂":transport==="bus"?"🚌":transport==="tuk-tuk"?"🛺":"🚗";
 
-  // Playback
-  useEffect(()=>{
-    if (playing) {
-      intervalRef.current = setInterval(()=>{
-        setVehiclePos(p=>{
-          if (p >= stops.length-1) { setPlaying(false); return p; }
-          return p+1;
-        });
-      }, 1800);
-    } else {
-      clearInterval(intervalRef.current);
-    }
-    return ()=>clearInterval(intervalRef.current);
-  },[playing, stops.length]);
-
-  const STOP_W = 160; // px per stop
-  const totalW = stops.length * STOP_W;
-
-  return (
-    <div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:20, padding:"1.5rem", marginTop:16, overflow:"hidden" }}>
-      <style>{`
-        @keyframes vehicleBounce {
-          0%,100% { transform:translateY(0); }
-          50% { transform:translateY(-3px); }
-        }
-        @keyframes stopPulse {
-          0%,100% { box-shadow:0 0 0 0 rgba(11,107,82,0); }
-          50% { box-shadow:0 0 0 6px rgba(11,107,82,0.15); }
-        }
-        @keyframes dotDash {
-          0% { stroke-dashoffset: 20; }
-          100% { stroke-dashoffset: 0; }
-        }
-      `}</style>
-
-      {/* Header */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, flexWrap:"wrap", gap:10 }}>
-        <div>
-          <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:C.ink }}>🗺️ Your Journey at a Glance</div>
-          <div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>{stops.length} stops · {days.length} days · {vehicle} {transport||"private car"}</div>
-        </div>
-        <div style={{ display:"flex", gap:8 }}>
-          <button onClick={()=>{ setVehiclePos(0); setPlaying(true); }} style={{ padding:"8px 16px", background:C.teal, color:"#fff", border:"none", borderRadius:10, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
-            {playing ? "▶ Playing…" : "▶ Play journey"}
-          </button>
-          {playing && <button onClick={()=>setPlaying(false)} style={{ padding:"8px 14px", background:"none", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:10, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>⏸ Pause</button>}
-          <button onClick={()=>{ setPlaying(false); setVehiclePos(0); }} style={{ padding:"8px 14px", background:"none", color:C.inkSoft, border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>↺ Reset</button>
-        </div>
-      </div>
-
-      {/* Scrollable map */}
-      <div style={{ overflowX:"auto", paddingBottom:8, cursor:"grab" }}>
-        <div style={{ width:totalW+STOP_W, minWidth:"100%", position:"relative", paddingTop:60, paddingBottom:100 }}>
-
-          {/* SVG dashed path */}
-          <svg style={{ position:"absolute", top:90, left:0, width:totalW+STOP_W, height:4, overflow:"visible" }} viewBox={`0 0 ${totalW+STOP_W} 4`} preserveAspectRatio="none">
-            {/* Background track */}
-            <line x1={80} y1={2} x2={totalW+40} y2={2} stroke={C.border} strokeWidth={3} strokeLinecap="round"/>
-            {/* Completed path */}
-            {vehiclePos > 0 && (
-              <line
-                x1={80} y1={2}
-                x2={80 + vehiclePos * STOP_W} y2={2}
-                stroke={C.tealMid} strokeWidth={3} strokeLinecap="round"
-                strokeDasharray="8 5"
-                style={{ animation:"dotDash .4s linear infinite" }}
-              />
-            )}
-          </svg>
-
-          {/* Moving vehicle */}
-          <div style={{
-            position:"absolute",
-            top:72,
-            left: 80 + vehiclePos * STOP_W - 14,
-            fontSize:26,
-            transition:"left 1.6s cubic-bezier(.4,0,.2,1)",
-            animation:"vehicleBounce 1s ease-in-out infinite",
-            zIndex:10,
-            filter:"drop-shadow(0 2px 4px rgba(0,0,0,.2))",
-          }}>
-            {vehicle}
-          </div>
-
-          {/* Stops */}
-          <div style={{ display:"flex", width:totalW+STOP_W, paddingLeft:0 }}>
-            {stops.map((stop,i)=>{
-              const isActive   = i === vehiclePos;
-              const isVisited  = i < vehiclePos;
-              const isStart    = stop.type==="start";
-
-              return (
-                <div key={i} onClick={()=>setVehiclePos(i)} style={{ width:STOP_W, flexShrink:0, display:"flex", flexDirection:"column", alignItems:"center", cursor:"pointer", position:"relative" }}>
-
-                  {/* Travel time between stops */}
-                  {i > 0 && stop.travel && (
-                    <div style={{ position:"absolute", top:-20, left:-30, right:30, textAlign:"center", fontSize:10, color:C.inkSoft, fontWeight:600, whiteSpace:"nowrap" }}>
-                      {stop.travel}
-                    </div>
-                  )}
-
-                  {/* Stop circle */}
-                  <div style={{
-                    width: isActive?52:40, height:isActive?52:40,
-                    borderRadius:"50%",
-                    background: isStart?"#F0F0F0":isVisited?C.teal:isActive?C.teal:"#fff",
-                    border:`3px solid ${isStart?"#999":isActive||isVisited?C.teal:C.border}`,
-                    display:"flex", alignItems:"center", justifyContent:"center",
-                    fontSize:isActive?22:18,
-                    transition:"all .4s",
-                    boxShadow: isActive?"0 4px 16px rgba(11,107,82,.3)":"none",
-                    animation: isActive?"stopPulse 1.5s ease-in-out infinite":"none",
-                    zIndex:5,
-                    flexShrink:0,
-                  }}>
-                    {isStart ? "🏁" : isVisited ? "✓" : stop.icon}
-                  </div>
-
-                  {/* Day badge */}
-                  {!isStart && (
-                    <div style={{ fontSize:9, fontWeight:700, color:isActive?C.teal:C.inkSoft, marginTop:4, background:isActive?C.tealLight:"transparent", padding:"2px 6px", borderRadius:10, textTransform:"uppercase", letterSpacing:.5 }}>
-                      Day {stop.day}
-                    </div>
-                  )}
-
-                  {/* Location name */}
-                  <div style={{ fontSize:12, fontWeight:isActive?700:600, color:isActive?C.teal:C.ink, marginTop:4, textAlign:"center", lineHeight:1.3, maxWidth:120, transition:"color .3s" }}>
-                    {stop.name}
-                  </div>
-
-                  {/* Highlight activity */}
-                  {isActive && stop.highlight && stop.highlight!==stop.name && (
-                    <div style={{ fontSize:10, color:C.inkSoft, marginTop:4, textAlign:"center", maxWidth:120, lineHeight:1.3, background:C.tealPale, padding:"3px 8px", borderRadius:8 }}>
-                      {stop.highlight}
-                    </div>
-                  )}
-
-                  {/* Theme */}
-                  {isActive && stop.theme && (
-                    <div style={{ fontSize:10, color:C.teal, marginTop:3, textAlign:"center", maxWidth:130, fontStyle:"italic", lineHeight:1.3 }}>
-                      "{stop.theme}"
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div style={{ marginTop:8, display:"flex", alignItems:"center", gap:10 }}>
-        <div style={{ flex:1, height:4, background:C.border, borderRadius:4, overflow:"hidden" }}>
-          <div style={{ height:"100%", width:`${(vehiclePos/(stops.length-1||1))*100}%`, background:`linear-gradient(90deg,${C.teal},${C.tealMid})`, borderRadius:4, transition:"width 1.6s ease" }}/>
-        </div>
-        <span style={{ fontSize:11, color:C.inkSoft, flexShrink:0, fontWeight:600 }}>Stop {vehiclePos+1} of {stops.length}</span>
-      </div>
-
-      {/* Legend */}
-      <div style={{ display:"flex", gap:16, marginTop:12, flexWrap:"wrap" }}>
-        {[{c:C.teal,l:"Visited / active"},{c:C.border,l:"Upcoming"},{c:C.tealMid,l:"Journey path"}].map(({c,l})=>(
-          <div key={l} style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:C.inkSoft }}>
-            <div style={{ width:10, height:10, borderRadius:"50%", background:c, flexShrink:0 }}/>
-            {l}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // ─── LOCAL CHEAT SHEET ───────────────────────────────────────────────────────
 function LocalCheatSheet({ location }) {
@@ -2024,26 +2157,27 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
             </div>
           </div>
 
-          {/* Itinerary days */}
+          {/* Show ALL days — locked ones get the PremiumLock floating modal on click */}
           {(itinDays||itin.days).map((d,idx)=>{
-            const itinId = itin.title + itin.tagline; // unique ID for this itinerary
+            const itinId = itin.title + itin.tagline;
             const isLocked = idx > 0 && !premium.isUnlocked(itinId);
             return (
-              <div key={d.day}>
-                {isLocked && idx===1 ? (
-                  <PremiumLock itinId={itinId} onUnlock={premium.unlock}/>
-                ) : !isLocked ? (
-                  <div style={{ border:`1.5px solid ${C.border}`, borderRadius:16, marginBottom:16, overflow:"hidden", background:C.white, boxShadow:"0 2px 12px rgba(0,0,0,.04)" }}>
-                    <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,${C.teal},#147856)`, display:"flex", alignItems:"center", gap:12 }}>
-                      <span style={{ background:"rgba(255,255,255,.2)", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Day {d.day}</span>
-                      <span style={{ fontSize:15, fontWeight:700, color:"#fff", fontFamily:serif }}>{d.location}</span>
-                      <span style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginLeft:"auto" }}>— {d.theme}</span>
-                    </div>
-                    <div style={{ padding:"6px 20px 10px" }}>
-                      {d.activities.map((a,i)=><ActivityRow key={`${d.day}-${i}`} act={a} isLast={i===d.activities.length-1}/>)}
-                    </div>
+              <div key={d.day} style={{ position:"relative", marginBottom:16 }}>
+                <div style={{ border:`1.5px solid ${isLocked?"#E4E4E4":C.border}`, borderRadius:16, overflow:"hidden", background:C.white, boxShadow:"0 2px 12px rgba(0,0,0,.04)", opacity:isLocked?.5:1 }}>
+                  <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,${isLocked?"#999":"#0B6B52"},${isLocked?"#bbb":"#147856"})`, display:"flex", alignItems:"center", gap:12 }}>
+                    <span style={{ background:"rgba(255,255,255,.2)", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Day {d.day}</span>
+                    <span style={{ fontSize:15, fontWeight:700, color:"#fff", fontFamily:serif }}>{d.location}</span>
+                    <span style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginLeft:"auto" }}>— {d.theme}</span>
+                    {isLocked && <span style={{ fontSize:14 }}>🔒</span>}
                   </div>
-                ) : null}
+                  <div style={{ padding:"6px 20px 10px", filter:isLocked?"blur(3px)":"none", pointerEvents:isLocked?"none":"auto" }}>
+                    {d.activities.map((a,i)=><ActivityRow key={`${d.day}-${i}`} act={a} isLast={i===d.activities.length-1}/>)}
+                  </div>
+                </div>
+                {/* Floating premium unlock overlay on locked days */}
+                {isLocked && (
+                  <PremiumLock itinId={itinId} onUnlock={premium.unlock}/>
+                )}
               </div>
             );
           })}
@@ -3126,94 +3260,76 @@ function usePremium() {
   return { isUnlocked, unlock };
 }
 
+
+// ─── PREMIUM LOCK ─────────────────────────────────────────────────────────────
 function PremiumLock({ itinId, onUnlock }) {
-  const [showPaypal, setShowPaypal] = useState(false);
-  const [paying, setPaying]         = useState(false);
-  const [step, setStep]             = useState("lock"); // lock | demo | success
+  const [show,   setShow]  = useState(false);
+  const [paying, setPaying]= useState(false);
+  const [step,   setStep]  = useState("lock");
 
   const handleDemoPayment = () => {
     setPaying(true);
-    // Simulate PayPal processing
     setTimeout(()=>{ setPaying(false); setStep("success"); }, 2000);
   };
 
-  const handleRealSuccess = () => {
-    onUnlock(itinId);
-  };
-
   return (
-    <div style={{ position:"relative", borderRadius:16, overflow:"hidden", marginBottom:16 }}>
-      {/* Blurred preview */}
-      <div style={{ filter:"blur(5px)", pointerEvents:"none", userSelect:"none", opacity:.35, padding:"16px 20px", background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16 }}>
-        {[1,2,3,4].map(i=>(
-          <div key={i} style={{ display:"flex", gap:12, padding:"12px 0", borderBottom:`1px solid ${C.border}` }}>
-            <div style={{ width:44, height:44, borderRadius:8, background:C.tealLight, flexShrink:0 }}/>
-            <div style={{ flex:1 }}>
-              <div style={{ height:13, background:C.border, borderRadius:6, width:["60%","75%","50%","80%"][i-1], marginBottom:6 }}/>
-              <div style={{ height:11, background:C.tealLight, borderRadius:6, width:["80%","55%","70%","45%"][i-1] }}/>
-            </div>
-          </div>
-        ))}
+    <>
+      <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", zIndex:5 }}>
+        <button onClick={()=>{ setShow(true); setStep("lock"); }} style={{ padding:"10px 24px", background:C.amber, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans, boxShadow:"0 4px 16px rgba(0,0,0,.25)", display:"flex", alignItems:"center", gap:8 }}>
+          🔒 Unlock this day — ${UNLOCK_PRICE}
+        </button>
       </div>
 
-      {/* Lock overlay */}
-      <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"rgba(255,255,255,.92)", backdropFilter:"blur(4px)", borderRadius:16, padding:"1.5rem", textAlign:"center" }}>
-        {step==="lock" && <>
-          <div style={{ width:56, height:56, borderRadius:"50%", background:C.amberLight, display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, marginBottom:12 }}>🔒</div>
-          <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>Days 2+ are Premium</h3>
-          <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, maxWidth:300, marginBottom:16 }}>
-            Unlock the complete itinerary including all days, Google Maps route, place swapping and drag & drop reordering.
-          </p>
-          <div style={{ background:C.amberLight, border:`1.5px solid #F0D48A`, borderRadius:12, padding:"10px 24px", marginBottom:20, display:"inline-flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:22, fontWeight:800, color:C.amber }}>${UNLOCK_PRICE}</span>
-            <span style={{ fontSize:13, color:C.amber, fontWeight:600 }}>USD · one-time</span>
+      {show && (
+        <div onClick={e=>e.target===e.currentTarget&&setShow(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(6px)" }}>
+          <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:400, boxShadow:"0 24px 80px rgba(0,0,0,.3)", overflow:"hidden", animation:"slideUp .25s ease" }}>
+            {step==="lock" && <>
+              <div style={{ background:`linear-gradient(135deg,${C.amber},#D97706)`, padding:"1.5rem", textAlign:"center" }}>
+                <div style={{ fontSize:40, marginBottom:8 }}>🔒</div>
+                <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#fff", marginBottom:4 }}>Premium Feature</div>
+                <div style={{ fontSize:13, color:"rgba(255,255,255,.85)" }}>Unlock all days, maps, swapping & drag-drop</div>
+              </div>
+              <div style={{ padding:"1.5rem" }}>
+                <div style={{ background:C.amberLight, border:`1.5px solid #F0D48A`, borderRadius:14, padding:"14px", textAlign:"center", marginBottom:20 }}>
+                  <div style={{ fontSize:28, fontWeight:800, color:C.amber }}>${UNLOCK_PRICE} USD</div>
+                  <div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>One-time payment · Instant access</div>
+                </div>
+                <button onClick={()=>setStep("demo")} style={{ width:"100%", padding:"14px", background:"#0070BA", color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+                  <span style={{ fontWeight:900, fontSize:16 }}>Pay</span><span style={{ fontWeight:300, fontSize:16, color:"#80CFFF" }}>Pal</span>
+                  <span>→ Pay ${UNLOCK_PRICE}.00</span>
+                </button>
+                <div style={{ textAlign:"center", fontSize:11, color:C.inkSoft }}>✓ Secure · ✓ Instant · ✓ No subscription</div>
+                <button onClick={()=>setShow(false)} style={{ width:"100%", marginTop:10, padding:"10px", background:"none", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.inkSoft, cursor:"pointer", fontFamily:sans }}>Cancel</button>
+              </div>
+            </>}
+            {step==="demo" && (
+              <div style={{ padding:"1.5rem" }}>
+                <div style={{ textAlign:"center", marginBottom:16 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#0070BA", marginBottom:4 }}>PayPal Checkout</div>
+                  <div style={{ fontSize:12, color:C.inkSoft }}>CeylonTrails — Full Itinerary Access</div>
+                </div>
+                <div style={{ background:"#F5F7FA", borderRadius:10, padding:"12px", marginBottom:16, textAlign:"center", fontSize:16, fontWeight:700, color:C.ink }}>Total: ${UNLOCK_PRICE}.00 USD</div>
+                <input readOnly value="demo@paypal.com" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:8, boxSizing:"border-box" }}/>
+                <input readOnly type="password" value="••••••••" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:14, boxSizing:"border-box" }}/>
+                <button onClick={handleDemoPayment} disabled={paying} style={{ width:"100%", padding:"13px", background:paying?"#aaa":"#0070BA", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:paying?"wait":"pointer", fontFamily:sans, marginBottom:8 }}>
+                  {paying ? <span style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}><span style={{ width:16, height:16, border:"2px solid rgba(255,255,255,.4)", borderTopColor:"#fff", borderRadius:"50%", display:"inline-block", animation:"spin .8s linear infinite" }}/> Processing…</span> : `Pay $${UNLOCK_PRICE}.00`}
+                </button>
+                <button onClick={()=>setStep("lock")} style={{ width:"100%", padding:"10px", background:"none", border:"none", color:C.inkSoft, fontSize:12, cursor:"pointer", fontFamily:sans }}>← Back</button>
+                <div style={{ textAlign:"center", fontSize:10, color:C.inkSoft, marginTop:6 }}>🔒 Demo mode — no real charge</div>
+              </div>
+            )}
+            {step==="success" && (
+              <div style={{ padding:"2rem", textAlign:"center" }}>
+                <div style={{ width:72, height:72, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:32 }}>✅</div>
+                <div style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink, marginBottom:8 }}>Payment Successful!</div>
+                <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:20 }}>Your full itinerary is now unlocked — all days, maps and features.</p>
+                <button onClick={()=>{ setShow(false); onUnlock(itinId); }} style={{ width:"100%", padding:"13px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans }}>🗺️ View Full Itinerary</button>
+              </div>
+            )}
           </div>
-          <div style={{ display:"flex", flexDirection:"column", gap:10, width:"100%", maxWidth:280 }}>
-            <button onClick={()=>setStep("demo")} style={{ padding:"13px 24px", background:"#0070BA", color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
-              <span style={{ fontWeight:800, fontSize:16, color:"#fff" }}>Pay</span><span style={{ fontWeight:400, fontSize:16, color:"#80CFFF" }}>Pal</span>
-              <span style={{ marginLeft:4 }}>→ Pay ${UNLOCK_PRICE}</span>
-            </button>
-            <div style={{ fontSize:10, color:C.inkSoft }}>✓ Secure payment · ✓ Instant access · ✓ No subscription</div>
-          </div>
-        </>}
-
-        {step==="demo" && <>
-          {/* PayPal demo UI */}
-          <div style={{ background:"#fff", border:`1.5px solid #0070BA`, borderRadius:16, padding:"1.5rem", width:"100%", maxWidth:320, textAlign:"center" }}>
-            <div style={{ fontSize:13, fontWeight:700, color:"#0070BA", marginBottom:4 }}>PayPal Checkout</div>
-            <div style={{ fontSize:11, color:C.inkSoft, marginBottom:16 }}>CeylonTrails — Full Itinerary Access</div>
-            <div style={{ background:"#F5F7FA", borderRadius:10, padding:"12px", marginBottom:16, fontSize:14, fontWeight:700, color:C.ink }}>
-              Total: ${UNLOCK_PRICE}.00 USD
-            </div>
-            <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:14 }}>
-              <input placeholder="PayPal email" disabled value="demo@paypal.com" style={{ padding:"10px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", color:C.inkSoft }}/>
-              <input placeholder="Password" type="password" disabled value="••••••••" style={{ padding:"10px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", color:C.inkSoft }}/>
-            </div>
-            <button onClick={handleDemoPayment} disabled={paying} style={{ width:"100%", padding:"12px", background:paying?"#aaa":"#0070BA", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:paying?"not-allowed":"pointer", fontFamily:sans, marginBottom:10 }}>
-              {paying ? (
-                <span style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
-                  <span style={{ width:16, height:16, border:"2px solid rgba(255,255,255,.4)", borderTopColor:"#fff", borderRadius:"50%", display:"inline-block", animation:"spin .8s linear infinite" }}/>
-                  Processing…
-                </span>
-              ) : `Pay $${UNLOCK_PRICE}.00`}
-            </button>
-            <button onClick={()=>setStep("lock")} style={{ fontSize:12, color:C.inkSoft, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>← Cancel</button>
-          </div>
-          <div style={{ fontSize:10, color:C.inkSoft, marginTop:10 }}>🔒 Demo mode — no real payment taken</div>
-        </>}
-
-        {step==="success" && <>
-          <div style={{ width:64, height:64, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", fontSize:28, marginBottom:14 }}>✅</div>
-          <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>Payment Successful!</h3>
-          <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:20, maxWidth:280 }}>
-            Your itinerary is now fully unlocked. All days, maps and features are available.
-          </p>
-          <button onClick={handleRealSuccess} style={{ padding:"13px 32px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans }}>
-            🗺️ View Full Itinerary
-          </button>
-        </>}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }
 
