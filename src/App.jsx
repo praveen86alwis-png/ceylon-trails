@@ -1566,28 +1566,6 @@ function AnimatedJourneyMap({ days, transport, startLabel }) {
   );
 }
 
-  // Build stop list — one per unique day location + start point
-  const stops = [];
-  if (startLabel) stops.push({ name: startLabel, type:"start", day:0, icon:"🏁", activities:[] });
-  days.forEach(d => {
-    const existing = stops.find(s=>s.name===d.location&&s.day!==0);
-    if (!existing) {
-      // Pick best activity icon for this location
-      const icons = { breakfast:"☕",lunch:"🍛",dinner:"🍽️",sightseeing:"🏛️",hike:"🥾",safari:"🐘",beach:"🏖️",sunset:"🌅",checkin:"🏨",transport:"🚗",activity:"🎯",rural:"🌾",cafe:"☕" };
-      const mainAct = d.activities?.find(a=>a.type!=="transport"&&a.type!=="checkin");
-      stops.push({
-        name: d.location,
-        type: "stop",
-        day: d.day,
-        icon: icons[mainAct?.type||"sightseeing"]||"📍",
-        theme: d.theme,
-        highlight: mainAct?.place || d.location,
-        travel: d.activities?.find(a=>a.travelFromPrev)?.travelFromPrev || "",
-      });
-    }
-  });
-
-
 
 // ─── LOCAL CHEAT SHEET ───────────────────────────────────────────────────────
 function LocalCheatSheet({ location }) {
