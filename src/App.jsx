@@ -1854,66 +1854,6 @@ function DraggableItinerary({ days, onUpdate, itinId, premium }) {
     setSwap(null);
   };
 
-  return (
-    <>
-      {swap && <SwapModal act={swap.act} dayLocation={days[swap.dayIdx]?.location||""} onSwap={a=>handleSwapDone(swap.dayIdx, swap.actIdx, a)} onClose={()=>setSwap(null)}/>}
-      <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:16, padding:"10px 14px", background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:12 }}>
-        <span style={{ fontSize:16 }}>↕️</span>
-        <span style={{ fontSize:12, color:C.teal, fontWeight:500 }}>Drag any activity to reorder within a day or move it to another day. Click 🔄 to swap a place.</span>
-      </div>
-      {days.map((d, dayIdx)=>(
-        <div key={d.day} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, marginBottom:16, overflow:"hidden", background:C.white, boxShadow:"0 2px 12px rgba(0,0,0,.04)" }}>
-          <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,${C.teal},#147856)`, display:"flex", alignItems:"center", gap:12 }}>
-            <span style={{ background:"rgba(255,255,255,.2)", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Day {d.day}</span>
-            <span style={{ fontSize:15, fontWeight:700, color:"#fff", fontFamily:serif }}>{d.location}</span>
-            <span style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginLeft:"auto" }}>— {d.theme}</span>
-          </div>
-          <div style={{ padding:"6px 12px 10px" }}
-            onDragOver={e=>{ if(d.activities.length===0) handleDragOver(e, dayIdx, 0); }}
-            onDrop={e=>{ if(d.activities.length===0) handleDrop(e, dayIdx, 0); }}>
-            {d.activities.map((a,actIdx)=>{
-              const isDraggingThis = dragging?.dayIdx===dayIdx && dragging?.actIdx===actIdx;
-              const isOver = dragOver?.dayIdx===dayIdx && dragOver?.actIdx===actIdx;
-              return (
-                <div key={actIdx}
-                  draggable
-                  onDragStart={()=>handleDragStart(dayIdx, actIdx)}
-                  onDragOver={e=>handleDragOver(e, dayIdx, actIdx)}
-                  onDrop={e=>handleDrop(e, dayIdx, actIdx)}
-                  onDragEnd={()=>{ setDragging(null); setDragOver(null); }}
-                  style={{
-                    opacity: isDraggingThis ? 0.4 : 1,
-                    background: isOver ? C.tealPale : "transparent",
-                    border: isOver ? `2px dashed ${C.tealMid}` : "2px solid transparent",
-                    borderRadius:10, marginBottom:2, transition:"background .15s",
-                  }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 8px", borderBottom: actIdx<d.activities.length-1?`1px solid ${C.border}`:"none" }}>
-                    {/* Drag handle */}
-                    <span style={{ cursor:"grab", fontSize:14, color:C.inkSoft, flexShrink:0, userSelect:"none" }}>⠿</span>
-                    <span style={{ fontSize:11, color:C.inkSoft, minWidth:46, fontWeight:600, flexShrink:0 }}>{a.time}</span>
-                    {/* Travel time badge */}
-                    {a.travelFromPrev && (
-                      <span style={{ fontSize:9, padding:"2px 6px", borderRadius:20, background:"#F0F0F0", color:C.inkSoft, flexShrink:0, whiteSpace:"nowrap" }}>🚗 {a.travelFromPrev}</span>
-                    )}
-                    <div style={{ flex:1, minWidth:0 }}>
-                      {a.place&&<div style={{ fontSize:13, fontWeight:600, color:C.ink }}>{a.place}</div>}
-                      <div style={{ fontSize:11, color:C.inkSoft, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{a.text}</div>
-                    </div>
-                    {/* Swap button */}
-                    <button onClick={()=>setSwap({dayIdx, actIdx, act:a})} title="Swap this place" style={{ background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"4px 8px", cursor:"pointer", fontSize:12, color:C.inkSoft, flexShrink:0 }}>🔄</button>
-                    {/* Expand handled by ActivityRow below */}
-                  </div>
-                  {/* Full expandable row */}
-                  <ActivityRow act={a} isLast={actIdx===d.activities.length-1} hideBorder/>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </>
-  );
-}
 const TRAVEL_OPTS = [
   {v:"beach",    i:"🏖️", l:"Beach & Coast",      s:"Sun, sand, surf & sea"},
   {v:"hills",    i:"⛰️", l:"Hill Country",        s:"Tea trails, mist & waterfalls"},
