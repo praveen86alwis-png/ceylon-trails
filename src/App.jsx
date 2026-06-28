@@ -500,6 +500,7 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
           <span onClick={()=>setPage("srilankamap")} style={{ fontSize:14, color:page==="srilankamap"?C.teal:C.inkSoft, fontWeight:page==="srilankamap"?600:400, cursor:"pointer", borderBottom:page==="srilankamap"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>Sri Lanka Map</span>
           <span onClick={()=>setPage("journey")} style={{ fontSize:14, color:page==="journey"?C.teal:C.inkSoft, fontWeight:page==="journey"?600:400, cursor:"pointer", borderBottom:page==="journey"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>Plan a trip</span>
           <span onClick={onGuideOpen} style={{ fontSize:14, color:C.inkSoft, cursor:"pointer", paddingBottom:2, whiteSpace:"nowrap" }}>Find a Guide</span>
+          <span onClick={()=>setPage("guideportal")} style={{ fontSize:14, color:page==="guideportal"?C.teal:C.inkSoft, fontWeight:page==="guideportal"?600:400, cursor:"pointer", borderBottom:page==="guideportal"?"2px solid "+C.teal:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>Guide Portal</span>
         </div>
 
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -526,7 +527,7 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
 
       {menuOpen && (
         <div style={{ position:"fixed", top:64, left:0, right:0, zIndex:399, background:"#fff", borderBottom:`1px solid ${C.border}`, boxShadow:"0 8px 24px rgba(0,0,0,.1)", padding:"1rem 1.5rem 1.5rem", maxHeight:"80vh", overflowY:"auto" }}>
-          {[["home","🏠 Home"],["destinations","🗺️ Destinations"],["srilankamap","🗾 Sri Lanka Map"],["journey","✨ Plan a trip"],["guides","🧭 Find a Guide"]].map(([p,l])=>(
+          {[["home","🏠 Home"],["destinations","🗺️ Destinations"],["srilankamap","🗾 Sri Lanka Map"],["journey","✨ Plan a trip"],["guides","🧭 Find a Guide"],["guideportal","🧭 Guide Portal"]].map(([p,l])=>(
             <div key={p} onClick={()=>{ if(p==="guides") onGuideOpen(); else setPage(p); setMenuOpen(false); }} style={{ padding:"14px 0", fontSize:16, fontWeight:page===p?600:400, color:page===p?C.teal:C.ink, cursor:"pointer", borderBottom:`1px solid ${C.border}` }}>{l}</div>
           ))}
           {user ? (
@@ -3455,6 +3456,581 @@ function PremiumLock({ itinId, onUnlock }) {
   );
 }
 
+// ─── GUIDE PORTAL DATA ────────────────────────────────────────────────────────
+const GUIDE_SPECIALTIES = ["Beach & Coastal","Hill Country & Tea","Cultural Triangle","Wildlife Safari","Adventure Sports","Rural & Village","City Tours","Photography Tours","Food & Culinary","Birdwatching","Historical Sites","Multi-region"];
+const GUIDE_LANGUAGES   = ["English","Sinhala","Tamil","German","French","Japanese","Chinese","Korean","Russian","Arabic","Italian","Spanish"];
+const GUIDE_AREAS       = ["Colombo & Western","Kandy & Central","Galle & Southern","Sigiriya & Cultural Triangle","Yala & Wildlife","Ella & Uva","Trincomalee & East","Jaffna & North","All Island"];
+
+// ─── FIREBASE HELPERS ─────────────────────────────────────────────────────────
+async function saveGuideProfile(uid, data) {
+  if (!window.firebase) return;
+  await window.firebase.firestore().collection("guides").doc(uid).set(data, { merge:true });
+}
+async function getGuideProfile(uid) {
+  if (!window.firebase) return null;
+  const doc = await window.firebase.firestore().collection("guides").doc(uid).get();
+  return doc.exists ? doc.data() : null;
+}
+async function loadTripRequests(guideId) {
+  if (!window.firebase) return [];
+  const snap = await window.firebase.firestore().collection("tripRequests").where("guideId","==",guideId).orderBy("createdAt","desc").limit(20).get();
+  return snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+async function submitBid(requestId, bid) {
+  if (!window.firebase) return;
+  await window.firebase.firestore().collection("tripRequests").doc(requestId).update({
+    bid, bidStatus:"submitted", bidAt: new Date().toISOString()
+  });
+}
+
+// ─── GUIDE REGISTRATION FORM ──────────────────────────────────────────────────
+function GuideRegister({ user, onComplete }) {
+  const [step, setStep]       = useState(0); // 0=personal 1=professional 2=submit
+  const [saving, setSaving]   = useState(false);
+  const [form, setForm]       = useState({
+    fullName:"", phone:"", nic:"", address:"",
+    sltdaNo:"", experience:1, bio:"",
+    languages:[], specialties:[], areas:[],
+    activeTours:[], photo:"",
+  });
+  const upd = (k,v) => setForm(f=>({...f,[k]:v}));
+  const tog = (k,v) => setForm(f=>{ const a=f[k], i=a.indexOf(v); return {...f,[k]:i>-1?a.filter(x=>x!==v):[...a,v]}; });
+
+  const submit = async () => {
+    setSaving(true);
+    try {
+      await saveGuideProfile(user.uid, {
+        ...form, email:user.email, uid:user.uid,
+        status:"pending", role:"guide",
+        registeredAt: new Date().toISOString(),
+        availability:"available", tripsCompleted:0, rating:0, reviews:[],
+      });
+      // Also load Firestore SDK if not loaded
+      onComplete();
+    } catch(e) { alert("Error saving profile: "+e.message); }
+    setSaving(false);
+  };
+
+  const steps = [
+    // Step 0 — Personal details
+    <>
+      <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>Personal Information</h3>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20 }}>This information will be verified by the Sri Lanka Tourism Development Authority.</p>
+      {[
+        ["Full name (as on NIC)","fullName","text","e.g. Chaminda Perera"],
+        ["Phone number","phone","tel","e.g. +94 77 123 4567"],
+        ["NIC number","nic","text","e.g. 199012345678"],
+        ["Home address","address","text","City, Province"],
+        ["SLTDA Licence number","sltdaNo","text","e.g. SLTDA/GT/2024/001"],
+      ].map(([label,key,type,ph])=>(
+        <div key={key} style={{ marginBottom:14 }}>
+          <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>{label}</label>
+          <input type={type} value={form[key]} onChange={e=>upd(key,e.target.value)} placeholder={ph}
+            style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:14, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+        </div>
+      ))}
+    </>,
+
+    // Step 1 — Professional details
+    <>
+      <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>Professional Details</h3>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Tell tourists about your expertise and experience.</p>
+
+      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Years of experience</label>
+      <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:16 }}>
+        <button onClick={()=>upd("experience",Math.max(1,form.experience-1))} style={{ width:36, height:36, borderRadius:"50%", border:`1.5px solid ${C.border}`, background:"none", fontSize:18, cursor:"pointer" }}>−</button>
+        <span style={{ fontSize:20, fontWeight:700, color:C.teal, minWidth:32, textAlign:"center" }}>{form.experience}</span>
+        <button onClick={()=>upd("experience",Math.min(40,form.experience+1))} style={{ width:36, height:36, borderRadius:"50%", border:`1.5px solid ${C.border}`, background:"none", fontSize:18, cursor:"pointer" }}>+</button>
+        <span style={{ fontSize:13, color:C.inkSoft }}>years</span>
+      </div>
+
+      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Languages spoken</label>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
+        {GUIDE_LANGUAGES.map(l=><button key={l} onClick={()=>tog("languages",l)} style={{ padding:"6px 14px", borderRadius:20, border:`1.5px solid ${form.languages.includes(l)?C.teal:C.border}`, background:form.languages.includes(l)?C.tealLight:"#fff", color:form.languages.includes(l)?C.teal:C.inkSoft, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{l}</button>)}
+      </div>
+
+      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Specialties</label>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
+        {GUIDE_SPECIALTIES.map(s=><button key={s} onClick={()=>tog("specialties",s)} style={{ padding:"6px 14px", borderRadius:20, border:`1.5px solid ${form.specialties.includes(s)?C.teal:C.border}`, background:form.specialties.includes(s)?C.tealLight:"#fff", color:form.specialties.includes(s)?C.teal:C.inkSoft, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{s}</button>)}
+      </div>
+
+      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Areas covered</label>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
+        {GUIDE_AREAS.map(a=><button key={a} onClick={()=>tog("areas",a)} style={{ padding:"6px 14px", borderRadius:20, border:`1.5px solid ${form.areas.includes(a)?C.teal:C.border}`, background:form.areas.includes(a)?C.tealLight:"#fff", color:form.areas.includes(a)?C.teal:C.inkSoft, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{a}</button>)}
+      </div>
+
+      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Bio (tell tourists about yourself)</label>
+      <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} rows={4} placeholder="I grew up in Kandy and have been guiding for 8 years. I specialise in cultural and hill country tours..."
+        style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
+    </>,
+
+    // Step 2 — Review & submit
+    <>
+      <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>Review & Submit</h3>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Your application will be reviewed and you'll receive an email within 2–3 business days.</p>
+      <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"16px" }}>
+        {[
+          ["👤 Name", form.fullName],
+          ["📞 Phone", form.phone],
+          ["🪪 NIC", form.nic],
+          ["🛡️ SLTDA No", form.sltdaNo],
+          ["⭐ Experience", `${form.experience} years`],
+          ["🗣️ Languages", form.languages.join(", ")||"None selected"],
+          ["🎯 Specialties", form.specialties.join(", ")||"None selected"],
+          ["📍 Areas", form.areas.join(", ")||"None selected"],
+        ].map(([l,v])=>(
+          <div key={l} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+            <span style={{ minWidth:120, color:C.inkSoft }}>{l}</span>
+            <span style={{ fontWeight:600, color:C.ink, flex:1 }}>{v||"—"}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"12px 14px", marginTop:14, fontSize:12, color:C.amber, lineHeight:1.6 }}>
+        ⚠️ By submitting, you confirm that all information is accurate and your SLTDA licence is valid. CeylonTrails will verify your details within 2–3 business days.
+      </div>
+    </>,
+  ];
+
+  return (
+    <div style={{ maxWidth:580, margin:"0 auto", padding:"2rem 1.5rem" }}>
+      {/* Progress */}
+      <StepDots cur={step} total={3}/>
+      <div style={{ background:C.white, borderRadius:20, padding:"1.8rem", border:`1px solid ${C.border}`, boxShadow:"0 4px 20px rgba(0,0,0,.06)" }}>
+        {steps[step]}
+        <div style={{ display:"flex", justifyContent:"space-between", marginTop:24, paddingTop:16, borderTop:`1px solid ${C.border}`, gap:12 }}>
+          {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>← Back</Btn> : <span/>}
+          {step<2
+            ? <Btn onClick={()=>setStep(s=>s+1)}>Next →</Btn>
+            : <Btn variant="amber" onClick={submit} style={{ opacity:saving?.6:1 }}>{saving?"Submitting…":"Submit Application"}</Btn>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── GUIDE DASHBOARD ──────────────────────────────────────────────────────────
+function GuideDashboard({ user, profile, onProfileUpdate }) {
+  const [activeTab, setTab]     = useState("requests");
+  const [requests, setRequests] = useState([]);
+  const [loadingReqs, setLR]    = useState(false);
+  const [availability, setAvail]= useState(profile?.availability||"available");
+  const [freeDate, setFreeDate] = useState(profile?.freeDate||"");
+  const [editProfile, setEditP] = useState(false);
+  const [bidModal, setBid]      = useState(null); // {request}
+  const [bidText, setBidText]   = useState({ price:"", message:"", dates:"" });
+  const [newTour, setNewTour]   = useState({ title:"", location:"", date:"", rating:5, notes:"" });
+  const [addingTour, setAddTour]= useState(false);
+
+  useEffect(()=>{
+    if (activeTab==="requests") {
+      setLR(true);
+      loadTripRequests(user.uid).then(r=>{ setRequests(r); setLR(false); }).catch(()=>setLR(false));
+    }
+  },[activeTab]);
+
+  const updateAvailability = async (val, date) => {
+    setAvail(val);
+    await saveGuideProfile(user.uid, { availability:val, freeDate:date||"" });
+    onProfileUpdate({ ...profile, availability:val, freeDate:date||"" });
+  };
+
+  const submitBidHandler = async () => {
+    if (!bidModal || !bidText.price) return;
+    await submitBid(bidModal.id, bidText);
+    setRequests(rs=>rs.map(r=>r.id===bidModal.id?{...r,bid:bidText,bidStatus:"submitted"}:r));
+    setBid(null); setBidText({ price:"", message:"", dates:"" });
+  };
+
+  const addCompletedTour = async () => {
+    if (!newTour.title) return;
+    const tours = [...(profile?.activeTours||[]), { ...newTour, addedAt:new Date().toISOString() }];
+    await saveGuideProfile(user.uid, { activeTours:tours, tripsCompleted:(profile?.tripsCompleted||0)+1 });
+    onProfileUpdate({ ...profile, activeTours:tours, tripsCompleted:(profile?.tripsCompleted||0)+1 });
+    setNewTour({ title:"", location:"", date:"", rating:5, notes:"" });
+    setAddTour(false);
+  };
+
+  const TABS = [
+    { id:"requests",   label:"📩 Trip Requests", badge:requests.filter(r=>!r.bid).length },
+    { id:"profile",    label:"👤 My Profile" },
+    { id:"tours",      label:"🗺️ My Tours" },
+    { id:"earnings",   label:"💰 Earnings" },
+  ];
+
+  const statusColors = { available:C.teal, "on-trip":"#EA580C", unavailable:"#64748B" };
+  const statusLabels = { available:"✅ Available", "on-trip":"🚗 On a trip", unavailable:"⏸ Unavailable" };
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.surface }}>
+      {/* Bid modal */}
+      {bidModal && (
+        <div onClick={e=>e.target===e.currentTarget&&setBid(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.55)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(4px)" }}>
+          <div style={{ background:"#fff", borderRadius:20, width:"100%", maxWidth:480, padding:"1.5rem", boxShadow:"0 20px 60px rgba(0,0,0,.25)" }}>
+            <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:4 }}>Submit your bid</h3>
+            <p style={{ fontSize:12, color:C.inkSoft, marginBottom:16 }}>For: <strong>{bidModal.itinTitle||"Trip request"}</strong></p>
+            {[["Price (USD total)","price","number","e.g. 250"],["Available dates","dates","text","e.g. 15–20 Jan 2026"]].map(([l,k,t,ph])=>(
+              <div key={k} style={{ marginBottom:12 }}>
+                <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>{l}</label>
+                <input type={t} value={bidText[k]} onChange={e=>setBidText(b=>({...b,[k]:e.target.value}))} placeholder={ph}
+                  style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+              </div>
+            ))}
+            <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>Message to tourist</label>
+            <textarea value={bidText.message} onChange={e=>setBidText(b=>({...b,message:e.target.value}))} rows={3} placeholder="Hello! I would love to guide you through Sri Lanka..."
+              style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box", marginBottom:16 }}/>
+            <div style={{ display:"flex", gap:10 }}>
+              <Btn onClick={submitBidHandler} style={{ flex:1 }}>Send bid →</Btn>
+              <Btn variant="outline" onClick={()=>setBid(null)}>Cancel</Btn>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2rem 2rem 1.5rem" }}>
+        <div style={{ maxWidth:900, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+            <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(255,255,255,.2)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:serif, fontSize:22, fontWeight:700, color:"#fff" }}>
+              {profile?.fullName?.[0]||user.email?.[0]||"G"}
+            </div>
+            <div>
+              <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#fff" }}>{profile?.fullName||"Guide"}</div>
+              <div style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginTop:2 }}>
+                {profile?.experience} yrs exp · {profile?.specialties?.slice(0,2).join(", ")||"Guide"}
+              </div>
+            </div>
+          </div>
+          {/* Availability toggle */}
+          <div style={{ background:"rgba(255,255,255,.12)", borderRadius:14, padding:"10px 16px" }}>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,.7)", marginBottom:8, fontWeight:600 }}>My status</div>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+              {Object.entries(statusLabels).map(([v,l])=>(
+                <button key={v} onClick={()=>updateAvailability(v,"")} style={{ padding:"6px 12px", borderRadius:20, border:`1.5px solid ${availability===v?"#fff":"rgba(255,255,255,.3)"}`, background:availability===v?"#fff":"transparent", color:availability===v?statusColors[v]:"rgba(255,255,255,.85)", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{l}</button>
+              ))}
+            </div>
+            {availability==="on-trip" && (
+              <div style={{ marginTop:8, display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontSize:11, color:"rgba(255,255,255,.75)" }}>Free from:</span>
+                <input type="date" value={freeDate} onChange={e=>{ setFreeDate(e.target.value); updateAvailability("on-trip",e.target.value); }}
+                  style={{ padding:"4px 8px", border:"1px solid rgba(255,255,255,.4)", borderRadius:8, fontSize:12, background:"rgba(255,255,255,.1)", color:"#fff" }}/>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div style={{ maxWidth:900, margin:"14px auto 0", display:"flex", gap:16, flexWrap:"wrap" }}>
+          {[
+            [`${profile?.tripsCompleted||0}`, "Tours completed"],
+            [`${profile?.rating||"—"}★`, "Average rating"],
+            [`${requests.filter(r=>!r.bid).length}`, "Pending requests"],
+            [profile?.sltdaNo?"✓ Verified":"⏳ Pending", "SLTDA Status"],
+          ].map(([v,l])=>(
+            <div key={l} style={{ background:"rgba(255,255,255,.12)", borderRadius:10, padding:"10px 16px", flex:1, minWidth:100 }}>
+              <div style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:"#fff" }}>{v}</div>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,.65)", marginTop:2 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab nav */}
+      <div style={{ background:C.white, borderBottom:`1px solid ${C.border}`, position:"sticky", top:0, zIndex:200 }}>
+        <div style={{ maxWidth:900, margin:"0 auto", display:"flex", overflowX:"auto" }}>
+          {TABS.map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{ padding:"14px 20px", border:"none", background:"transparent", fontSize:13, fontWeight:activeTab===t.id?700:400, color:activeTab===t.id?C.teal:C.inkSoft, cursor:"pointer", borderBottom:activeTab===t.id?`2.5px solid ${C.teal}`:"2.5px solid transparent", whiteSpace:"nowrap", fontFamily:sans, display:"flex", alignItems:"center", gap:6 }}>
+              {t.label}
+              {t.badge>0 && <span style={{ background:C.coral, color:"#fff", fontSize:10, fontWeight:700, padding:"2px 6px", borderRadius:20 }}>{t.badge}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:900, margin:"0 auto", padding:"1.5rem 1.5rem 4rem" }}>
+
+        {/* ── Trip Requests ── */}
+        {activeTab==="requests" && (
+          <>
+            {loadingReqs && <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}>Loading requests…</div>}
+            {!loadingReqs && requests.length===0 && (
+              <div style={{ textAlign:"center", padding:"4rem", color:C.inkSoft }}>
+                <div style={{ fontSize:48, marginBottom:16 }}>📩</div>
+                <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>No trip requests yet</h3>
+                <p style={{ fontSize:13, lineHeight:1.7 }}>When tourists request a bid from you, they'll appear here. Make sure your profile is complete to attract more requests.</p>
+              </div>
+            )}
+            {requests.map(req=>(
+              <div key={req.id} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, padding:"1.2rem", marginBottom:12, background:C.white }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:10, marginBottom:10 }}>
+                  <div>
+                    <div style={{ fontSize:15, fontWeight:700, color:C.ink, marginBottom:3 }}>{req.itinTitle||"Trip Request"}</div>
+                    <div style={{ fontSize:12, color:C.inkSoft }}>From: {req.touristName||req.touristEmail||"Tourist"} · {req.itinDays||"?"} days · {req.group||"solo"}</div>
+                  </div>
+                  <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20, background:req.bid?C.tealLight:C.amberLight, color:req.bid?C.teal:C.amber, border:`1px solid ${req.bid?"#9FE1CB":"#F0D48A"}` }}>
+                    {req.bid?"✓ Bid sent":"⏳ Awaiting your bid"}
+                  </span>
+                </div>
+                {req.itinTagline && <p style={{ fontSize:13, color:C.inkSoft, marginBottom:10 }}>{req.itinTagline}</p>}
+                {req.message && <div style={{ background:C.surface, borderRadius:8, padding:"8px 12px", fontSize:12, color:C.ink, marginBottom:10, borderLeft:`3px solid ${C.border}` }}>"{req.message}"</div>}
+                {req.bid ? (
+                  <div style={{ background:C.tealPale, borderRadius:8, padding:"8px 12px", fontSize:12, color:C.teal }}>
+                    Your bid: <strong>${req.bid.price}</strong> · {req.bid.dates}
+                  </div>
+                ) : (
+                  <Btn onClick={()=>{ setBid(req); setBidText({ price:"", message:"", dates:"" }); }}>Submit bid →</Btn>
+                )}
+              </div>
+            ))}
+            {/* Demo requests if empty */}
+            {!loadingReqs && requests.length===0 && (
+              <div style={{ marginTop:16, background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:12, padding:"12px 16px", fontSize:12, color:C.teal }}>
+                💡 Demo: Trip requests from tourists who choose "Find a Guide" and select you will appear here in real-time.
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Profile ── */}
+        {activeTab==="profile" && (
+          <div>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:10 }}>
+              <h2 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink }}>My Profile</h2>
+              <Btn onClick={()=>setEditP(e=>!e)}>{editProfile?"✓ Done editing":"✏️ Edit profile"}</Btn>
+            </div>
+            {[
+              { label:"Full Name",     key:"fullName",    type:"text" },
+              { label:"Phone",         key:"phone",       type:"tel" },
+              { label:"SLTDA No",      key:"sltdaNo",     type:"text" },
+              { label:"Experience (years)", key:"experience", type:"number" },
+            ].map(f=>(
+              <div key={f.key} style={{ marginBottom:14 }}>
+                <label style={{ fontSize:12, fontWeight:600, color:C.inkSoft, display:"block", marginBottom:4 }}>{f.label}</label>
+                {editProfile
+                  ? <input type={f.type} value={profile?.[f.key]||""} onChange={async e=>{ const v=e.target.value; await saveGuideProfile(user.uid,{[f.key]:v}); onProfileUpdate({...profile,[f.key]:v}); }}
+                      style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+                  : <div style={{ fontSize:14, fontWeight:600, color:C.ink, padding:"8px 0" }}>{profile?.[f.key]||"—"}</div>
+                }
+              </div>
+            ))}
+
+            <label style={{ fontSize:12, fontWeight:600, color:C.inkSoft, display:"block", marginBottom:6 }}>Bio</label>
+            {editProfile
+              ? <textarea value={profile?.bio||""} onChange={async e=>{ const v=e.target.value; await saveGuideProfile(user.uid,{bio:v}); onProfileUpdate({...profile,bio:v}); }} rows={4}
+                  style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
+              : <p style={{ fontSize:13, color:C.ink, lineHeight:1.7 }}>{profile?.bio||"No bio yet."}</p>
+            }
+
+            <div style={{ marginTop:16 }}>
+              <label style={{ fontSize:12, fontWeight:600, color:C.inkSoft, display:"block", marginBottom:8 }}>Languages</label>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                {editProfile
+                  ? GUIDE_LANGUAGES.map(l=><button key={l} onClick={async()=>{ const langs=(profile?.languages||[]).includes(l)?(profile.languages.filter(x=>x!==l)):[...(profile?.languages||[]),l]; await saveGuideProfile(user.uid,{languages:langs}); onProfileUpdate({...profile,languages:langs}); }}
+                      style={{ padding:"5px 12px", borderRadius:20, border:`1.5px solid ${(profile?.languages||[]).includes(l)?C.teal:C.border}`, background:(profile?.languages||[]).includes(l)?C.tealLight:"#fff", color:(profile?.languages||[]).includes(l)?C.teal:C.inkSoft, fontSize:12, cursor:"pointer", fontFamily:sans }}>{l}</button>)
+                  : (profile?.languages||[]).map(l=><Pill key={l}>{l}</Pill>)
+                }
+              </div>
+            </div>
+
+            <div style={{ marginTop:14 }}>
+              <label style={{ fontSize:12, fontWeight:600, color:C.inkSoft, display:"block", marginBottom:8 }}>Specialties</label>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                {editProfile
+                  ? GUIDE_SPECIALTIES.map(s=><button key={s} onClick={async()=>{ const specs=(profile?.specialties||[]).includes(s)?(profile.specialties.filter(x=>x!==s)):[...(profile?.specialties||[]),s]; await saveGuideProfile(user.uid,{specialties:specs}); onProfileUpdate({...profile,specialties:specs}); }}
+                      style={{ padding:"5px 12px", borderRadius:20, border:`1.5px solid ${(profile?.specialties||[]).includes(s)?C.teal:C.border}`, background:(profile?.specialties||[]).includes(s)?C.tealLight:"#fff", color:(profile?.specialties||[]).includes(s)?C.teal:C.inkSoft, fontSize:12, cursor:"pointer", fontFamily:sans }}>{s}</button>)
+                  : (profile?.specialties||[]).map(s=><Pill key={s}>{s}</Pill>)
+                }
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── My Tours ── */}
+        {activeTab==="tours" && (
+          <div>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:10 }}>
+              <h2 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink }}>Completed Tours</h2>
+              <Btn onClick={()=>setAddTour(t=>!t)}>+ Add tour</Btn>
+            </div>
+
+            {addingTour && (
+              <div style={{ border:`1.5px solid ${C.teal}`, borderRadius:16, padding:"1.2rem", marginBottom:16, background:C.tealPale }}>
+                <h4 style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:C.ink, marginBottom:12 }}>Add completed tour</h4>
+                {[["Tour title","title","text","e.g. 5-Day Beach Explorer"],["Location","location","text","e.g. Southern Coast"],["Date completed","date","date",""]].map(([l,k,t,ph])=>(
+                  <div key={k} style={{ marginBottom:10 }}>
+                    <label style={{ fontSize:12, fontWeight:600, color:C.inkSoft, display:"block", marginBottom:4 }}>{l}</label>
+                    <input type={t} value={newTour[k]} onChange={e=>setNewTour(n=>({...n,[k]:e.target.value}))} placeholder={ph}
+                      style={{ width:"100%", padding:"9px 12px", border:`1.5px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+                  </div>
+                ))}
+                <label style={{ fontSize:12, fontWeight:600, color:C.inkSoft, display:"block", marginBottom:4 }}>Tourist rating (1–5)</label>
+                <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+                  {[1,2,3,4,5].map(n=><button key={n} onClick={()=>setNewTour(t=>({...t,rating:n}))} style={{ width:36, height:36, borderRadius:"50%", border:`1.5px solid ${newTour.rating>=n?C.amber:C.border}`, background:newTour.rating>=n?C.amberLight:"#fff", color:newTour.rating>=n?C.amber:C.inkSoft, fontSize:16, cursor:"pointer" }}>★</button>)}
+                </div>
+                <div style={{ display:"flex", gap:10 }}>
+                  <Btn onClick={addCompletedTour}>Save tour</Btn>
+                  <Btn variant="outline" onClick={()=>setAddTour(false)}>Cancel</Btn>
+                </div>
+              </div>
+            )}
+
+            {(profile?.activeTours||[]).length===0 && !addingTour && (
+              <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}>
+                <div style={{ fontSize:40, marginBottom:12 }}>🗺️</div>
+                <p>No completed tours yet. Add your first tour to build your portfolio!</p>
+              </div>
+            )}
+
+            {(profile?.activeTours||[]).map((tour,i)=>(
+              <div key={i} style={{ border:`1.5px solid ${C.border}`, borderRadius:14, padding:"1rem", marginBottom:10, background:C.white }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                  <div>
+                    <div style={{ fontSize:14, fontWeight:700, color:C.ink, marginBottom:3 }}>{tour.title}</div>
+                    <div style={{ fontSize:12, color:C.inkSoft }}>📍 {tour.location} · 📅 {tour.date}</div>
+                  </div>
+                  <div style={{ color:C.amberMid, fontSize:14 }}>{"★".repeat(tour.rating||5)}</div>
+                </div>
+                {tour.notes && <p style={{ fontSize:12, color:C.inkSoft, marginTop:8, lineHeight:1.5 }}>{tour.notes}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Earnings ── */}
+        {activeTab==="earnings" && (
+          <div style={{ textAlign:"center", padding:"4rem 2rem" }}>
+            <div style={{ fontSize:48, marginBottom:16 }}>💰</div>
+            <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>Earnings Dashboard</h3>
+            <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, maxWidth:400, margin:"0 auto 24px" }}>
+              Track your completed bookings and earnings here. Connect your payment account to receive direct payouts.
+            </p>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, maxWidth:500, margin:"0 auto" }}>
+              {[["$0","This month"],["$0","Total earned"],[`${profile?.tripsCompleted||0}`,"Tours done"]].map(([v,l])=>(
+                <div key={l} style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:14, padding:"1rem" }}>
+                  <div style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.teal }}>{v}</div>
+                  <div style={{ fontSize:11, color:C.inkSoft, marginTop:4 }}>{l}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:24, background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:12, padding:"12px 16px", fontSize:12, color:C.amber, maxWidth:400, margin:"24px auto 0" }}>
+              💡 Full earnings tracking and payouts coming soon. Contact support@ceylontrails.lk to set up direct payments.
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── GUIDE PORTAL PAGE ────────────────────────────────────────────────────────
+function GuidePortalPage({ setPage }) {
+  const { user, signInEmail, signUpEmail, signInGoogle } = useAuth();
+  const [guideProfile, setGuideProfile] = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [mode, setMode]                 = useState("signin");
+  const [email, setEmail]               = useState("");
+  const [pass, setPass]                 = useState("");
+  const [error, setError]               = useState("");
+  const [authLoading, setAL]            = useState(false);
+
+  // Load guide profile if logged in
+  useEffect(()=>{
+    if (!user) { setLoading(false); return; }
+    // Load Firestore SDK
+    const loadFirestore = async () => {
+      if (!window.firebase.firestore) {
+        await new Promise((res,rej)=>{ const s=document.createElement("script"); s.src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+      }
+      const p = await getGuideProfile(user.uid);
+      setGuideProfile(p);
+      setLoading(false);
+    };
+    loadFirestore().catch(()=>setLoading(false));
+  },[user]);
+
+  const handleAuth = async (fn) => {
+    setAL(true); setError("");
+    try { await fn(); } catch(e) { setError(e.message.replace("Firebase: ","").replace(/\(auth\/.*\)/,"")); }
+    setAL(false);
+  };
+
+  if (loading) return (
+    <div style={{ minHeight:"60vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ width:40, height:40, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite" }}/>
+    </div>
+  );
+
+  // Not logged in — show guide login
+  if (!user) return (
+    <div style={{ minHeight:"80vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", background:C.surface }}>
+      <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:420, overflow:"hidden", boxShadow:"0 8px 40px rgba(0,0,0,.12)" }}>
+        <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2rem", textAlign:"center" }}>
+          <div style={{ fontSize:36, marginBottom:8 }}>🧭</div>
+          <div style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:"#fff", marginBottom:4 }}>Guide Portal</div>
+          <div style={{ fontSize:13, color:"rgba(255,255,255,.75)" }}>CeylonTrails — For certified guides</div>
+        </div>
+        <div style={{ padding:"1.5rem" }}>
+          <button onClick={()=>handleAuth(signInGoogle)} style={{ width:"100%", padding:"12px", border:`1.5px solid ${C.border}`, borderRadius:12, background:"#fff", fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:sans, display:"flex", alignItems:"center", justifyContent:"center", gap:10, marginBottom:16 }}>
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+            Continue with Google
+          </button>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}><div style={{ flex:1, height:1, background:C.border }}/><span style={{ fontSize:12, color:C.inkSoft }}>or</span><div style={{ flex:1, height:1, background:C.border }}/></div>
+          <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Guide email" type="email"
+            style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:14, fontFamily:sans, marginBottom:10, outline:"none", boxSizing:"border-box" }}/>
+          <input value={pass} onChange={e=>setPass(e.target.value)} placeholder="Password" type="password"
+            style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:14, fontFamily:sans, marginBottom:14, outline:"none", boxSizing:"border-box" }}/>
+          {error && <div style={{ background:C.coralLight, border:`1px solid #EFBAA8`, borderRadius:10, padding:"8px 12px", fontSize:12, color:C.coral, marginBottom:12 }}>{error}</div>}
+          <button onClick={()=>handleAuth(mode==="signin"?()=>signInEmail(email,pass):()=>signUpEmail(email,pass))} disabled={authLoading||!email||!pass}
+            style={{ width:"100%", padding:"13px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:authLoading?.6:1, marginBottom:12 }}>
+            {authLoading?"Please wait…":mode==="signin"?"Sign in to Guide Portal":"Create guide account"}
+          </button>
+          <div style={{ textAlign:"center", fontSize:13, color:C.inkSoft }}>
+            {mode==="signin"?<>New guide? <span onClick={()=>{setMode("signup");setError("");}} style={{ color:C.teal, fontWeight:600, cursor:"pointer" }}>Register here</span></>:<>Have an account? <span onClick={()=>{setMode("signin");setError("");}} style={{ color:C.teal, fontWeight:600, cursor:"pointer" }}>Sign in</span></>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Logged in but no profile — show registration
+  if (!guideProfile) return (
+    <div style={{ minHeight:"100vh", background:C.surface }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2rem", textAlign:"center" }}>
+        <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>Guide Registration</div>
+        <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,36px)", fontWeight:700, color:"#fff", marginBottom:8 }}>Apply to become a CeylonTrails Guide</h1>
+        <p style={{ fontSize:14, color:"rgba(255,255,255,.75)", maxWidth:500, margin:"0 auto" }}>Complete your profile to start receiving trip requests from tourists across the world.</p>
+      </div>
+      <GuideRegister user={user} onComplete={async()=>{ const p = await getGuideProfile(user.uid); setGuideProfile(p); }}/>
+    </div>
+  );
+
+  // Pending approval
+  if (guideProfile.status==="pending") return (
+    <div style={{ minHeight:"80vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem" }}>
+      <div style={{ textAlign:"center", maxWidth:480 }}>
+        <div style={{ width:80, height:80, borderRadius:"50%", background:C.amberLight, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px", fontSize:36 }}>⏳</div>
+        <h2 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:12 }}>Application under review</h2>
+        <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.8, marginBottom:20 }}>
+          Thank you, <strong>{guideProfile.fullName}</strong>! Your application has been submitted.<br/>
+          Our team will verify your SLTDA credentials and send you an email within <strong>2–3 business days</strong>.
+        </p>
+        <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"1rem", textAlign:"left" }}>
+          {[["SLTDA No", guideProfile.sltdaNo],["Experience", `${guideProfile.experience} years`],["Specialties", guideProfile.specialties?.join(", ")||"—"],["Languages", guideProfile.languages?.join(", ")||"—"]].map(([l,v])=>(
+            <div key={l} style={{ display:"flex", gap:12, padding:"6px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+              <span style={{ color:C.inkSoft, minWidth:100 }}>{l}</span>
+              <span style={{ fontWeight:600, color:C.ink }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={()=>setGuideProfile(null)} style={{ marginTop:16, padding:"10px 24px", background:"none", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.inkSoft, cursor:"pointer", fontFamily:sans }}>Edit application</button>
+      </div>
+    </div>
+  );
+
+  // Approved — full dashboard
+  return <GuideDashboard user={user} profile={guideProfile} onProfileUpdate={setGuideProfile}/>;
+}
+
 export default function App() {
   const [page, setPage]         = useState("home");
   const [guideOpen, setGuide]   = useState(false);
@@ -3500,6 +4076,7 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
       {page==="destinations" && <DestinationsPage setPage={setPage} onGuideOpen={openGuide} savedItin={savedItin} setSavedItin={setSaved}/>}
       {page==="journey"      && <JourneyPage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} onGuideOpen={openGuide} user={user} onLoginNeeded={()=>setLogin(true)} premium={premium}/>}
       {page==="srilankamap" && <SriLankaMapPage  setPage={setPage}/>}
+      {page==="guideportal"  && <GuidePortalPage  setPage={setPage}/>}
 
       <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin} user={user} onLoginNeeded={()=>setLogin(true)}/>
       <WishlistPanel wishlist={wishlist} savedItin={savedItin} setSavedItin={setSaved}/>
