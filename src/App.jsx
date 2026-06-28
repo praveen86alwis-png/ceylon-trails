@@ -3484,17 +3484,305 @@ async function submitBid(requestId, bid) {
 }
 
 // ─── GUIDE REGISTRATION FORM ──────────────────────────────────────────────────
+// ─── VALIDATION HELPERS ───────────────────────────────────────────────────────
+const VALIDATORS = {
+  fullName:  { test: v => /^[a-zA-Z\s.'-]{2,60}$/.test(v.trim()),   msg:"Name must contain only letters (2–60 characters)" },
+  phone:     { test: v => /^\+?[\d\s\-()]{7,20}$/.test(v.trim()),   msg:"Enter a valid phone number" },
+  nic:       { test: v => /^[0-9]{9}[vVxX]$|^[0-9]{12}$/.test(v.trim()), msg:"Enter a valid NIC (9 digits + V/X or 12 digits)" },
+  address:   { test: v => v.trim().length >= 5,                       msg:"Please enter your full address" },
+  sltdaNo:   { test: v => v.trim().length >= 4,                       msg:"Enter your SLTDA licence number" },
+  bio:       { test: v => v.trim().length >= 50,                      msg:"Bio must be at least 50 characters" },
+};
+
+function validateField(key, value) {
+  if (!VALIDATORS[key]) return null;
+  if (!value || value.toString().trim()==="") return "This field is required";
+  return VALIDATORS[key].test(value) ? null : VALIDATORS[key].msg;
+}
+
+// ─── IMAGE UPLOAD HELPER ──────────────────────────────────────────────────────
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    if (file.size > 2 * 1024 * 1024) { reject(new Error("File must be under 2MB")); return; }
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── EMAIL NOTIFICATION (EmailJS) ────────────────────────────────────────────
+async function sendAdminNotification(guideName, guideEmail, sltdaNo) {
+  // Uses EmailJS free tier — set up at emailjs.com
+  // Add VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_TEMPLATE_ID, VITE_EMAILJS_PUBLIC_KEY to .env
+  const serviceId  = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+  const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+  const publicKey  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+  if (!serviceId || !templateId || !publicKey) return; // silently skip if not configured
+
+  try {
+    if (!window.emailjs) {
+      await loadScript("https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js");
+      window.emailjs.init(publicKey);
+    }
+    await window.emailjs.send(serviceId, templateId, {
+      guide_name:  guideName,
+      guide_email: guideEmail,
+      sltda_no:    sltdaNo,
+      timestamp:   new Date().toLocaleString(),
+      admin_url:   window.location.origin + "?admin",
+    });
+  } catch(e) { console.warn("Email notification failed:", e.message); }
+}
+
+// ─── GUIDE REGISTER (with validation + photo upload) ─────────────────────────
 function GuideRegister({ user, onComplete }) {
-  const [step, setStep]       = useState(0); // 0=personal 1=professional 2=submit
-  const [saving, setSaving]   = useState(false);
-  const [form, setForm]       = useState({
+  const [step, setStep]     = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [form, setForm]     = useState({
     fullName:"", phone:"", nic:"", address:"",
     sltdaNo:"", experience:1, bio:"",
     languages:[], specialties:[], areas:[],
-    activeTours:[], photo:"",
+    activeTours:[], photo:"", licenceDoc:"", licenceDocName:"",
   });
-  const upd = (k,v) => setForm(f=>({...f,[k]:v}));
+  const photoRef   = useRef(null);
+  const licenceRef = useRef(null);
+
+  const upd = (k, v) => {
+    setForm(f=>({...f,[k]:v}));
+    // Clear error on change
+    if (errors[k]) setErrors(e=>({...e,[k]:null}));
+  };
   const tog = (k,v) => setForm(f=>{ const a=f[k], i=a.indexOf(v); return {...f,[k]:i>-1?a.filter(x=>x!==v):[...a,v]}; });
+
+  const handlePhoto = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { setErrors(er=>({...er,photo:"Please select an image file (JPG, PNG)"})); return; }
+    try { const b64 = await fileToBase64(file); upd("photo", b64); }
+    catch(e) { setErrors(er=>({...er,photo:e.message})); }
+  };
+
+  const handleLicence = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/") && file.type!=="application/pdf") {
+      setErrors(er=>({...er,licenceDoc:"Please select an image or PDF file"})); return;
+    }
+    try {
+      const b64 = await fileToBase64(file);
+      upd("licenceDoc", b64);
+      upd("licenceDocName", file.name);
+    } catch(e) { setErrors(er=>({...er,licenceDoc:e.message})); }
+  };
+
+  // Validate current step before advancing
+  const validateStep = (s) => {
+    const newErrors = {};
+    if (s===0) {
+      ["fullName","phone","nic","address","sltdaNo"].forEach(k=>{
+        const e = validateField(k, form[k]);
+        if (e) newErrors[k] = e;
+      });
+      if (!form.photo) newErrors.photo = "Profile photo is required";
+      if (!form.licenceDoc) newErrors.licenceDoc = "SLTDA licence document is required";
+    }
+    if (s===1) {
+      if (form.languages.length===0)  newErrors.languages  = "Select at least one language";
+      if (form.specialties.length===0) newErrors.specialties = "Select at least one specialty";
+      if (form.areas.length===0)       newErrors.areas       = "Select at least one area";
+      const bioErr = validateField("bio", form.bio);
+      if (bioErr) newErrors.bio = bioErr;
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length===0;
+  };
+
+  const submit = async () => {
+    if (!validateStep(1)) return;
+    setSaving(true);
+    try {
+      await saveGuideProfile(user.uid, {
+        ...form, email:user.email, uid:user.uid,
+        status:"pending", role:"guide",
+        registeredAt: new Date().toISOString(),
+        availability:"available", tripsCompleted:0, rating:0, reviews:[],
+      });
+      await sendAdminNotification(form.fullName, user.email, form.sltdaNo);
+      onComplete();
+    } catch(e) { alert("Error saving profile: "+e.message); }
+    setSaving(false);
+  };
+
+  const Field = ({ label, k, type="text", placeholder, hint }) => (
+    <div style={{ marginBottom:14 }}>
+      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>
+        {label} <span style={{ color:C.coral }}>*</span>
+      </label>
+      <input type={type} value={form[k]} onChange={e=>upd(k,e.target.value)} placeholder={placeholder}
+        style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${errors[k]?C.coral:C.border}`, borderRadius:10, fontSize:14, fontFamily:sans, outline:"none", boxSizing:"border-box", transition:"border-color .15s" }}/>
+      {errors[k] && <div style={{ fontSize:11, color:C.coral, marginTop:4 }}>⚠️ {errors[k]}</div>}
+      {hint && !errors[k] && <div style={{ fontSize:11, color:C.inkSoft, marginTop:4 }}>{hint}</div>}
+    </div>
+  );
+
+  const steps = [
+    // Step 0 — Personal + uploads
+    <>
+      <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>Personal Information</h3>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20 }}>All fields are required and will be verified by SLTDA.</p>
+
+      {/* Profile photo upload */}
+      <div style={{ marginBottom:16 }}>
+        <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:8 }}>
+          Profile photo <span style={{ color:C.coral }}>*</span>
+        </label>
+        <div onClick={()=>photoRef.current?.click()} style={{ display:"flex", alignItems:"center", gap:14, cursor:"pointer" }}>
+          <div style={{ width:80, height:80, borderRadius:"50%", border:`2px dashed ${errors.photo?C.coral:C.border}`, background:C.surface, overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            {form.photo
+              ? <img src={form.photo} alt="Profile" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+              : <span style={{ fontSize:28, opacity:.4 }}>📷</span>
+            }
+          </div>
+          <div>
+            <div style={{ fontSize:13, fontWeight:600, color:C.teal }}>{form.photo?"Change photo":"Upload profile photo"}</div>
+            <div style={{ fontSize:11, color:C.inkSoft, marginTop:3 }}>JPG or PNG · Max 2MB · Clear face photo</div>
+            {errors.photo && <div style={{ fontSize:11, color:C.coral, marginTop:3 }}>⚠️ {errors.photo}</div>}
+          </div>
+        </div>
+        <input ref={photoRef} type="file" accept="image/*" onChange={handlePhoto} style={{ display:"none" }}/>
+      </div>
+
+      <Field label="Full name (as on NIC)" k="fullName" placeholder="e.g. Chaminda Perera" hint="Letters and spaces only"/>
+      <Field label="Phone number" k="phone" type="tel" placeholder="+94 77 123 4567" hint="Include country code"/>
+      <Field label="NIC number" k="nic" placeholder="e.g. 199012345678 or 900123456V" hint="Old format: 9 digits + V/X · New format: 12 digits"/>
+      <Field label="Home address" k="address" placeholder="Street, City, Province"/>
+      <Field label="SLTDA Licence number" k="sltdaNo" placeholder="e.g. SLTDA/GT/2024/001"/>
+
+      {/* Licence document upload */}
+      <div style={{ marginBottom:8 }}>
+        <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:8 }}>
+          SLTDA Licence document <span style={{ color:C.coral }}>*</span>
+        </label>
+        <div onClick={()=>licenceRef.current?.click()} style={{ border:`2px dashed ${errors.licenceDoc?C.coral:C.border}`, borderRadius:12, padding:"16px", textAlign:"center", cursor:"pointer", background:form.licenceDoc?C.tealPale:C.surface, transition:"background .15s" }}>
+          {form.licenceDoc ? (
+            <div>
+              <div style={{ fontSize:22, marginBottom:4 }}>{form.licenceDocName?.endsWith(".pdf")?"📄":"🖼️"}</div>
+              <div style={{ fontSize:13, fontWeight:600, color:C.teal }}>{form.licenceDocName}</div>
+              <div style={{ fontSize:11, color:C.inkSoft, marginTop:3 }}>Click to replace</div>
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontSize:28, opacity:.4, marginBottom:4 }}>📎</div>
+              <div style={{ fontSize:13, fontWeight:600, color:C.inkSoft }}>Upload SLTDA licence</div>
+              <div style={{ fontSize:11, color:C.inkSoft, marginTop:3 }}>Image (JPG/PNG) or PDF · Max 2MB</div>
+            </div>
+          )}
+        </div>
+        <input ref={licenceRef} type="file" accept="image/*,application/pdf" onChange={handleLicence} style={{ display:"none" }}/>
+        {errors.licenceDoc && <div style={{ fontSize:11, color:C.coral, marginTop:4 }}>⚠️ {errors.licenceDoc}</div>}
+      </div>
+    </>,
+
+    // Step 1 — Professional
+    <>
+      <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>Professional Details</h3>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Tell tourists about your expertise. All sections required.</p>
+
+      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>
+        Years of experience <span style={{ color:C.coral }}>*</span>
+      </label>
+      <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:16 }}>
+        <button onClick={()=>upd("experience",Math.max(1,form.experience-1))} style={{ width:36, height:36, borderRadius:"50%", border:`1.5px solid ${C.border}`, background:"none", fontSize:18, cursor:"pointer" }}>−</button>
+        <span style={{ fontSize:20, fontWeight:700, color:C.teal, minWidth:32, textAlign:"center" }}>{form.experience}</span>
+        <button onClick={()=>upd("experience",Math.min(40,form.experience+1))} style={{ width:36, height:36, borderRadius:"50%", border:`1.5px solid ${C.border}`, background:"none", fontSize:18, cursor:"pointer" }}>+</button>
+        <span style={{ fontSize:13, color:C.inkSoft }}>years</span>
+      </div>
+
+      {[
+        ["Languages spoken","languages",GUIDE_LANGUAGES],
+        ["Specialties","specialties",GUIDE_SPECIALTIES],
+        ["Areas covered","areas",GUIDE_AREAS],
+      ].map(([label,key,opts])=>(
+        <div key={key} style={{ marginBottom:16 }}>
+          <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>
+            {label} <span style={{ color:C.coral }}>*</span>
+          </label>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+            {opts.map(o=><button key={o} onClick={()=>tog(key,o)} style={{ padding:"6px 14px", borderRadius:20, border:`1.5px solid ${form[key].includes(o)?C.teal:C.border}`, background:form[key].includes(o)?C.tealLight:"#fff", color:form[key].includes(o)?C.teal:C.inkSoft, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{o}</button>)}
+          </div>
+          {errors[key] && <div style={{ fontSize:11, color:C.coral, marginTop:5 }}>⚠️ {errors[key]}</div>}
+        </div>
+      ))}
+
+      <div style={{ marginBottom:8 }}>
+        <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>
+          Bio <span style={{ color:C.coral }}>*</span>
+          <span style={{ fontWeight:400, color:C.inkSoft, marginLeft:8 }}>({form.bio.length}/50 min)</span>
+        </label>
+        <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} rows={4}
+          placeholder="I grew up in Kandy and have been guiding for 8 years. I specialise in cultural and hill country tours, speaking fluent English, German and Sinhala..."
+          style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${errors.bio?C.coral:C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
+        {errors.bio && <div style={{ fontSize:11, color:C.coral, marginTop:4 }}>⚠️ {errors.bio}</div>}
+      </div>
+    </>,
+
+    // Step 2 — Review
+    <>
+      <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>Review & Submit</h3>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Your application will be reviewed within 2–3 business days.</p>
+
+      <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:16 }}>
+        <div style={{ width:64, height:64, borderRadius:"50%", overflow:"hidden", border:`2px solid ${C.border}`, flexShrink:0 }}>
+          {form.photo ? <img src={form.photo} alt="Profile" style={{ width:"100%", height:"100%", objectFit:"cover" }}/> : <div style={{ width:"100%", height:"100%", background:C.surface, display:"flex", alignItems:"center", justifyContent:"center", fontSize:24 }}>👤</div>}
+        </div>
+        <div>
+          <div style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink }}>{form.fullName||"Your Name"}</div>
+          <div style={{ fontSize:13, color:C.inkSoft }}>{form.specialties.slice(0,2).join(", ")||"Specialties"}</div>
+        </div>
+      </div>
+
+      <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"16px" }}>
+        {[
+          ["📞 Phone", form.phone],
+          ["🪪 NIC", form.nic],
+          ["📍 Address", form.address],
+          ["🛡️ SLTDA No", form.sltdaNo],
+          ["⭐ Experience", `${form.experience} yrs`],
+          ["🗣️ Languages", form.languages.join(", ")||"—"],
+          ["🎯 Specialties", form.specialties.join(", ")||"—"],
+          ["📍 Areas", form.areas.join(", ")||"—"],
+          ["📎 Licence doc", form.licenceDocName||"—"],
+        ].map(([l,v])=>(
+          <div key={l} style={{ display:"flex", gap:10, padding:"7px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+            <span style={{ minWidth:120, color:C.inkSoft }}>{l}</span>
+            <span style={{ fontWeight:600, color:C.ink, flex:1 }}>{v||"—"}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"12px 14px", marginTop:12, fontSize:12, color:C.amber, lineHeight:1.6 }}>
+        ⚠️ By submitting, you confirm all information is accurate and your SLTDA licence is valid.
+      </div>
+    </>,
+  ];
+
+  return (
+    <div style={{ maxWidth:580, margin:"0 auto", padding:"2rem 1.5rem" }}>
+      <StepDots cur={step} total={3}/>
+      <div style={{ background:C.white, borderRadius:20, padding:"1.8rem", border:`1px solid ${C.border}`, boxShadow:"0 4px 20px rgba(0,0,0,.06)" }}>
+        {steps[step]}
+        <div style={{ display:"flex", justifyContent:"space-between", marginTop:24, paddingTop:16, borderTop:`1px solid ${C.border}`, gap:12 }}>
+          {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>← Back</Btn> : <span/>}
+          {step<2
+            ? <Btn onClick={()=>{ if(validateStep(step)) setStep(s=>s+1); }}>Next →</Btn>
+            : <Btn variant="amber" onClick={submit} style={{ opacity:saving?.6:1 }}>{saving?"Submitting…":"Submit Application"}</Btn>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
 
   const submit = async () => {
     setSaving(true);
@@ -3922,6 +4210,236 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
   );
 }
 
+// ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
+function AdminPanel({ onClose }) {
+  const ADMIN_PWD = import.meta.env.VITE_ADMIN_PASSWORD || "ceylontrails2024";
+  const [authed,    setAuthed]  = useState(()=>sessionStorage.getItem("ct_admin")==="1");
+  const [pwd,       setPwd]     = useState("");
+  const [guides,    setGuides]  = useState([]);
+  const [loading,   setLoading] = useState(false);
+  const [selected,  setSelected]= useState(null);
+  const [filterTab, setFilter]  = useState("pending");
+  const [rejMsg,    setRejMsg]  = useState("");
+  const [actioning, setActioning]=useState(false);
+
+  const login = () => {
+    if (pwd===ADMIN_PWD){ sessionStorage.setItem("ct_admin","1"); setAuthed(true); loadGuides(); }
+    else alert("Incorrect password");
+  };
+
+  const loadGuides = async () => {
+    setLoading(true);
+    try {
+      if (!window.firebase?.firestore) {
+        await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+      }
+      const snap = await window.firebase.firestore().collection("guides").orderBy("registeredAt","desc").get();
+      setGuides(snap.docs.map(d=>({id:d.id,...d.data()})));
+    } catch(e) { alert("Error loading guides: "+e.message); }
+    setLoading(false);
+  };
+
+  useEffect(()=>{ if(authed) loadGuides(); },[authed]);
+
+  const approve = async (guide) => {
+    setActioning(true);
+    await window.firebase.firestore().collection("guides").doc(guide.uid).update({ status:"approved", approvedAt:new Date().toISOString() });
+    setGuides(gs=>gs.map(g=>g.uid===guide.uid?{...g,status:"approved"}:g));
+    setSelected(s=>s?{...s,status:"approved"}:s);
+    setActioning(false);
+  };
+
+  const reject = async (guide) => {
+    if (!rejMsg.trim()) { alert("Please enter a reason for rejection"); return; }
+    setActioning(true);
+    await window.firebase.firestore().collection("guides").doc(guide.uid).update({ status:"rejected", rejectedAt:new Date().toISOString(), rejectionReason:rejMsg });
+    setGuides(gs=>gs.map(g=>g.uid===guide.uid?{...g,status:"rejected",rejectionReason:rejMsg}:g));
+    setSelected(s=>s?{...s,status:"rejected"}:s);
+    setRejMsg(""); setActioning(false);
+  };
+
+  const statusColor = { pending:C.amber, approved:C.teal, rejected:C.coral };
+  const filtered = guides.filter(g=>g.status===filterTab);
+
+  if (!authed) return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(8px)" }}>
+      <div style={{ background:"#fff", borderRadius:20, padding:"2rem", width:"100%", maxWidth:380, textAlign:"center", boxShadow:"0 20px 60px rgba(0,0,0,.3)" }}>
+        <div style={{ fontSize:36, marginBottom:12 }}>🔐</div>
+        <h2 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>Admin Panel</h2>
+        <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20 }}>CeylonTrails Guide Management</p>
+        <input type="password" value={pwd} onChange={e=>setPwd(e.target.value)} placeholder="Admin password"
+          onKeyDown={e=>e.key==="Enter"&&login()}
+          style={{ width:"100%", padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:14, fontFamily:sans, outline:"none", marginBottom:12, boxSizing:"border-box" }}/>
+        <Btn full onClick={login}>Enter Admin Panel</Btn>
+        <button onClick={onClose} style={{ marginTop:10, width:"100%", padding:"10px", background:"none", border:"none", fontSize:13, color:C.inkSoft, cursor:"pointer", fontFamily:sans }}>Cancel</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"#F0F4F8", zIndex:1000, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      {/* Header */}
+      <div style={{ background:`linear-gradient(135deg,#1A2A3A,#2D4A6A)`, padding:"14px 24px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <span style={{ fontSize:22 }}>🔐</span>
+          <div>
+            <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff" }}>CeylonTrails Admin</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,.6)" }}>Guide Management Panel</div>
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:10 }}>
+          <button onClick={loadGuides} style={{ padding:"7px 14px", background:"rgba(255,255,255,.1)", color:"#fff", border:"1px solid rgba(255,255,255,.25)", borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:sans }}>↺ Refresh</button>
+          <button onClick={()=>{ sessionStorage.removeItem("ct_admin"); onClose(); }} style={{ padding:"7px 14px", background:"rgba(255,255,255,.1)", color:"#fff", border:"1px solid rgba(255,255,255,.25)", borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:sans }}>✕ Close</button>
+        </div>
+      </div>
+
+      <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
+        {/* Left: guide list */}
+        <div style={{ width:320, background:"#fff", borderRight:"1px solid #E0E6ED", display:"flex", flexDirection:"column", flexShrink:0 }}>
+          {/* Filter tabs */}
+          <div style={{ display:"flex", borderBottom:"1px solid #E0E6ED" }}>
+            {["pending","approved","rejected"].map(s=>(
+              <button key={s} onClick={()=>setFilter(s)} style={{ flex:1, padding:"12px 8px", border:"none", background:filterTab===s?"#EEF4FF":"transparent", color:filterTab===s?"#2D4A6A":"#64748B", fontSize:12, fontWeight:filterTab===s?700:400, cursor:"pointer", fontFamily:sans, borderBottom:filterTab===s?"2.5px solid #2D4A6A":"2.5px solid transparent", textTransform:"capitalize" }}>
+                {s} <span style={{ background:filterTab===s?"#2D4A6A":"#E2E8F0", color:filterTab===s?"#fff":"#64748B", fontSize:10, fontWeight:700, padding:"1px 6px", borderRadius:10, marginLeft:4 }}>
+                  {guides.filter(g=>g.status===s).length}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Guide list */}
+          <div style={{ flex:1, overflowY:"auto" }}>
+            {loading && <div style={{ padding:"2rem", textAlign:"center", color:"#64748B", fontSize:13 }}>Loading guides…</div>}
+            {!loading && filtered.length===0 && <div style={{ padding:"2rem", textAlign:"center", color:"#64748B", fontSize:13 }}>No {filterTab} guides</div>}
+            {filtered.map(g=>(
+              <div key={g.uid} onClick={()=>setSelected(g)} style={{ padding:"14px 16px", borderBottom:"1px solid #F0F4F8", cursor:"pointer", background:selected?.uid===g.uid?"#EEF4FF":"transparent", transition:"background .15s" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <div style={{ width:40, height:40, borderRadius:"50%", overflow:"hidden", flexShrink:0, background:"#E2E8F0" }}>
+                    {g.photo ? <img src={g.photo} alt={g.fullName} style={{ width:"100%", height:"100%", objectFit:"cover" }}/> : <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>👤</div>}
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#1A2A3A", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{g.fullName}</div>
+                    <div style={{ fontSize:11, color:"#64748B", marginTop:1 }}>{g.email}</div>
+                    <div style={{ fontSize:10, color:"#64748B", marginTop:2 }}>Registered: {g.registeredAt?new Date(g.registeredAt).toLocaleDateString():"—"}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: guide detail */}
+        <div style={{ flex:1, overflowY:"auto", padding:"1.5rem" }}>
+          {!selected ? (
+            <div style={{ height:"100%", display:"flex", alignItems:"center", justifyContent:"center", color:"#94A3B8", flexDirection:"column", gap:12 }}>
+              <span style={{ fontSize:48 }}>👈</span>
+              <p style={{ fontSize:14 }}>Select a guide to review</p>
+            </div>
+          ) : (
+            <div style={{ maxWidth:700 }}>
+              {/* Status badge */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                  <div style={{ width:64, height:64, borderRadius:"50%", overflow:"hidden", border:"2px solid #E0E6ED", flexShrink:0 }}>
+                    {selected.photo ? <img src={selected.photo} alt={selected.fullName} style={{ width:"100%", height:"100%", objectFit:"cover" }}/> : <div style={{ width:"100%", height:"100%", background:"#E2E8F0", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24 }}>👤</div>}
+                  </div>
+                  <div>
+                    <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#1A2A3A" }}>{selected.fullName}</div>
+                    <div style={{ fontSize:13, color:"#64748B" }}>{selected.email}</div>
+                  </div>
+                </div>
+                <span style={{ fontSize:12, fontWeight:700, padding:"6px 16px", borderRadius:20, background:statusColor[selected.status]+"22", color:statusColor[selected.status], border:`1.5px solid ${statusColor[selected.status]}44`, textTransform:"capitalize" }}>
+                  {selected.status}
+                </span>
+              </div>
+
+              {/* Details grid */}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
+                {[
+                  ["Phone", selected.phone],
+                  ["NIC", selected.nic],
+                  ["Address", selected.address],
+                  ["SLTDA No", selected.sltdaNo],
+                  ["Experience", `${selected.experience} years`],
+                  ["Registered", selected.registeredAt?new Date(selected.registeredAt).toLocaleString():"—"],
+                ].map(([l,v])=>(
+                  <div key={l} style={{ background:"#fff", borderRadius:10, padding:"10px 14px", border:"1px solid #E0E6ED" }}>
+                    <div style={{ fontSize:11, color:"#64748B", marginBottom:3, fontWeight:600 }}>{l}</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:"#1A2A3A" }}>{v||"—"}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Languages & Specialties */}
+              {[["Languages",selected.languages],["Specialties",selected.specialties],["Areas",selected.areas]].map(([l,arr])=>arr?.length>0&&(
+                <div key={l} style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:12, fontWeight:600, color:"#64748B", marginBottom:6 }}>{l}</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                    {(arr||[]).map(x=><span key={x} style={{ fontSize:11, padding:"3px 10px", borderRadius:20, background:"#EEF4FF", color:"#2D4A6A", fontWeight:600 }}>{x}</span>)}
+                  </div>
+                </div>
+              ))}
+
+              {/* Bio */}
+              {selected.bio && (
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:12, fontWeight:600, color:"#64748B", marginBottom:6 }}>Bio</div>
+                  <div style={{ background:"#fff", borderRadius:10, padding:"12px 14px", border:"1px solid #E0E6ED", fontSize:13, color:"#1A2A3A", lineHeight:1.65 }}>{selected.bio}</div>
+                </div>
+              )}
+
+              {/* SLTDA Licence document */}
+              {selected.licenceDoc && (
+                <div style={{ marginBottom:20 }}>
+                  <div style={{ fontSize:12, fontWeight:600, color:"#64748B", marginBottom:6 }}>SLTDA Licence Document</div>
+                  {selected.licenceDocName?.endsWith(".pdf")
+                    ? <a href={selected.licenceDoc} download={selected.licenceDocName} style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"10px 16px", background:"#EEF4FF", borderRadius:10, color:"#2D4A6A", textDecoration:"none", fontSize:13, fontWeight:600 }}>📄 {selected.licenceDocName} — Download</a>
+                    : <img src={selected.licenceDoc} alt="SLTDA Licence" style={{ maxWidth:"100%", borderRadius:10, border:"1px solid #E0E6ED", maxHeight:300, objectFit:"contain" }}/>
+                  }
+                </div>
+              )}
+
+              {/* Action buttons */}
+              {selected.status==="pending" && (
+                <div style={{ background:"#fff", borderRadius:14, padding:"1.2rem", border:"1px solid #E0E6ED" }}>
+                  <h4 style={{ fontSize:14, fontWeight:700, color:"#1A2A3A", marginBottom:14 }}>Review Decision</h4>
+                  <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
+                    <button onClick={()=>approve(selected)} disabled={actioning} style={{ flex:1, padding:"12px", background:"#16A34A", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning?.6:1, minWidth:120 }}>
+                      ✅ Approve Guide
+                    </button>
+                  </div>
+                  <div>
+                    <label style={{ fontSize:12, fontWeight:600, color:"#64748B", display:"block", marginBottom:6 }}>Rejection reason (required to reject)</label>
+                    <textarea value={rejMsg} onChange={e=>setRejMsg(e.target.value)} rows={2} placeholder="e.g. SLTDA licence could not be verified. Please reapply with a clearer document."
+                      style={{ width:"100%", padding:"10px 12px", border:"1.5px solid #E0E6ED", borderRadius:8, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box", marginBottom:8 }}/>
+                    <button onClick={()=>reject(selected)} disabled={actioning||!rejMsg.trim()} style={{ width:"100%", padding:"12px", background:"#DC2626", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning||!rejMsg.trim()?.5:1 }}>
+                      ❌ Reject Application
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {selected.status==="approved" && (
+                <div style={{ background:"#F0FDF4", border:"1.5px solid #86EFAC", borderRadius:12, padding:"14px", textAlign:"center", fontSize:13, color:"#16A34A", fontWeight:600 }}>
+                  ✅ This guide is approved · Active on platform since {selected.approvedAt?new Date(selected.approvedAt).toLocaleDateString():"—"}
+                </div>
+              )}
+
+              {selected.status==="rejected" && (
+                <div style={{ background:"#FEF2F2", border:"1.5px solid #FECACA", borderRadius:12, padding:"14px" }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#DC2626", marginBottom:4 }}>❌ Application Rejected</div>
+                  <div style={{ fontSize:12, color:"#64748B" }}>Reason: {selected.rejectionReason||"No reason given"}</div>
+                  <button onClick={()=>approve(selected)} style={{ marginTop:10, padding:"8px 16px", background:"#16A34A", color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Override — Approve</button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── GUIDE PORTAL PAGE ────────────────────────────────────────────────────────
 function GuidePortalPage({ setPage }) {
   const { user, signInEmail, signUpEmail, signInGoogle } = useAuth();
@@ -4066,6 +4584,14 @@ export default function App() {
 function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, setSaved, showLogin, setLogin, showWelcome, setWelcome, welcomeUser, handleLoginSuccess, wishlist }) {
   const { user, signOut } = useAuth();
   const premium = usePremium();
+  const [showAdmin, setShowAdmin] = useState(()=>window.location.search.includes("admin"));
+
+  // Watch for ?admin in URL
+  useEffect(()=>{
+    const check = () => setShowAdmin(window.location.search.includes("admin"));
+    window.addEventListener("popstate", check);
+    return ()=>window.removeEventListener("popstate", check);
+  },[]);
 
   return (
     <div style={{ fontFamily:sans, color:C.ink, background:C.white, minHeight:"100vh" }}>
@@ -4084,6 +4610,7 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
 
       {showLogin && <LoginModal onClose={()=>setLogin(false)} onSuccess={handleLoginSuccess}/>}
       {showWelcome && <WelcomeToast user={welcomeUser} onDone={()=>setWelcome(false)}/>}
+      {showAdmin && <AdminPanel onClose={()=>{ setShowAdmin(false); window.history.replaceState({},"",window.location.pathname); }}/>}
     </div>
   );
 }
