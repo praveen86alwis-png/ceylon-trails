@@ -1989,14 +1989,8 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   const [placeInput, setPlaceInput] = useState("");
   const [startLabel, setStartLabel] = useState("Sri Lanka");
 
-  // Auto-generate if user just logged in while on last wizard step
+  // Auto-generate ref — used after generate() is defined below
   const didAutoGenerate = useRef(false);
-  useEffect(()=>{
-    if (user && step===9 && !itin && !loading && !didAutoGenerate.current) {
-      didAutoGenerate.current = true;
-      generate();
-    }
-  }, [user]);
 
   const upd = (k,v) => setAns(a=>({...a,[k]:v}));
   const tog = (k,v) => setAns(a=>{ const arr=a[k], i=arr.indexOf(v); return {...a,[k]:i>-1?arr.filter(x=>x!==v):[...arr,v]}; });
@@ -2327,6 +2321,15 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
     }
     setLoad(false);
   };
+
+  // Auto-generate if user just logged in while on last wizard step
+  // Must be after generate() is defined above
+  useEffect(()=>{
+    if (user && step===9 && !itin && !loading && !didAutoGenerate.current) {
+      didAutoGenerate.current = true;
+      generate();
+    }
+  }, [user]);
 
   // Result page
   if (step===10) {
