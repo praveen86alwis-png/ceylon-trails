@@ -347,38 +347,97 @@ function GalleryLightbox({ place, onClose }) {
 const MOBILE_CSS = `
   * { box-sizing: border-box; }
 
-  /* Desktop nav links hidden on mobile — hamburger shows instead */
+  /* Desktop nav hidden on mobile */
   .desktop-nav { display: flex !important; }
 
   @media (max-width: 768px) {
+    /* Nav */
     .desktop-nav { display: none !important; }
-    .services-grid { grid-template-columns: 1fr !important; }
-    .dest-grid-5 { grid-template-columns: 1fr 1fr !important; }
-    .dest-grid-4 { grid-template-columns: 1fr 1fr !important; }
-    .why-grid { grid-template-columns: 1fr 1fr !important; }
-    .footer-top { flex-direction: column !important; }
-    .footer-links { flex-wrap: wrap !important; gap: 1.5rem !important; }
-    .hero-stats { flex-wrap: wrap !important; gap: 1.5rem !important; justify-content: center !important; }
-    .guide-drawer { width: 100% !important; }
-    .opt-grid-2 { grid-template-columns: 1fr !important; }
-    .info-2col { grid-template-columns: 1fr !important; }
-    .cheat-grid { grid-template-columns: 1fr !important; }
-    .itin-banner-row { flex-direction: column !important; }
+
+    /* Grids → responsive */
+    .services-grid  { grid-template-columns: 1fr !important; }
+    .dest-grid-5    { grid-template-columns: 1fr 1fr !important; }
+    .dest-grid-4    { grid-template-columns: 1fr 1fr !important; }
+    .why-grid       { grid-template-columns: 1fr 1fr !important; }
+    .cheat-grid     { grid-template-columns: 1fr !important; }
+    .footer-links   { flex-wrap: wrap !important; gap: 1.5rem !important; }
+    .hero-stats     { flex-wrap: wrap !important; gap: 1.5rem !important; justify-content: center !important; }
+    .guide-drawer   { width: 100% !important; }
+    .opt-grid-2     { grid-template-columns: 1fr !important; }
+    .info-2col      { grid-template-columns: 1fr !important; }
+
+    /* Wizard card */
+    .wizard-card    { padding: 1.2rem !important; border-radius: 16px !important; }
+
+    /* Custom places input row — stack vertically on mobile */
+    .place-input-row {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 10px !important;
+    }
+    .place-input-row input { width: 100% !important; }
+    .place-input-row button { width: 100% !important; border-radius: 12px !important; }
+
+    /* Buttons — full width on mobile in wizard */
+    .wizard-btn-row { flex-direction: row !important; gap: 10px !important; }
+    .wizard-btn-row button { flex: 1 !important; padding: 12px 10px !important; font-size: 13px !important; }
+
+    /* Result page banner */
+    .result-banner  { padding: 2rem 1rem !important; }
+    .result-banner h1 { font-size: 22px !important; }
+
+    /* Start/end banner */
+    .trip-banner    { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
+
+    /* Floating wishlist button — move slightly in from edge */
+    .wishlist-btn   { bottom: 80px !important; right: 16px !important; width: 50px !important; height: 50px !important; }
+    .wishlist-panel { right: 16px !important; width: calc(100vw - 32px) !important; bottom: 140px !important; }
+
+    /* Emergency button */
+    .emergency-btn  { bottom: 80px !important; left: 16px !important; width: 50px !important; height: 50px !important; }
+    .emergency-panel{ left: 16px !important; width: calc(100vw - 32px) !important; }
+
+    /* Day cards */
+    .day-card-header { flex-wrap: wrap !important; gap: 6px !important; }
+
+    /* Activity row — thumbnail smaller */
+    .act-thumb { width: 36px !important; height: 36px !important; }
+
+    /* Journey map scroll hint */
+    .journey-map { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+
+    /* Destination tabs — scrollable */
+    .dest-tabs { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; white-space: nowrap !important; }
+
+    /* Region sub-tabs */
+    .region-tabs { flex-wrap: nowrap !important; overflow-x: auto !important; }
+
+    /* Hero section padding */
+    .hero-section { padding: 3rem 1rem 2rem !important; }
   }
 
   @media (max-width: 480px) {
     .dest-grid-5 { grid-template-columns: 1fr !important; }
-    .why-grid { grid-template-columns: 1fr !important; }
-    .hero-stats { gap: 1rem !important; }
+    .dest-grid-4 { grid-template-columns: 1fr !important; }
+    .why-grid    { grid-template-columns: 1fr !important; }
+    .hero-stats  { gap: 1rem !important; }
+
+    /* Nav height */
+    nav { padding: 0 1rem !important; }
+
+    /* Wizard steps */
+    .wizard-card { padding: 1rem !important; }
   }
 
-  /* Bigger touch targets on mobile */
+  /* Touch targets */
   @media (max-width: 768px) {
     button { min-height: 44px; }
-    input, select { min-height: 44px; font-size: 16px !important; }
+    input, select, textarea { min-height: 44px; font-size: 16px !important; }
+    a { min-height: 44px; display: inline-flex; align-items: center; }
   }
 
   html { scroll-behavior: smooth; }
+  img  { max-width: 100%; }
 `;
 
 function MobileStyles() {
@@ -783,7 +842,7 @@ function WishlistPanel({ wishlist, savedItin, setSavedItin }) {
   return (
     <>
       {/* Floating button */}
-      <button onClick={()=>setOpen(o=>!o)} style={{
+      <button onClick={()=>setOpen(o=>!o)} className="wishlist-btn" style={{
         position:"fixed", bottom:24, right:24, zIndex:500,
         width:56, height:56, borderRadius:"50%",
         background: open ? C.amber : C.white,
@@ -804,7 +863,7 @@ function WishlistPanel({ wishlist, savedItin, setSavedItin }) {
 
       {/* Panel */}
       {open && (
-        <div style={{ position:"fixed", bottom:90, right:24, zIndex:500, width:340, maxWidth:"calc(100vw - 48px)", background:"#fff", borderRadius:20, boxShadow:"0 12px 48px rgba(0,0,0,.2)", border:`1px solid ${C.border}`, display:"flex", flexDirection:"column", maxHeight:"60vh" }}>
+        <div className="wishlist-panel" style={{ position:"fixed", bottom:90, right:24, zIndex:500, width:340, maxWidth:"calc(100vw - 48px)", background:"#fff", borderRadius:20, boxShadow:"0 12px 48px rgba(0,0,0,.2)", border:`1px solid ${C.border}`, display:"flex", flexDirection:"column", maxHeight:"60vh" }}>
           <div style={{ padding:"14px 16px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
             <div>
               <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:C.ink }}>♡ Wishlist</div>
@@ -1678,10 +1737,94 @@ Return ONLY a raw JSON array of 4 objects, no markdown:
 }
 
 // ─── DRAGGABLE ITINERARY ──────────────────────────────────────────────────────
-function DraggableItinerary({ days, onUpdate }) {
-  const [dragging, setDragging]     = useState(null); // {dayIdx, actIdx}
-  const [dragOver,  setDragOver]    = useState(null); // {dayIdx, actIdx}
-  const [swap,      setSwap]        = useState(null); // {dayIdx, actIdx, act}
+function DraggableItinerary({ days, onUpdate, itinId, premium }) {
+  const [dragging, setDragging]     = useState(null);
+  const [dragOver,  setDragOver]    = useState(null);
+  const [swap,      setSwap]        = useState(null);
+
+  const handleDragStart = (dayIdx, actIdx) => {
+    if (premium && !premium.isUnlocked(itinId) && dayIdx > 0) return; // block drag on locked days
+    setDragging({dayIdx, actIdx});
+  };
+  const handleDragOver  = (e, dayIdx, actIdx) => { e.preventDefault(); setDragOver({dayIdx, actIdx}); };
+  const handleDrop      = (e, toDayIdx, toActIdx) => {
+    e.preventDefault();
+    if (!dragging) return;
+    if (premium && !premium.isUnlocked(itinId) && (dragging.dayIdx>0||toDayIdx>0)) return;
+    const { dayIdx:fromDay, actIdx:fromAct } = dragging;
+    if (fromDay===toDayIdx && fromAct===toActIdx) { setDragging(null); setDragOver(null); return; }
+    const newDays = days.map(d=>({...d, activities:[...d.activities]}));
+    const [moved] = newDays[fromDay].activities.splice(fromAct, 1);
+    newDays[toDayIdx].activities.splice(toActIdx, 0, moved);
+    [fromDay, toDayIdx].forEach(di=>{
+      newDays[di].activities.forEach((a,i)=>{
+        const baseHour = 7 + i*2;
+        a.time = `${String(baseHour).padStart(2,"0")}:00`;
+      });
+    });
+    onUpdate(newDays);
+    setDragging(null); setDragOver(null);
+  };
+  const handleSwapDone = (dayIdx, actIdx, newAct) => {
+    const newDays = days.map(d=>({...d, activities:[...d.activities]}));
+    const old = newDays[dayIdx].activities[actIdx];
+    newDays[dayIdx].activities[actIdx] = { ...old, ...newAct, type: old.type, time: old.time };
+    onUpdate(newDays);
+    setSwap(null);
+  };
+
+  return (
+    <>
+      {swap && <SwapModal act={swap.act} dayLocation={days[swap.dayIdx]?.location||""} onSwap={a=>handleSwapDone(swap.dayIdx, swap.actIdx, a)} onClose={()=>setSwap(null)}/>}
+      <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:12, padding:"10px 14px", marginBottom:16, display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+        <span style={{ fontSize:16 }}>↕️</span>
+        <span style={{ fontSize:12, color:C.teal, fontWeight:500 }}>Drag any activity to reorder. Click 🔄 to swap a place.</span>
+        {premium && !premium.isUnlocked(itinId) && <span style={{ fontSize:11, color:C.amber, marginLeft:"auto" }}>🔒 Unlock premium to reorder Days 2+</span>}
+      </div>
+      {days.map((d, dayIdx)=>{
+        const isLocked = premium && !premium.isUnlocked(itinId) && dayIdx > 0;
+        return (
+          <div key={d.day} style={{ position:"relative", marginBottom:16 }}>
+            <div style={{ border:`1.5px solid ${isLocked?"#E4E4E4":C.border}`, borderRadius:16, overflow:"hidden", background:C.white, boxShadow:"0 2px 12px rgba(0,0,0,.04)", opacity:isLocked?.5:1 }}>
+              <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,${isLocked?"#999":"#0B6B52"},${isLocked?"#bbb":"#147856"})`, display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                <span style={{ background:"rgba(255,255,255,.2)", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Day {d.day}</span>
+                <span style={{ fontSize:15, fontWeight:700, color:"#fff", fontFamily:serif }}>{d.location}</span>
+                <span style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginLeft:"auto" }}>— {d.theme}</span>
+                {isLocked && <span style={{ fontSize:14 }}>🔒</span>}
+              </div>
+              <div style={{ padding:"6px 12px 10px", filter:isLocked?"blur(3px)":"none", pointerEvents:isLocked?"none":"auto" }}
+                onDragOver={e=>{ if(d.activities.length===0) handleDragOver(e, dayIdx, 0); }}
+                onDrop={e=>{ if(d.activities.length===0) handleDrop(e, dayIdx, 0); }}>
+                {d.activities.map((a,actIdx)=>{
+                  const isDraggingThis = dragging?.dayIdx===dayIdx && dragging?.actIdx===actIdx;
+                  const isOver = dragOver?.dayIdx===dayIdx && dragOver?.actIdx===actIdx;
+                  return (
+                    <div key={actIdx}
+                      draggable={!isLocked}
+                      onDragStart={()=>handleDragStart(dayIdx, actIdx)}
+                      onDragOver={e=>handleDragOver(e, dayIdx, actIdx)}
+                      onDrop={e=>handleDrop(e, dayIdx, actIdx)}
+                      onDragEnd={()=>{ setDragging(null); setDragOver(null); }}
+                      style={{ opacity:isDraggingThis?.4:1, background:isOver?C.tealPale:"transparent", border:isOver?`2px dashed ${C.tealMid}`:"2px solid transparent", borderRadius:10, marginBottom:2 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 6px", borderBottom:actIdx<d.activities.length-1?`1px solid ${C.border}`:"none" }}>
+                        {!isLocked && <span style={{ cursor:"grab", fontSize:14, color:C.inkSoft, flexShrink:0, userSelect:"none" }}>⠿</span>}
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <ActivityRow act={a} isLast={actIdx===d.activities.length-1} hideBorder/>
+                        </div>
+                        {!isLocked && <button onClick={()=>setSwap({dayIdx, actIdx, act:a})} title="Swap this place" style={{ background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"4px 8px", cursor:"pointer", fontSize:12, color:C.inkSoft, flexShrink:0 }}>🔄</button>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {isLocked && <PremiumLock itinId={itinId} onUnlock={premium.unlock}/>}
+          </div>
+        );
+      })}
+    </>
+  );
+}
 
   const handleDragStart = (dayIdx, actIdx) => setDragging({dayIdx, actIdx});
   const handleDragOver  = (e, dayIdx, actIdx) => { e.preventDefault(); setDragOver({dayIdx, actIdx}); };
@@ -1888,13 +2031,32 @@ function MismatchWarning({ travel, activities }) {
 
 // ─── JOURNEY PAGE ────────────────────────────────────────────────────────────
 function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLoginNeeded, premium }) {
-  const [step, setStep]    = useState(0);
-  const [ans, setAns]      = useState({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", customPlaces:[], startCity:"airport" });
+  const [step, setStep]    = useState(()=>{
+    // Restore step if user just logged in mid-wizard
+    const saved = sessionStorage.getItem("ct_wizard_step");
+    if (saved) { sessionStorage.removeItem("ct_wizard_step"); return parseInt(saved)||0; }
+    return 0;
+  });
+  const [ans, setAns]      = useState(()=>{
+    // Restore wizard answers if user just logged in mid-wizard
+    const saved = sessionStorage.getItem("ct_wizard_ans");
+    if (saved) { sessionStorage.removeItem("ct_wizard_ans"); try { return JSON.parse(saved); } catch {} }
+    return { days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", customPlaces:[], startCity:"airport", startTime:"09:00" };
+  });
   const [loading, setLoad] = useState(false);
   const [itin, setItin]    = useState(savedItin||null);
   const [itinDays, setItinDays] = useState(savedItin?.days||null);
   const [placeInput, setPlaceInput] = useState("");
-  const [startLabel, setStartLabel] = useState("Sri Lanka"); // readable start for result page
+  const [startLabel, setStartLabel] = useState("Sri Lanka");
+
+  // Auto-generate if user just logged in while on last wizard step
+  const didAutoGenerate = useRef(false);
+  useEffect(()=>{
+    if (user && step===9 && !itin && !loading && !didAutoGenerate.current) {
+      didAutoGenerate.current = true;
+      generate();
+    }
+  }, [user]);
 
   const upd = (k,v) => setAns(a=>({...a,[k]:v}));
   const tog = (k,v) => setAns(a=>{ const arr=a[k], i=arr.indexOf(v); return {...a,[k]:i>-1?arr.filter(x=>x!==v):[...arr,v]}; });
@@ -1922,7 +2084,159 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   const generate = async () => {
     setStep(10); setLoad(true);
 
-    // ── CRITICAL: explicit per-style city/region WHITELISTS ──────────────────
+    const STYLE_CITIES = {
+      beach:    { allowed:["Negombo","Galle","Unawatuna","Mirissa","Hikkaduwa","Tangalle","Weligama","Arugam Bay","Nilaveli","Trincomalee","Bentota","Beruwala","Kalpitiya"], forbidden:["Kandy","Ella","Nuwara Eliya","Sigiriya","Dambulla","Anuradhapura","Polonnaruwa","Yala","Wilpattu"] },
+      hills:    { allowed:["Kandy","Nuwara Eliya","Ella","Haputale","Bandarawela","Hatton","Knuckles","Horton Plains"], forbidden:["Mirissa","Hikkaduwa","Galle","Sigiriya","Anuradhapura","Polonnaruwa","Yala"] },
+      cultural: { allowed:["Dambulla","Sigiriya","Anuradhapura","Polonnaruwa","Kandy","Galle Fort"], forbidden:["Mirissa","Hikkaduwa","Ella","Nuwara Eliya","Yala"] },
+      wildlife: { allowed:["Yala","Tissamaharama","Udawalawe","Sinharaja","Wilpattu","Minneriya","Habarana","Bundala"], forbidden:["Mirissa","Hikkaduwa","Ella","Nuwara Eliya","Sigiriya"] },
+      adventure:{ allowed:["Kitulgala","Ella","Adam's Peak","Knuckles Range","Kalpitiya","Kandy"], forbidden:[] },
+      rural:    { allowed:["Knuckles Villages","Mahiyanganaya","Belihuloya","Ratnapura","Weligama","Dambulla","Matale"], forbidden:[] },
+      mixed:    { allowed:["Colombo","Kandy","Dambulla","Sigiriya","Ella","Galle","Mirissa"], forbidden:[] },
+    };
+    const styleKey = ans.travel || "mixed";
+    const cities   = STYLE_CITIES[styleKey] || STYLE_CITIES.mixed;
+
+    const N   = Math.min(ans.days, 10);
+    const uid = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+    // ── Starting point ─────────────────────────────────────────────────────────
+    const customStart = ans.startCity==="custom" && ans.customStart
+      ? ans.customStart.trim()
+      : ans.startCity==="colombo" ? "Colombo"
+      : ans.startCity==="airport" ? "Bandaranaike International Airport, Katunayake"
+      : ans.customStart?.trim() || "Colombo";
+
+    setStartLabel(customStart);
+
+    const allowedCities = [...cities.allowed];
+    if (ans.startCity==="custom" && ans.customStart) {
+      allowedCities.unshift(ans.customStart.trim() + " (starting point)");
+    }
+
+    // ── Start time logic ────────────────────────────────────────────────────────
+    const startHour = parseInt((ans.startTime||"09:00").split(":")[0]);
+    const isEveningStart = startHour >= 18;
+    const isAfternoonStart = startHour >= 14 && startHour < 18;
+    const isMorningStart = startHour < 12;
+
+    const startTimeNote = isEveningStart
+      ? `TRIP STARTS AT ${ans.startTime} (EVENING): Day 1 MUST contain ONLY: drive from ${customStart} to hotel + hotel check-in + dinner. NO sightseeing, NO beaches, NO activities on Day 1. Full activities start from Day 2.`
+      : isAfternoonStart
+      ? `TRIP STARTS AT ${ans.startTime} (AFTERNOON): Day 1 should have drive to hotel + check-in + 1-2 light afternoon activities + dinner. Avoid heavy sightseeing on Day 1.`
+      : `TRIP STARTS AT ${ans.startTime} (MORNING): Day 1 is a full day. Start with drive from ${customStart} to first destination, then full activities.`;
+
+    // ── Budget → Hotel tier ─────────────────────────────────────────────────────
+    const hotelTier = ans.budget==="luxury"
+      ? "5-star luxury resort (e.g. Jetwing, Aman, Cape Weligama, Shangri-La, Anantara)"
+      : ans.budget==="mid"
+      ? "3-4 star boutique hotel or well-rated guesthouse"
+      : "budget guesthouse, hostel or simple local inn";
+
+    // ── Bus note ────────────────────────────────────────────────────────────────
+    const busNote = ans.transport==="bus"
+      ? `BUS RULES: For every inter-city leg include specific bus number/route (e.g. "CTB 15 Colombo–Kandy"), departure bus stand, journey time, price in LKR.`
+      : "";
+
+    const actsPerDay = ans.pace==="relaxed" ? 3 : ans.pace==="packed" ? 5 : 4;
+    const customNote = ans.customPlaces.length
+      ? `MUST-VISIT: ${ans.customPlaces.join(", ")}`
+      : "";
+
+    const prompt = `[${uid}] You are a world-class Sri Lanka travel planner creating a COMPLETE A-to-Z trip plan.
+
+TRIP:
+- ${N} days, ${ans.nights} nights | ${ans.group||"solo"} | Budget: ${ans.budget||"mid-range"} (${hotelTier})
+- Style: ${styleKey} | Food: ${ans.food.join(", ")||"open"} | Activities: ${ans.activities.join(", ")||"sightseeing"}
+- Transport: ${ans.transport||"private-car"} | Pace: ${ans.pace||"balanced"} (${actsPerDay} activities/day)
+- Starting from: ${customStart} at ${ans.startTime||"09:00"}
+${customNote ? `- ${customNote}` : ""}
+
+${startTimeNote}
+
+HOTEL RULES (CRITICAL):
+- Select ONE specific real hotel per destination matching "${hotelTier}"
+- Day 1: First activity = drive from ${customStart} to hotel with REAL drive time (e.g. "45 min drive from Colombo on A3 highway")
+- Day 1: Second activity = hotel check-in with hotel name, area, why chosen
+- Every morning from Day 2 onwards: first activity = breakfast AT THE HOTEL where they slept
+- Every evening: last activity = dinner near hotel + return to hotel
+- Last day: include hotel check-out + drive back to ${customStart} if needed
+- Hotel stays in same location unless explicitly moving cities
+
+LOCATION RULES:
+- ALLOWED: ${allowedCities.join(", ")}
+- FORBIDDEN: ${cities.forbidden.length ? cities.forbidden.join(", ") : "none"}
+- All activities must be within 30 min of the hotel unless it's an explicitly planned excursion
+
+${busNote}
+
+MANDATORY FIELDS — every activity must have ALL of these:
+- time: realistic clock time (e.g. "08:30")
+- type: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|checkin|sunset|activity|rural|hotel
+- place: REAL specific named place (hotel name, restaurant name, beach name — NEVER generic)
+- area: street and city
+- text: what to do/order/see in one vivid sentence
+- why: why this specific place is recommended
+- hours: opening hours
+- price: price range in USD or LKR
+- mapQuery: "Place Name, City, Sri Lanka"
+- travelFromPrev: travel time from previous activity (e.g. "5 min walk", "20 min drive", "45 min drive on A3 from Colombo")
+- unsplashQuery: 4-6 word Unsplash search for a beautiful photo (e.g. "Negombo beach sunset Sri Lanka")
+
+Return ONLY valid raw JSON — no markdown, no backticks:
+{"title":"...","tagline":"...","hotel":{"name":"Full Hotel Name","area":"City","stars":5,"why":"One sentence why this hotel"},"highlights":["...","...","..."],"days":[{"day":1,"location":"City, Sri Lanka","theme":"Day theme","hotel":"Hotel Name (for reference)","activities":[{...all fields above...}]}]}`;
+
+    try {
+      const data = await callClaude({
+        model:      "claude-sonnet-4-6",
+        max_tokens: 8000,
+        temperature: 1,
+        messages: [{ role: "user", content: prompt }],
+      });
+      if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+      const raw   = data.content.map(c => c.text || "").join("");
+      const clean = raw.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "").trim();
+      const parsed = JSON.parse(clean);
+      if (!parsed.days || !parsed.days.length) throw new Error("No days returned");
+      setItin(parsed); setSavedItin(parsed); setItinDays(parsed.days);
+    } catch(err) {
+      console.error("AI error:", err);
+      const isConnectionError = err.message.includes("fetch") || err.message.includes("Failed") || err.message.includes("ECONNREFUSED") || err.message.includes("NetworkError");
+      if (isConnectionError) {
+        setLoad(false); setStep(0);
+        alert("⚠️ Cannot reach the proxy server.\n\nMake sure you started it:\n  cd proxy\n  npm start");
+        return;
+      }
+      // Fallback itinerary
+      const destLabel = {beach:"Negombo / Southern Coast",hills:"Kandy & Ella",cultural:"Sigiriya & Anuradhapura",wildlife:"Yala",mixed:"Sri Lanka"}[styleKey]||"Sri Lanka";
+      const hotelName = ans.budget==="luxury" ? "Jetwing Beach" : ans.budget==="mid" ? "Goldi Sands Hotel" : "Kings Gate Hotel";
+      const fallDays = [{
+        day:1, location:"Negombo, Sri Lanka", theme:"Arrival & settle in",
+        hotel: hotelName,
+        activities:[
+          {time:ans.startTime||"09:00",type:"transport",place:`${customStart} → Negombo`,area:customStart,text:`Drive from ${customStart} to Negombo along the coastal road.`,why:"Negombo is the closest beach to Colombo — just 45 min away.",hours:"",price:"$15–30 taxi",mapQuery:`Negombo, Sri Lanka`,travelFromPrev:"",unsplashQuery:"Negombo beach Sri Lanka"},
+          {time:"11:00",type:"checkin",place:hotelName,area:"Lewis Place, Negombo",text:`Check in to ${hotelName} on Negombo beach. Drop your bags and freshen up.`,why:"Beachfront location with excellent seafood restaurant on-site.",hours:"Check-in from 2pm, early check-in on request",price:ans.budget==="luxury"?"$150–300/night":ans.budget==="mid"?"$50–100/night":"$20–40/night",mapQuery:`${hotelName}, Negombo, Sri Lanka`,travelFromPrev:"45 min drive",unsplashQuery:"Negombo hotel beach resort"},
+          {time:"13:00",type:"lunch",place:"Lords Restaurant",area:"Lewis Place, Negombo",text:"Fresh grilled lobster and prawn curry on the beachfront terrace.",why:"Best seafood restaurant in Negombo — catch of the day is always exceptional.",hours:"11am–10pm",price:"$15–30",mapQuery:"Lords Restaurant, Negombo, Sri Lanka",travelFromPrev:"5 min walk",unsplashQuery:"Negombo seafood restaurant"},
+          ...(isEveningStart?[]:[{time:"16:00",type:"beach",place:"Negombo Beach",area:"Lewis Place, Negombo",text:"Relax on the golden sand, watch the fishing catamarans return at sunset.",why:"Calm waters, warm sand — perfect introduction to Sri Lanka's coast.",hours:"Always open",price:"Free",mapQuery:"Negombo Beach, Sri Lanka",travelFromPrev:"2 min walk",unsplashQuery:"Negombo beach sunset golden"}]),
+          {time:isEveningStart?"20:00":"19:00",type:"dinner",place:"Bijou Restaurant",area:"Poruthota Road, Negombo",text:"Candlelit dinner with fresh lobster thermidor and coconut prawn curry.",why:"Consistently rated the finest dining in Negombo — book ahead for beachside table.",hours:"6pm–11pm",price:"$20–45",mapQuery:"Bijou Restaurant, Negombo, Sri Lanka",travelFromPrev:"10 min walk",unsplashQuery:"Negombo fine dining seafood"},
+        ]
+      }];
+      while(fallDays.length<N){
+        const n=fallDays.length+1;
+        fallDays.push({day:n,location:"Negombo, Sri Lanka",theme:`Day ${n} — beach & relaxation`,hotel:hotelName,
+          activities:[
+            {time:"08:00",type:"breakfast",place:hotelName+" Restaurant",area:"Lewis Place, Negombo",text:"Full Sri Lankan breakfast with hoppers, string hoppers and fresh tropical fruit at the hotel.",why:"Start the day well — the hotel breakfast is included and excellent.",hours:"7am–10am",price:"Included",mapQuery:`${hotelName}, Negombo, Sri Lanka`,travelFromPrev:"",unsplashQuery:"Sri Lanka hotel breakfast hoppers"},
+            {time:"10:00",type:"beach",place:"Negombo Beach",area:"Lewis Place, Negombo",text:"Morning swim and sunbathe on Negombo's quiet northern beach.",why:"Less crowded than the main stretch — calm waters perfect for swimming.",hours:"Always open",price:"Free",mapQuery:"Negombo Beach, Sri Lanka",travelFromPrev:"2 min walk",unsplashQuery:"Negombo beach morning swim"},
+            {time:"13:00",type:"lunch",place:"The Icebear Restaurant",area:"Poruthota Road, Negombo",text:"Rice and curry with fresh fish, devilled squid and coconut sambol.",why:"Local favourite — the devilled seafood is extraordinary.",hours:"11am–9pm",price:"$8–15",mapQuery:"Icebear Restaurant, Negombo, Sri Lanka",travelFromPrev:"10 min walk",unsplashQuery:"Sri Lanka rice curry seafood"},
+            {time:"19:00",type:"dinner",place:hotelName+" Beachside Bar",area:"Lewis Place, Negombo",text:"Sunset cocktails and grilled seafood platter on the beach.",why:"Watch the sun set over the Indian Ocean with your feet in the sand.",hours:"5pm–11pm",price:"$20–35",mapQuery:`${hotelName}, Negombo, Sri Lanka`,travelFromPrev:"2 min walk",unsplashQuery:"Negombo beach sunset cocktails"},
+          ]
+        });
+      }
+      setItin({ title:`${N}-Day Beach Escape`, tagline:`Relax and recharge on Sri Lanka's golden coast`, hotel:{name:hotelName,area:"Negombo",stars:ans.budget==="luxury"?5:3,why:"Beachfront location with excellent seafood"}, highlights:["Beachfront hotel","Fresh seafood daily","Sunset views"], days:fallDays.slice(0,N) });
+      setSavedItin({ title:`${N}-Day Beach Escape`, tagline:`Relax and recharge on Sri Lanka's golden coast`, hotel:{name:hotelName,area:"Negombo",stars:ans.budget==="luxury"?5:3,why:"Beachfront location with excellent seafood"}, highlights:["Beachfront hotel","Fresh seafood daily","Sunset views"], days:fallDays.slice(0,N) });
+      setItinDays(fallDays.slice(0,N));
+    }
+    setLoad(false);
+  };
     // This is what was causing wrong locations. We now tell the AI EXACTLY
     // which cities are allowed for each style, not just a route description.
     const STYLE_CITIES = {
@@ -2094,6 +2408,18 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
             <p style={{ fontSize:15, color:"rgba(255,255,255,.75)", marginBottom:16 }}>{itin.tagline}</p>
             <p style={{ fontSize:13, color:"rgba(255,255,255,.65)", marginBottom:16 }}>📅 {ans.days} days · {ans.nights} nights · {ans.group||"solo"} · {ans.budget||"mid-range"} budget · Starting: {startLabel}</p>
             {itin.highlights&&<div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16 }}>{itin.highlights.map((h,i)=><span key={i} style={{ fontSize:12, fontWeight:500, padding:"4px 12px", borderRadius:20, background:"rgba(255,255,255,.15)", color:"rgba(255,255,255,.9)", border:"1px solid rgba(255,255,255,.25)" }}>✓ {h}</span>)}</div>}
+            {/* Hotel recommendation */}
+            {itin.hotel && (
+              <div style={{ display:"inline-flex", alignItems:"center", gap:10, background:"rgba(255,255,255,.12)", border:"1px solid rgba(255,255,255,.25)", borderRadius:12, padding:"10px 16px", marginBottom:14 }}>
+                <span style={{ fontSize:22 }}>🏨</span>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#fff" }}>{itin.hotel.name}</div>
+                  <div style={{ fontSize:11, color:"rgba(255,255,255,.75)" }}>
+                    {"★".repeat(itin.hotel.stars||3)} · {itin.hotel.area} · {itin.hotel.why}
+                  </div>
+                </div>
+              </div>
+            )}
             <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
               <button onClick={downloadPDF} style={{ padding:"10px 20px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>📄 Download PDF</button>
               {/* Google Maps multi-waypoint route */}
@@ -2138,30 +2464,13 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
             </div>
           </div>
 
-          {/* Show ALL days — locked ones get the PremiumLock floating modal on click */}
-          {(itinDays||itin.days).map((d,idx)=>{
-            const itinId = itin.title + itin.tagline;
-            const isLocked = idx > 0 && !premium.isUnlocked(itinId);
-            return (
-              <div key={d.day} style={{ position:"relative", marginBottom:16 }}>
-                <div style={{ border:`1.5px solid ${isLocked?"#E4E4E4":C.border}`, borderRadius:16, overflow:"hidden", background:C.white, boxShadow:"0 2px 12px rgba(0,0,0,.04)", opacity:isLocked?.5:1 }}>
-                  <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,${isLocked?"#999":"#0B6B52"},${isLocked?"#bbb":"#147856"})`, display:"flex", alignItems:"center", gap:12 }}>
-                    <span style={{ background:"rgba(255,255,255,.2)", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Day {d.day}</span>
-                    <span style={{ fontSize:15, fontWeight:700, color:"#fff", fontFamily:serif }}>{d.location}</span>
-                    <span style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginLeft:"auto" }}>— {d.theme}</span>
-                    {isLocked && <span style={{ fontSize:14 }}>🔒</span>}
-                  </div>
-                  <div style={{ padding:"6px 20px 10px", filter:isLocked?"blur(3px)":"none", pointerEvents:isLocked?"none":"auto" }}>
-                    {d.activities.map((a,i)=><ActivityRow key={`${d.day}-${i}`} act={a} isLast={i===d.activities.length-1}/>)}
-                  </div>
-                </div>
-                {/* Floating premium unlock overlay on locked days */}
-                {isLocked && (
-                  <PremiumLock itinId={itinId} onUnlock={premium.unlock}/>
-                )}
-              </div>
-            );
-          })}
+          {/* Show ALL days with drag/drop and swap — locked ones get premium overlay */}
+          <DraggableItinerary
+            days={itinDays||itin.days}
+            onUpdate={newDays=>{ setItinDays(newDays); setSavedItin({...itin, days:newDays}); }}
+            itinId={itin.title+itin.tagline}
+            premium={premium}
+          />
 
           <AnimatedJourneyMap days={itinDays||itin.days} transport={ans.transport} startLabel={startLabel}/>
           <LocalCheatSheet location={itin.days?.[0]?.location||"Sri Lanka"}/>
@@ -2171,7 +2480,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
             <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
               <Btn variant="amber" onClick={onGuideOpen}>Find a guide & request bid →</Btn>
               <Btn variant="outline" onClick={downloadPDF}>📄 Download PDF</Btn>
-              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", customPlaces:[], startCity:"airport" }); }}>↺ New itinerary</Btn>
+              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", customPlaces:[], startCity:"airport", startTime:"09:00" }); }}>↺ New itinerary</Btn>
             </div>
           </div>
         </div>
@@ -2287,17 +2596,17 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
         If you already know a place in Sri Lanka you want to include — a temple, a waterfall, a town, a restaurant — add it here and we'll fit it into your itinerary.
       </p>
       {/* Input row */}
-      <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+      <div className="place-input-row" style={{ display:"flex", gap:8, marginBottom:16 }}>
         <input
           value={placeInput}
           onChange={e=>setPlaceInput(e.target.value)}
           onKeyDown={e=>{ if(e.key==="Enter"&&placeInput.trim()){ setAns(a=>({...a,customPlaces:[...a.customPlaces,placeInput.trim()]})); setPlaceInput(""); } }}
           placeholder="e.g. Ravana Falls, Ella · Nine Arch Bridge · Galle Fort"
-          style={{ flex:1, padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:13, fontFamily:sans, color:C.ink, outline:"none" }}
+          style={{ flex:1, padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:13, fontFamily:sans, color:C.ink, outline:"none", minWidth:0 }}
         />
         <button
           onClick={()=>{ if(placeInput.trim()){ setAns(a=>({...a,customPlaces:[...a.customPlaces,placeInput.trim()]})); setPlaceInput(""); } }}
-          style={{ padding:"12px 18px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>
+          style={{ padding:"12px 18px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap", flexShrink:0 }}>
           Add +
         </button>
       </div>
@@ -2349,10 +2658,34 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
         </>
       ) : (
         <>
-          <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20, lineHeight:1.6 }}>You're ready to generate. Here's a summary of your trip preferences:</p>
-          <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:16, padding:"16px 18px" }}>
+          {/* Start time picker */}
+          <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16, lineHeight:1.6 }}>Almost done! Two final details:</p>
+
+          <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"16px 18px", marginBottom:16 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:10 }}>🕐 What time does your trip start?</div>
+            <p style={{ fontSize:12, color:C.inkSoft, marginBottom:12 }}>This affects what we plan for Day 1 — an evening start means check-in only, morning start means a full day.</p>
+            <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+              <input type="time" value={ans.startTime||"09:00"} onChange={e=>upd("startTime",e.target.value)}
+                style={{ padding:"10px 14px", border:`1.5px solid ${C.teal}`, borderRadius:10, fontSize:16, fontFamily:sans, fontWeight:600, color:C.ink, outline:"none", cursor:"pointer" }}/>
+              <div style={{ fontSize:12, color:C.inkSoft }}>
+                {(()=>{
+                  const h = parseInt((ans.startTime||"09:00").split(":")[0]);
+                  return h < 12 ? "🌅 Morning — full day planned"
+                       : h < 14 ? "☀️ Midday — nearly full day"
+                       : h < 18 ? "🌤️ Afternoon — lighter day 1"
+                       : "🌙 Evening — check-in & dinner only";
+                })()}
+              </div>
+            </div>
+          </div>
+
+          {/* Trip summary */}
+          <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"16px 18px" }}>
+            <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:10 }}>📋 Trip summary</div>
             {[
               ["📅","Duration",`${ans.days} days, ${ans.nights} nights`],
+              ["🕐","Start time",ans.startTime||"09:00"],
+              ["📍","Starting from",ans.startCity==="airport"?"BIA Airport":ans.startCity==="colombo"?"Colombo":ans.customStart||"Colombo"],
               ["🗺️","Style",ans.travel||"Not selected"],
               ["👥","Group",ans.group||"Not selected"],
               ["💰","Budget",ans.budget||"Not selected"],
@@ -2360,10 +2693,10 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
               ["⚡","Pace",ans.pace||"balanced"],
               ...(ans.customPlaces.length?[["📍","Your places",ans.customPlaces.join(", ")]]:[]),
             ].map(([icon,label,val])=>(
-              <div key={label} style={{ display:"flex", gap:12, padding:"8px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
-                <span style={{ fontSize:15 }}>{icon}</span>
-                <span style={{ color:C.inkSoft, minWidth:80 }}>{label}</span>
-                <span style={{ fontWeight:600, color:C.ink, textTransform:"capitalize" }}>{val}</span>
+              <div key={label} style={{ display:"flex", gap:12, padding:"6px 0", borderBottom:`1px solid ${C.border}`, fontSize:12 }}>
+                <span style={{ fontSize:14 }}>{icon}</span>
+                <span style={{ color:C.inkSoft, minWidth:90 }}>{label}</span>
+                <span style={{ fontWeight:600, color:C.ink, textTransform:"capitalize", flex:1 }}>{val}</span>
               </div>
             ))}
           </div>
@@ -2383,13 +2716,22 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
         </div>
       </div>
       <div style={{ maxWidth:640, margin:"2.5rem auto", padding:"0 1.5rem 4rem" }}>
-        <div style={{ background:C.white, borderRadius:24, padding:"2.5rem", border:`1px solid ${C.border}`, boxShadow:"0 4px 24px rgba(0,0,0,.06)" }}>
+        <div className="wizard-card" style={{ background:C.white, borderRadius:24, padding:"2.5rem", border:`1px solid ${C.border}`, boxShadow:"0 4px 24px rgba(0,0,0,.06)" }}>
           {steps[step]}
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:28, paddingTop:20, borderTop:`1px solid ${C.border}` }}>
+          <div className="wizard-btn-row" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:28, paddingTop:20, borderTop:`1px solid ${C.border}`, gap:12 }}>
             {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>← Back</Btn> : <span/>}
             {step<9
               ? <Btn onClick={()=>setStep(s=>s+1)}>Next →</Btn>
-              : <Btn variant="amber" onClick={()=>{ if(!user){ onLoginNeeded(); return; } generate(); }}>✨ Generate my itinerary</Btn>
+              : <Btn variant="amber" onClick={()=>{
+                  if(!user){
+                    // Save wizard state so it survives login
+                    sessionStorage.setItem("ct_wizard_ans", JSON.stringify(ans));
+                    sessionStorage.setItem("ct_wizard_step", String(step));
+                    onLoginNeeded();
+                    return;
+                  }
+                  generate();
+                }}>✨ Generate my itinerary</Btn>
             }
           </div>
         </div>
@@ -2788,8 +3130,14 @@ function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose }) {
             </div>
           )}
 
-          {d.formatted_phone_number && <p style={{ fontSize:13, color:C.ink, marginBottom:8 }}>📞 {d.formatted_phone_number}</p>}
-          {d.website && <a href={d.website} target="_blank" rel="noopener noreferrer" style={{ fontSize:13, color:C.teal, display:"block", marginBottom:14, wordBreak:"break-all" }}>🌐 {d.website}</a>}
+          {d.formatted_phone_number && <p style={{ fontSize:13, color:C.ink, marginBottom:8, display:"flex", alignItems:"center", gap:8 }}>📞 <a href={`tel:${d.formatted_phone_number}`} style={{ color:C.teal, textDecoration:"none", fontWeight:600 }}>{d.formatted_phone_number}</a></p>}
+          {d.website && (
+            <a href={d.website} target="_blank" rel="noopener noreferrer"
+              style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 14px", background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:10, fontSize:13, color:C.teal, textDecoration:"none", fontWeight:600, marginBottom:14, wordBreak:"break-all" }}>
+              🌐 <span style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{d.website.replace(/^https?:\/\/(www\.)?/,"")}</span>
+              <span style={{ flexShrink:0, fontSize:11, opacity:.7 }}>↗</span>
+            </a>
+          )}
 
           {/* Reviews */}
           {d.reviews?.length>0 && <>
