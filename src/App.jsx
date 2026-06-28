@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
 const C = {
@@ -386,7 +386,104 @@ function MobileStyles() {
 }
 
 // ─── NAV ─────────────────────────────────────────────────────────────────────
-// ─── NAV DROPDOWN DATA ───────────────────────────────────────────────────────
+// ─── NAV WITH AUTH ────────────────────────────────────────────────────────────
+function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }) {
+  const [menuOpen,  setMenuOpen]  = useState(false);
+  const [destHover, setDestHover] = useState(false);
+  const hoverTimer = useRef(null);
+
+  const openDest = (catId) => {
+    setPage("destinations"); setDestHover(false); setMenuOpen(false);
+    sessionStorage.setItem("explorecat", catId);
+  };
+  const handleDestEnter = () => { clearTimeout(hoverTimer.current); setDestHover(true); };
+  const handleDestLeave = () => { hoverTimer.current = setTimeout(()=>setDestHover(false), 200); };
+
+  const displayName = user?.displayName?.split(" ")[0] || user?.email?.split("@")[0];
+
+  return (
+    <>
+      <nav style={{ position:"sticky", top:0, zIndex:400, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 1.5rem", height:64, background:"rgba(255,255,255,0.96)", backdropFilter:"blur(14px)", borderBottom:`1px solid rgba(0,0,0,0.06)` }}>
+        <div onClick={()=>{ setPage("home"); setMenuOpen(false); }} style={{ cursor:"pointer", fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, flexShrink:0 }}>
+          Ceylon<span style={{ color:C.tealMid }}>Trails</span>
+          <sup style={{ fontFamily:sans, fontSize:9, color:C.amber, letterSpacing:1, textTransform:"uppercase", verticalAlign:"super", marginLeft:1 }}>LK</sup>
+        </div>
+
+        {/* Desktop links */}
+        <div className="desktop-nav" style={{ display:"flex", gap:"1.6rem", alignItems:"center" }}>
+          <span onClick={()=>setPage("home")} style={{ fontSize:14, color:page==="home"?C.teal:C.inkSoft, fontWeight:page==="home"?600:400, cursor:"pointer", borderBottom:page==="home"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2 }}>Home</span>
+
+          <div style={{ position:"relative" }} onMouseEnter={handleDestEnter} onMouseLeave={handleDestLeave}>
+            <span style={{ fontSize:14, color:page==="destinations"?C.teal:C.inkSoft, fontWeight:page==="destinations"?600:400, cursor:"pointer", borderBottom:page==="destinations"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, display:"flex", alignItems:"center", gap:4 }}
+              onClick={()=>setPage("destinations")}>
+              Destinations <span style={{ fontSize:10, opacity:.6 }}>▾</span>
+            </span>
+            {destHover && (
+              <div style={{ position:"absolute", top:"calc(100% + 14px)", left:"50%", transform:"translateX(-50%)", background:"#fff", borderRadius:16, boxShadow:"0 8px 40px rgba(0,0,0,.15)", border:`1px solid ${C.border}`, padding:12, width:340, zIndex:500, display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
+                <div style={{ position:"absolute", top:-7, left:"50%", width:14, height:14, background:"#fff", border:`1px solid ${C.border}`, borderBottom:"none", borderRight:"none", transform:"translateX(-50%) rotate(45deg)" }}/>
+                {[
+                  {id:"hotels",label:"🏨 Hotels",desc:"Luxury to budget stays"},
+                  {id:"restaurants",label:"🍛 Restaurants",desc:"Local & international cuisine"},
+                  {id:"places",label:"📍 Places to Visit",desc:"All regions by province"},
+                ].map(cat=>(
+                  <div key={cat.id} onClick={()=>openDest(cat.id)} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, cursor:"pointer", transition:"background .15s" }}
+                    onMouseEnter={e=>e.currentTarget.style.background=C.tealPale}
+                    onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    <span style={{ fontSize:22, flexShrink:0 }}>{cat.label.split(" ")[0]}</span>
+                    <div><div style={{ fontSize:13, fontWeight:600, color:C.ink }}>{cat.label.slice(cat.label.indexOf(" ")+1)}</div><div style={{ fontSize:11, color:C.inkSoft }}>{cat.desc}</div></div>
+                  </div>
+                ))}
+                <div onClick={()=>{ setPage("destinations"); setDestHover(false); }} style={{ gridColumn:"1/-1", padding:"8px 12px", borderTop:`1px solid ${C.border}`, marginTop:4, textAlign:"center", fontSize:12, fontWeight:600, color:C.teal, cursor:"pointer" }}>Browse all destinations →</div>
+              </div>
+            )}
+          </div>
+
+          <span onClick={()=>setPage("srilankamap")} style={{ fontSize:14, color:page==="srilankamap"?C.teal:C.inkSoft, fontWeight:page==="srilankamap"?600:400, cursor:"pointer", borderBottom:page==="srilankamap"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>Sri Lanka Map</span>
+          <span onClick={()=>setPage("journey")} style={{ fontSize:14, color:page==="journey"?C.teal:C.inkSoft, fontWeight:page==="journey"?600:400, cursor:"pointer", borderBottom:page==="journey"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>Plan a trip</span>
+          <span onClick={onGuideOpen} style={{ fontSize:14, color:C.inkSoft, cursor:"pointer", paddingBottom:2, whiteSpace:"nowrap" }}>Find a Guide</span>
+        </div>
+
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          {/* Auth button */}
+          {user ? (
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ width:32, height:32, borderRadius:"50%", background:C.teal, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700 }}>
+                {displayName?.[0]?.toUpperCase()||"U"}
+              </div>
+              <span style={{ fontSize:13, fontWeight:600, color:C.ink }}>{displayName}</span>
+              <button onClick={signOut} style={{ fontSize:12, color:C.inkSoft, background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"4px 10px", cursor:"pointer", fontFamily:sans }}>Sign out</button>
+            </div>
+          ) : (
+            <button onClick={onLoginClick} style={{ padding:"8px 18px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Sign in</button>
+          )}
+          <button onClick={()=>setPage("journey")} style={{ padding:"9px 18px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>Plan my trip</button>
+          <button onClick={()=>setMenuOpen(o=>!o)} style={{ display:"flex", flexDirection:"column", gap:5, padding:8, background:"none", border:`1px solid ${C.border}`, borderRadius:10, cursor:"pointer" }}>
+            <span style={{ width:20, height:2, background:menuOpen?C.teal:C.ink, borderRadius:2 }}/>
+            <span style={{ width:20, height:2, background:menuOpen?C.teal:C.ink, borderRadius:2 }}/>
+            <span style={{ width:20, height:2, background:menuOpen?C.teal:C.ink, borderRadius:2 }}/>
+          </button>
+        </div>
+      </nav>
+
+      {menuOpen && (
+        <div style={{ position:"fixed", top:64, left:0, right:0, zIndex:399, background:"#fff", borderBottom:`1px solid ${C.border}`, boxShadow:"0 8px 24px rgba(0,0,0,.1)", padding:"1rem 1.5rem 1.5rem", maxHeight:"80vh", overflowY:"auto" }}>
+          {[["home","🏠 Home"],["destinations","🗺️ Destinations"],["srilankamap","🗾 Sri Lanka Map"],["journey","✨ Plan a trip"],["guides","🧭 Find a Guide"]].map(([p,l])=>(
+            <div key={p} onClick={()=>{ if(p==="guides") onGuideOpen(); else setPage(p); setMenuOpen(false); }} style={{ padding:"14px 0", fontSize:16, fontWeight:page===p?600:400, color:page===p?C.teal:C.ink, cursor:"pointer", borderBottom:`1px solid ${C.border}` }}>{l}</div>
+          ))}
+          {user ? (
+            <div style={{ marginTop:14, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ fontSize:14, color:C.ink }}>👤 {displayName}</span>
+              <button onClick={()=>{ signOut(); setMenuOpen(false); }} style={{ fontSize:13, color:C.coral, background:"none", border:`1px solid ${C.coral}`, borderRadius:8, padding:"6px 14px", cursor:"pointer", fontFamily:sans }}>Sign out</button>
+            </div>
+          ) : (
+            <button onClick={()=>{ onLoginClick(); setMenuOpen(false); }} style={{ marginTop:14, width:"100%", padding:"13px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Sign in / Create account</button>
+          )}
+          <button onClick={()=>{ setPage("journey"); setMenuOpen(false); }} style={{ marginTop:10, width:"100%", padding:"13px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:sans }}>✨ Create my journey</button>
+        </div>
+      )}
+    </>
+  );
+}
 const NAV_DEST_CATS = [
   { id:"hotels",    icon:"🏨", label:"Hotels",           desc:"Luxury to budget stays" },
   { id:"restaurants",icon:"🍛",label:"Restaurants",      desc:"Local & international cuisine" },
@@ -745,28 +842,294 @@ function WishlistPanel({ wishlist, savedItin, setSavedItin }) {
 
 // ─── UNIFIED DESTINATIONS PAGE ───────────────────────────────────────────────
 // Merges region cards (Beaches, Hill Country etc) + Google Places (Hotels, Restaurants etc)
-const ALL_TABS = [
-  { id:"hotels",      label:"🏨 Hotels",           type:"places" },
-  { id:"restaurants", label:"🍛 Restaurants",       type:"places" },
-  { id:"places",      label:"📸 Places to Visit",   type:"places" },
-  { id:"adventure",   label:"🧗 Adventure",         type:"places" },
-  { id:"beaches",     label:"🏖️ Beaches",           type:"regions" },
-  { id:"hills",       label:"⛰️ Hill Country",      type:"regions" },
-  { id:"cultural",    label:"🏛️ Cultural",          type:"regions" },
-  { id:"wildlife",    label:"🐘 Wildlife",           type:"regions" },
-  { id:"rural",       label:"🌾 Rural",             type:"regions" },
+// Province mapping for destinations
+const PROVINCE_MAP = {
+  // Beaches
+  "Mirissa":"Southern Province", "Unawatuna":"Southern Province", "Hikkaduwa":"Southern Province",
+  "Tangalle":"Southern Province", "Arugam Bay":"Eastern Province", "Nilaveli":"Eastern Province",
+  // Hills
+  "Ella":"Uva Province", "Kandy":"Central Province", "Nuwara Eliya":"Central Province",
+  "Haputale":"Uva Province", "Horton Plains":"Central Province", "Knuckles Range":"Central Province",
+  // Cultural
+  "Sigiriya":"North Central Province", "Anuradhapura":"North Central Province",
+  "Polonnaruwa":"North Central Province", "Dambulla Cave Temple":"Central Province",
+  "Galle Fort":"Southern Province", "Jaffna":"Northern Province",
+  // Wildlife
+  "Yala National Park":"Southern Province", "Wilpattu National Park":"North Western Province",
+  "Udawalawe":"Southern Province", "Sinharaja Rainforest":"Southern Province",
+  "Minneriya":"North Central Province", "Bundala":"Southern Province",
+  // Adventure
+  "Adam's Peak":"Sabaragamuwa Province", "Ella Rock Hike":"Uva Province",
+  "Kitulgala White Water":"Sabaragamuwa Province", "Pidurutalagala":"Central Province",
+  "Kite Surfing, Kalpitiya":"North Western Province", "Knuckles Camping":"Central Province",
+  // Rural
+  "Knuckles Villages":"Central Province", "Weligama Fisher Village":"Southern Province",
+  "Dambulla Farming Village":"Central Province", "Mahiyanganaya":"Uva Province",
+  "Belihuloya Valley":"Sabaragamuwa Province", "Tangalle Village Coast":"Southern Province",
+};
+
+// Regions grouped under "Places to Visit"
+const PLACES_REGIONS = [
+  { id:"beaches",  label:"🏖️ Beaches",         province:"Southern & Eastern", color:[C.tealMid,"#0A8060"] },
+  { id:"hills",    label:"⛰️ Hill Country",     province:"Central & Uva",      color:["#2A6040","#1A3A2A"] },
+  { id:"cultural", label:"🏛️ Cultural Sites",   province:"North Central",      color:["#B87318","#7A4A0A"] },
+  { id:"wildlife", label:"🐘 Wildlife & Nature", province:"Southern & NW",      color:["#145840","#0A2A20"] },
+  { id:"adventure",label:"🧗 Adventure",         province:"Central & Sabara.",  color:["#C45230","#7A2010"] },
+  { id:"rural",    label:"🌾 Rural Sri Lanka",   province:"All provinces",      color:["#7A6010","#4A3A08"] },
 ];
 
+const ALL_TABS = [
+  { id:"hotels",      label:"🏨 Hotels",          type:"places" },
+  { id:"restaurants", label:"🍛 Restaurants",      type:"places" },
+  { id:"places",      label:"📍 Places to Visit",  type:"places_regions" },
+];
+
+
 function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
-  const init = sessionStorage.getItem("explorecat") || "beaches";
-  const [activeTab, setActiveTab] = useState(init);
-  const [gallery, setGallery]     = useState(null);
-  const [places, setPlaces]       = useState([]);
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState("");
-  const [selected, setSelected]   = useState(null);
-  const [addedToast, setToast]    = useState(false);
+  const init = sessionStorage.getItem("explorecat") || "hotels";
+  const [activeTab, setActiveTab]       = useState(init);
+  const [activeRegion, setActiveRegion] = useState("beaches"); // sub-region under Places to Visit
+  const [gallery, setGallery]           = useState(null);
+  const [places, setPlaces]             = useState([]);
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState("");
+  const [selected, setSelected]         = useState(null);
+  const [addedToast, setToast]          = useState(false);
   const wishlist = useWishlist();
+
+  const tab = ALL_TABS.find(t=>t.id===activeTab) || ALL_TABS[0];
+
+  useEffect(()=>{
+    if (tab.type==="places") loadPlaces(activeTab);
+  }, [activeTab]);
+
+  const loadPlaces = async (catId) => {
+    setLoading(true); setError(""); setPlaces([]);
+    try {
+      const query = GPLACES_CAT_QUERIES[catId];
+      const data  = await placesSearch(query);
+      if (data.error==="no_key") { setError("no_key"); setLoading(false); return; }
+      if (data.status==="REQUEST_DENIED") { setError("denied"); setLoading(false); return; }
+      setPlaces(data.results||[]);
+    } catch(e) { setError(e.message); }
+    setLoading(false);
+  };
+
+  const switchTab = (id) => {
+    setActiveTab(id); setSelected(null); setError(""); setPlaces([]);
+    sessionStorage.setItem("explorecat", id);
+  };
+
+  const addToItin = (place) => {
+    const newAct = {
+      time:"10:00", type:"sightseeing",
+      place:place.name, area:place.formatted_address||"Sri Lanka",
+      text:`Visit ${place.name} — rated ${place.rating||"N/A"}★`,
+      why:"Added from Destinations", hours:"", price:place.price_level?"$".repeat(place.price_level):"",
+      mapQuery:`${place.name}, Sri Lanka`,
+    };
+    if (savedItin) {
+      setSavedItin({...savedItin, days:savedItin.days.map((d,i)=>i===0?{...d,activities:[...d.activities,newAct]}:d)});
+      setToast(true); setTimeout(()=>setToast(false),2500);
+    } else { alert("Create an itinerary first from 'Plan a trip', then come back to add places."); }
+  };
+
+  // Region data for Places to Visit
+  const regionData = DESTINATIONS[activeRegion] || [];
+  const regionCat  = DEST_CATS.find(c=>c.id===activeRegion);
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.surface }}>
+      <GalleryLightbox place={gallery} onClose={()=>setGallery(null)}/>
+
+      {addedToast && (
+        <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", background:C.teal, color:"#fff", padding:"12px 24px", borderRadius:30, fontSize:14, fontWeight:600, zIndex:800, boxShadow:"0 4px 20px rgba(0,0,0,.2)", whiteSpace:"nowrap" }}>
+          ✅ Added to Day 1 of your itinerary!
+        </div>
+      )}
+
+      {/* Hero */}
+      <div style={{ background:"linear-gradient(160deg,#04322A 0%,#0B6B52 70%,#147856 100%)", padding:"3rem 2rem 2.5rem", position:"relative", overflow:"hidden" }}>
+        <HeroArt/>
+        <div style={{ position:"relative", zIndex:2, maxWidth:800, margin:"0 auto", textAlign:"center" }}>
+          <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Explore Sri Lanka</div>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(28px,5vw,46px)", fontWeight:700, color:"#fff", marginBottom:12 }}>Where would you like to go?</h1>
+          <p style={{ fontSize:15, color:"rgba(255,255,255,.7)", lineHeight:1.7, maxWidth:520, margin:"0 auto", fontWeight:300 }}>Hotels, restaurants and every destination across all 9 provinces.</p>
+        </div>
+      </div>
+
+      {/* Main tab bar */}
+      <div style={{ position:"sticky", top:64, zIndex:300, background:C.white, borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ maxWidth:1100, margin:"0 auto", display:"flex", padding:"0 1rem" }}>
+          {ALL_TABS.map(t=>(
+            <button key={t.id} onClick={()=>switchTab(t.id)} style={{
+              padding:"14px 24px", border:"none", background:"transparent",
+              fontSize:14, fontWeight:activeTab===t.id?700:400,
+              color:activeTab===t.id?C.teal:C.inkSoft, cursor:"pointer",
+              borderBottom:activeTab===t.id?`2.5px solid ${C.teal}`:"2.5px solid transparent",
+              whiteSpace:"nowrap", fontFamily:sans, flexShrink:0,
+            }}>{t.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"2rem 2rem 5rem" }}>
+
+        {/* ── HOTELS & RESTAURANTS (Google Places) ── */}
+        {tab.type==="places" && (
+          <PlacesTabContent
+            catId={activeTab} places={places} loading={loading} error={error}
+            tab={tab} wishlist={wishlist} selected={selected}
+            setSelected={setSelected} addToItin={addToItin}
+            onRetry={()=>loadPlaces(activeTab)}
+          />
+        )}
+
+        {/* ── PLACES TO VISIT (regions grouped by province) ── */}
+        {tab.type==="places_regions" && (
+          <>
+            {/* Region sub-tabs */}
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:24 }}>
+              {PLACES_REGIONS.map(r=>(
+                <button key={r.id} onClick={()=>setActiveRegion(r.id)} style={{
+                  padding:"10px 18px", border:`1.5px solid ${activeRegion===r.id?r.color[0]:C.border}`,
+                  borderRadius:20, background:activeRegion===r.id?r.color[0]:"#fff",
+                  color:activeRegion===r.id?"#fff":C.ink,
+                  cursor:"pointer", fontFamily:sans, fontSize:13, fontWeight:600,
+                  transition:"all .15s",
+                }}>
+                  {r.label}
+                  <span style={{ fontSize:10, marginLeft:6, opacity:.75 }}>· {r.province}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Region info */}
+            {regionCat && (
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:10 }}>
+                <div>
+                  <h2 style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink, marginBottom:4 }}>
+                    {PLACES_REGIONS.find(r=>r.id===activeRegion)?.label}
+                  </h2>
+                  <p style={{ fontSize:13, color:C.inkSoft }}>
+                    📍 {PLACES_REGIONS.find(r=>r.id===activeRegion)?.province} · {regionData.length} destinations ·
+                    <span style={{ color:C.teal, fontWeight:500 }}> Click any card for photo gallery</span>
+                  </p>
+                </div>
+                <Btn onClick={()=>setPage("journey")} style={{ flexShrink:0 }}>✨ Plan a trip here</Btn>
+              </div>
+            )}
+
+            <div className="dest-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.2rem" }}>
+              {regionData.map(p=>(
+                <div key={p.name} onClick={()=>setGallery(p)} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, cursor:"pointer", transition:"transform .2s,box-shadow .2s" }}
+                  onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,.1)"; }}
+                  onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
+                  {/* Cover image via Unsplash */}
+                  <div style={{ height:160, background:`linear-gradient(135deg,${regionCat?.color[0]||C.teal},${regionCat?.color[1]||"#147856"})`, position:"relative", overflow:"hidden" }}>
+                    <img src={getUnsplashUrl(p.name, 400, 240)} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>
+                    <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 55%)" }}/>
+                    <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 14px" }}>
+                      <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff" }}>{p.name}</div>
+                      {/* Province badge */}
+                      <div style={{ fontSize:10, color:"rgba(255,255,255,.8)", marginTop:3 }}>
+                        📍 {PROVINCE_MAP[p.name]||"Sri Lanka"}
+                      </div>
+                    </div>
+                    <div style={{ position:"absolute", top:8, right:8, background:"rgba(0,0,0,.45)", backdropFilter:"blur(4px)", color:"#fff", fontSize:10, fontWeight:600, padding:"3px 8px", borderRadius:20 }}>🖼️ Gallery</div>
+                  </div>
+                  <div style={{ padding:"12px 14px" }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                      <Pill>{p.tag}</Pill>
+                      <span style={{ fontSize:11, fontWeight:600, padding:"3px 8px", borderRadius:20,
+                        background:p.crowd==="Low"?"#EBF5D8":p.crowd==="High"?C.coralLight:C.amberLight,
+                        color:p.crowd==="Low"?"#3A6B10":p.crowd==="High"?C.coral:C.amber,
+                        border:`1px solid ${p.crowd==="Low"?"#C1DB8E":p.crowd==="High"?"#EFBAA8":"#F0D48A"}`,
+                      }}>{p.crowd} crowds</span>
+                    </div>
+                    <p style={{ fontSize:12, color:C.inkSoft, lineHeight:1.6, marginBottom:10 }}>{p.desc}</p>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:8, borderTop:`1px solid ${C.border}` }}>
+                      <span style={{ fontSize:11, color:C.inkSoft }}>📅 Best: <strong style={{ color:C.ink }}>{p.best}</strong></span>
+                      <button onClick={e=>{ e.stopPropagation(); setPage("journey"); }} style={{ fontSize:12, fontWeight:600, color:C.teal, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>Plan trip →</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ textAlign:"center", marginTop:"2.5rem" }}>
+              <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
+                <Btn onClick={()=>setPage("journey")}>✨ Create AI itinerary</Btn>
+                <Btn variant="amber" onClick={onGuideOpen}>Find a local guide →</Btn>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {selected && (
+        <PlaceDetailPanel place={selected} wishlist={wishlist} onAddToItin={()=>{ addToItin(selected); setSelected(null); }} onClose={()=>setSelected(null)}/>
+      )}
+    </div>
+  );
+}
+
+// Extracted Places tab content (Hotels/Restaurants)
+function PlacesTabContent({ catId, places, loading, error, tab, wishlist, selected, setSelected, addToItin, onRetry }) {
+  return (
+    <>
+      {error==="no_key" && (
+        <div style={{ background:C.amberLight, border:`1.5px solid #F0D48A`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
+          <div style={{ fontSize:32, marginBottom:10 }}>🔑</div>
+          <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>Google Places API key needed</h3>
+          <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, maxWidth:440, margin:"0 auto" }}>Add <code style={{ background:"rgba(0,0,0,.08)", padding:"2px 6px", borderRadius:4 }}>GOOGLE_PLACES_KEY</code> to your proxy <code>.env</code> and Vercel environment variables.</p>
+        </div>
+      )}
+      {error==="denied" && <div style={{ background:C.coralLight, border:`1.5px solid #EFBAA8`, borderRadius:16, padding:"2rem", textAlign:"center" }}><p style={{ fontSize:14, color:C.coral }}>⚠️ API key rejected — enable <strong>Places API</strong> in Google Cloud Console.</p></div>}
+      {error && error!=="no_key" && error!=="denied" && (
+        <div style={{ textAlign:"center", padding:"2rem" }}>
+          <p style={{ color:C.coral, fontSize:14, marginBottom:12 }}>{error}</p>
+          <Btn onClick={onRetry}>Try again</Btn>
+        </div>
+      )}
+      {loading && (
+        <div style={{ textAlign:"center", padding:"4rem" }}>
+          <div style={{ width:44, height:44, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto 14px" }}/>
+          <p style={{ fontSize:14, color:C.inkSoft }}>Finding the best places in Sri Lanka…</p>
+        </div>
+      )}
+      {!loading && !error && places.length>0 && (
+        <div className="dest-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.2rem" }}>
+          {places.map(p=>(
+            <div key={p.place_id} onClick={()=>setSelected(p)} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, cursor:"pointer", transition:"transform .2s,box-shadow .2s" }}
+              onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,.1)"; }}
+              onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
+              <div style={{ height:160, background:`linear-gradient(135deg,${C.teal},#147856)`, overflow:"hidden", position:"relative" }}>
+                {p.photos?.[0]
+                  ? <img src={photoUrl(p.photos[0].photo_reference)} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>
+                  : <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:40, opacity:.25 }}>{tab.label.split(" ")[0]}</div>
+                }
+                <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"8px 12px", background:"linear-gradient(to top,rgba(0,0,0,.65),transparent)" }}>
+                  <div style={{ fontFamily:serif, fontSize:15, fontWeight:700, color:"#fff" }}>{p.name}</div>
+                </div>
+                {wishlist.has(p.place_id) && <div style={{ position:"absolute", top:8, right:8, background:C.amber, color:"#fff", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:20 }}>♥</div>}
+              </div>
+              <div style={{ padding:"12px 14px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+                  <span style={{ fontSize:12, color:C.amberMid }}>{"★".repeat(Math.round(p.rating||0))}<span style={{ color:C.inkSoft }}> {p.rating} ({(p.user_ratings_total||0).toLocaleString()})</span></span>
+                  {p.price_level && <span style={{ fontSize:12, color:C.teal, fontWeight:600 }}>{"$".repeat(p.price_level)}</span>}
+                </div>
+                <p style={{ fontSize:11, color:C.inkSoft, lineHeight:1.5, margin:0 }}>{(p.formatted_address||"").split(",").slice(-3).join(", ")}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {!loading && !error && places.length===0 && <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}><div style={{ fontSize:40, marginBottom:10 }}>🔍</div><p>No results found.</p></div>}
+      {selected && <PlaceDetailPanel place={selected} wishlist={wishlist} onAddToItin={()=>{ addToItin(selected); setSelected(null); }} onClose={()=>setSelected(null)}/>}
+    </>
+  );
+}
 
   const tab = ALL_TABS.find(t=>t.id===activeTab) || ALL_TABS[0];
 
@@ -1377,7 +1740,7 @@ function MismatchWarning({ travel, activities }) {
 }
 
 // ─── JOURNEY PAGE ────────────────────────────────────────────────────────────
-function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen }) {
+function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLoginNeeded, premium }) {
   const [step, setStep]    = useState(0);
   const [ans, setAns]      = useState({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", customPlaces:[], startCity:"airport" });
   const [loading, setLoad] = useState(false);
@@ -1611,7 +1974,47 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
           </div>
         </div>
         <div style={{ maxWidth:820, margin:"0 auto", padding:"2.5rem 2rem" }}>
-          <DraggableItinerary days={itinDays||itin.days} onUpdate={newDays=>{ setItinDays(newDays); setSavedItin({...itin, days:newDays}); }}/>
+          {/* Start → End journey banner */}
+          <div style={{ display:"flex", alignItems:"center", gap:12, background:"#fff", border:`1.5px solid ${C.border}`, borderRadius:14, padding:"14px 18px", marginBottom:20 }}>
+            <div style={{ textAlign:"center", flex:1 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:3 }}>Starting point</div>
+              <div style={{ fontSize:14, fontWeight:700, color:C.teal }}>📍 {startLabel}</div>
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2, flexShrink:0 }}>
+              <div style={{ width:60, height:2, background:`linear-gradient(90deg,${C.teal},${C.amber})`, borderRadius:2 }}/>
+              <div style={{ fontSize:11, color:C.inkSoft, fontWeight:600 }}>{ans.days}d · {ans.nights}n</div>
+              <div style={{ width:60, height:2, background:`linear-gradient(90deg,${C.teal},${C.amber})`, borderRadius:2 }}/>
+            </div>
+            <div style={{ textAlign:"center", flex:1 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:3 }}>Ending point</div>
+              <div style={{ fontSize:14, fontWeight:700, color:C.amber }}>🏁 {(itinDays||itin.days).slice(-1)[0]?.location || startLabel}</div>
+            </div>
+          </div>
+
+          {/* Itinerary days */}
+          {(itinDays||itin.days).map((d,idx)=>{
+            const itinId = itin.title + itin.tagline; // unique ID for this itinerary
+            const isLocked = idx > 0 && !premium.isUnlocked(itinId);
+            return (
+              <div key={d.day}>
+                {isLocked && idx===1 ? (
+                  <PremiumLock itinId={itinId} onUnlock={premium.unlock}/>
+                ) : !isLocked ? (
+                  <div style={{ border:`1.5px solid ${C.border}`, borderRadius:16, marginBottom:16, overflow:"hidden", background:C.white, boxShadow:"0 2px 12px rgba(0,0,0,.04)" }}>
+                    <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,${C.teal},#147856)`, display:"flex", alignItems:"center", gap:12 }}>
+                      <span style={{ background:"rgba(255,255,255,.2)", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Day {d.day}</span>
+                      <span style={{ fontSize:15, fontWeight:700, color:"#fff", fontFamily:serif }}>{d.location}</span>
+                      <span style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginLeft:"auto" }}>— {d.theme}</span>
+                    </div>
+                    <div style={{ padding:"6px 20px 10px" }}>
+                      {d.activities.map((a,i)=><ActivityRow key={`${d.day}-${i}`} act={a} isLast={i===d.activities.length-1}/>)}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+
           <LocalCheatSheet location={itin.days?.[0]?.location||"Sri Lanka"}/>
           <div style={{ marginTop:"2rem", background:"linear-gradient(135deg,#FDF5E0,#FFF7E6)", border:"1.5px solid #F0D48A", borderRadius:20, padding:"2rem" }}>
             <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>📩 Want a local guide for this trip?</h3>
@@ -1837,7 +2240,7 @@ Types: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|check
             {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>← Back</Btn> : <span/>}
             {step<9
               ? <Btn onClick={()=>setStep(s=>s+1)}>Next →</Btn>
-              : <Btn variant="amber" onClick={generate}>✨ Generate my itinerary</Btn>
+              : <Btn variant="amber" onClick={()=>{ if(!user){ onLoginNeeded(); return; } generate(); }}>✨ Generate my itinerary</Btn>
             }
           </div>
         </div>
@@ -2524,24 +2927,283 @@ function EmergencyButton() {
   );
 }
 
+// ─── AUTH CONTEXT ─────────────────────────────────────────────────────────────
+const AuthContext = React.createContext(null);
+
+function useAuth() { return React.useContext(AuthContext); }
+
+function AuthProvider({ children }) {
+  const [user, setUser]       = useState(null);
+  const [authReady, setReady] = useState(false);
+  const [firebaseApp, setFB]  = useState(null);
+
+  useEffect(()=>{
+    // Load Firebase dynamically — no build step needed
+    const initFirebase = async () => {
+      try {
+        // Load from CDN
+        if (!window.firebase) {
+          await Promise.all([
+            loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"),
+            loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"),
+          ]);
+        }
+        const config = {
+          apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+          authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+          projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+        };
+        // Init only once
+        const app = window.firebase.apps.length
+          ? window.firebase.app()
+          : window.firebase.initializeApp(config);
+        setFB(app);
+        window.firebase.auth().onAuthStateChanged(u=>{ setUser(u); setReady(true); });
+      } catch(e) {
+        console.warn("Firebase init failed:", e.message);
+        setReady(true);
+      }
+    };
+    initFirebase();
+  },[]);
+
+  const signInEmail  = (email,pass) => window.firebase.auth().signInWithEmailAndPassword(email,pass);
+  const signUpEmail  = (email,pass) => window.firebase.auth().createUserWithEmailAndPassword(email,pass);
+  const signInGoogle = () => {
+    const provider = new window.firebase.auth.GoogleAuthProvider();
+    return window.firebase.auth().signInWithPopup(provider);
+  };
+  const signOut = () => window.firebase.auth().signOut();
+
+  return (
+    <AuthContext.Provider value={{ user, authReady, signInEmail, signUpEmail, signInGoogle, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+function loadScript(src) {
+  return new Promise((resolve,reject)=>{
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// ─── LOGIN MODAL ──────────────────────────────────────────────────────────────
+function LoginModal({ onClose, onSuccess }) {
+  const { signInEmail, signUpEmail, signInGoogle } = useAuth();
+  const [mode, setMode]     = useState("signin"); // signin | signup
+  const [email, setEmail]   = useState("");
+  const [pass, setPass]     = useState("");
+  const [error, setError]   = useState("");
+  const [loading, setLoad]  = useState(false);
+
+  const handle = async (fn) => {
+    setLoad(true); setError("");
+    try { const res = await fn(); onSuccess(res.user||res); }
+    catch(e) { setError(e.message.replace("Firebase: ","").replace(/\(auth\/.*\)/,"")); }
+    setLoad(false);
+  };
+
+  return (
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.55)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(6px)" }}>
+      <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:420, boxShadow:"0 24px 80px rgba(0,0,0,.25)", overflow:"hidden", animation:"slideUp .25s ease" }}>
+        <style>{`@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+        {/* Header */}
+        <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2rem 2rem 1.5rem", textAlign:"center", position:"relative" }}>
+          <button onClick={onClose} style={{ position:"absolute", top:12, right:12, width:32, height:32, borderRadius:"50%", border:"1px solid rgba(255,255,255,.3)", background:"rgba(255,255,255,.1)", color:"#fff", fontSize:16, cursor:"pointer" }}>✕</button>
+          <div style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:"#fff", marginBottom:4 }}>
+            Ceylon<span style={{ color:C.amberMid }}>Trails</span>
+          </div>
+          <div style={{ fontSize:13, color:"rgba(255,255,255,.75)" }}>
+            {mode==="signin" ? "Welcome back" : "Create your account"}
+          </div>
+        </div>
+
+        <div style={{ padding:"1.5rem" }}>
+          {/* Google sign-in */}
+          <button onClick={()=>handle(signInGoogle)} disabled={loading} style={{ width:"100%", padding:"12px", border:`1.5px solid ${C.border}`, borderRadius:12, background:"#fff", fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:sans, display:"flex", alignItems:"center", justifyContent:"center", gap:10, marginBottom:16, opacity:loading?.6:1 }}>
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+            Continue with Google
+          </button>
+
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+            <div style={{ flex:1, height:1, background:C.border }}/>
+            <span style={{ fontSize:12, color:C.inkSoft }}>or</span>
+            <div style={{ flex:1, height:1, background:C.border }}/>
+          </div>
+
+          {/* Email/password */}
+          <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" type="email"
+            style={{ width:"100%", padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:14, fontFamily:sans, marginBottom:10, outline:"none", boxSizing:"border-box" }}/>
+          <input value={pass} onChange={e=>setPass(e.target.value)} placeholder="Password" type="password"
+            style={{ width:"100%", padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:14, fontFamily:sans, marginBottom:14, outline:"none", boxSizing:"border-box" }}
+            onKeyDown={e=>e.key==="Enter"&&handle(mode==="signin"?()=>signInEmail(email,pass):()=>signUpEmail(email,pass))}/>
+
+          {error && <div style={{ background:"#FEF0F0", border:"1px solid #EFBAA8", borderRadius:10, padding:"8px 12px", fontSize:12, color:C.coral, marginBottom:12 }}>{error}</div>}
+
+          <button onClick={()=>handle(mode==="signin"?()=>signInEmail(email,pass):()=>signUpEmail(email,pass))} disabled={loading||!email||!pass}
+            style={{ width:"100%", padding:"13px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:loading||!email||!pass?"not-allowed":"pointer", fontFamily:sans, opacity:loading||!email||!pass?.6:1 }}>
+            {loading ? "Please wait…" : mode==="signin" ? "Sign in" : "Create account"}
+          </button>
+
+          <div style={{ textAlign:"center", marginTop:14, fontSize:13, color:C.inkSoft }}>
+            {mode==="signin" ? <>Don't have an account? <span onClick={()=>{ setMode("signup"); setError(""); }} style={{ color:C.teal, fontWeight:600, cursor:"pointer" }}>Sign up</span></>
+            : <>Already have an account? <span onClick={()=>{ setMode("signin"); setError(""); }} style={{ color:C.teal, fontWeight:600, cursor:"pointer" }}>Sign in</span></>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── WELCOME TOAST ────────────────────────────────────────────────────────────
+function WelcomeToast({ user, onDone }) {
+  const name = user?.displayName?.split(" ")[0] || user?.email?.split("@")[0] || "Traveller";
+  useEffect(()=>{ const t = setTimeout(onDone, 3500); return ()=>clearTimeout(t); },[]);
+  return (
+    <div style={{ position:"fixed", top:80, left:"50%", transform:"translateX(-50%)", zIndex:1000, background:"#fff", borderRadius:20, padding:"20px 28px", boxShadow:"0 12px 48px rgba(0,0,0,.2)", border:`1.5px solid ${C.tealLight}`, textAlign:"center", animation:"slideDown .4s ease", minWidth:280 }}>
+      <style>{`@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`}</style>
+      <div style={{ fontSize:32, marginBottom:8 }}>🌿</div>
+      <div style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:4 }}>Hello, {name}!</div>
+      <div style={{ fontSize:13, color:C.inkSoft, lineHeight:1.6 }}>Welcome to CeylonTrails.<br/>Your journey starts here.</div>
+    </div>
+  );
+}
+
+// ─── PREMIUM GATE ──────────────────────────────────────────────────────────────
+const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb"; // "sb" = sandbox
+const UNLOCK_PRICE = 2; // USD
+
+function usePremium() {
+  const { user } = useAuth();
+  const [unlockedItins, setUnlocked] = useState(()=>{
+    try { return JSON.parse(localStorage.getItem("ct_premium")||"[]"); } catch { return []; }
+  });
+  const unlock = (itinId) => {
+    const next = [...new Set([...unlockedItins, itinId])];
+    setUnlocked(next);
+    localStorage.setItem("ct_premium", JSON.stringify(next));
+  };
+  const isUnlocked = (itinId) => !itinId || unlockedItins.includes(itinId);
+  return { isUnlocked, unlock };
+}
+
+function PremiumLock({ itinId, onUnlock }) {
+  const [paypalLoaded, setPaypalLoaded] = useState(false);
+  const paypalRef = useRef(null);
+
+  useEffect(()=>{
+    if (!PAYPAL_CLIENT_ID || paypalLoaded) return;
+    loadScript(`https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=USD`)
+      .then(()=>{
+        setPaypalLoaded(true);
+        if (paypalRef.current && window.paypal) {
+          window.paypal.Buttons({
+            style:{ layout:"vertical", color:"gold", shape:"pill", label:"pay" },
+            createOrder:(_,actions)=>actions.order.create({ purchase_units:[{ amount:{ value:String(UNLOCK_PRICE) }, description:"CeylonTrails Full Itinerary Access" }] }),
+            onApprove:async(_,actions)=>{
+              await actions.order.capture();
+              onUnlock(itinId);
+            },
+            onError:(err)=>console.error("PayPal error",err),
+          }).render(paypalRef.current);
+        }
+      }).catch(()=>{});
+  },[]);
+
+  return (
+    <div style={{ position:"relative", borderRadius:16, overflow:"hidden" }}>
+      {/* Blurred preview */}
+      <div style={{ filter:"blur(6px)", pointerEvents:"none", userSelect:"none", opacity:.4, padding:"16px 20px", background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16 }}>
+        {[1,2,3].map(i=>(
+          <div key={i} style={{ display:"flex", gap:12, padding:"12px 0", borderBottom:`1px solid ${C.border}` }}>
+            <div style={{ width:44, height:44, borderRadius:8, background:C.tealLight }}/>
+            <div style={{ flex:1 }}><div style={{ height:13, background:C.border, borderRadius:6, width:"60%", marginBottom:6 }}/><div style={{ height:11, background:C.border, borderRadius:6, width:"80%" }}/></div>
+          </div>
+        ))}
+      </div>
+      {/* Lock overlay */}
+      <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"rgba(255,255,255,.85)", backdropFilter:"blur(2px)", borderRadius:16, padding:"2rem", textAlign:"center" }}>
+        <div style={{ fontSize:36, marginBottom:12 }}>🔒</div>
+        <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>Premium Feature</h3>
+        <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, maxWidth:320, marginBottom:20 }}>
+          Unlock the full itinerary including all days, Google Maps navigation, place swapping, and drag & drop reordering.
+        </p>
+        <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:12, padding:"10px 20px", marginBottom:20, fontSize:13, color:C.amber, fontWeight:700 }}>
+          One-time payment — ${UNLOCK_PRICE} USD
+        </div>
+        {PAYPAL_CLIENT_ID && PAYPAL_CLIENT_ID!=="sb" ? (
+          <div ref={paypalRef} style={{ width:"100%", maxWidth:280 }}/>
+        ) : (
+          <div>
+            <button onClick={()=>onUnlock(itinId)} style={{ padding:"12px 28px", background:C.amberMid, color:"#2C1800", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans, marginBottom:8 }}>
+              🔓 Unlock Full Itinerary — ${UNLOCK_PRICE}
+            </button>
+            <div style={{ fontSize:11, color:C.inkSoft, marginTop:6 }}>PayPal sandbox mode — click to simulate payment</div>
+          </div>
+        )}
+        <div style={{ marginTop:16, fontSize:11, color:C.inkSoft }}>✓ Instant access · ✓ Download PDF · ✓ Share with guides</div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
-  const [page, setPage]       = useState("home");
-  const [guideOpen, setGuide] = useState(false);
-  const [savedItin, setSaved] = useState(null);
+  const [page, setPage]         = useState("home");
+  const [guideOpen, setGuide]   = useState(false);
+  const [savedItin, setSaved]   = useState(null);
+  const [showLogin, setLogin]   = useState(false);
+  const [showWelcome, setWelcome] = useState(false);
+  const [welcomeUser, setWelcomeUser] = useState(null);
   const openGuide = useCallback(()=>setGuide(true), []);
   const wishlist  = useWishlist();
+
+  const handleLoginSuccess = (user) => {
+    setLogin(false);
+    setWelcomeUser(user);
+    setWelcome(true);
+  };
+
+  return (
+    <AuthProvider>
+      <AppInner
+        page={page} setPage={setPage}
+        guideOpen={guideOpen} setGuide={setGuide} openGuide={openGuide}
+        savedItin={savedItin} setSaved={setSaved}
+        showLogin={showLogin} setLogin={setLogin}
+        showWelcome={showWelcome} setWelcome={setWelcome}
+        welcomeUser={welcomeUser} setWelcomeUser={setWelcomeUser}
+        handleLoginSuccess={handleLoginSuccess}
+        wishlist={wishlist}
+      />
+    </AuthProvider>
+  );
+}
+
+function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, setSaved, showLogin, setLogin, showWelcome, setWelcome, welcomeUser, handleLoginSuccess, wishlist }) {
+  const { user, signOut } = useAuth();
+  const premium = usePremium();
 
   return (
     <div style={{ fontFamily:sans, color:C.ink, background:C.white, minHeight:"100vh" }}>
       <MobileStyles/>
-      <Nav page={page} setPage={setPage} onGuideOpen={openGuide}/>
+      <NavWithAuth page={page} setPage={setPage} onGuideOpen={openGuide} user={user} signOut={signOut} onLoginClick={()=>setLogin(true)}/>
+
       {page==="home"         && <HomePage         setPage={setPage} onGuideOpen={openGuide}/>}
       {page==="destinations" && <DestinationsPage setPage={setPage} onGuideOpen={openGuide} savedItin={savedItin} setSavedItin={setSaved}/>}
-      {page==="journey"      && <JourneyPage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} onGuideOpen={openGuide}/>}
+      {page==="journey"      && <JourneyPage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} onGuideOpen={openGuide} user={user} onLoginNeeded={()=>setLogin(true)} premium={premium}/>}
       {page==="srilankamap" && <SriLankaMapPage  setPage={setPage}/>}
-      <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin}/>
+
+      <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin} user={user} onLoginNeeded={()=>setLogin(true)}/>
       <WishlistPanel wishlist={wishlist} savedItin={savedItin} setSavedItin={setSaved}/>
       <EmergencyButton/>
+
+      {showLogin && <LoginModal onClose={()=>setLogin(false)} onSuccess={handleLoginSuccess}/>}
+      {showWelcome && <WelcomeToast user={welcomeUser} onDone={()=>setWelcome(false)}/>}
     </div>
   );
 }
