@@ -3879,24 +3879,6 @@ function GuideRegister({ user, onComplete }) {
     </>,
   ];
 
-  return (
-    <div style={{ maxWidth:580, margin:"0 auto", padding:"2rem 1.5rem" }}>
-      {/* Progress */}
-      <StepDots cur={step} total={3}/>
-      <div style={{ background:C.white, borderRadius:20, padding:"1.8rem", border:`1px solid ${C.border}`, boxShadow:"0 4px 20px rgba(0,0,0,.06)" }}>
-        {steps[step]}
-        <div style={{ display:"flex", justifyContent:"space-between", marginTop:24, paddingTop:16, borderTop:`1px solid ${C.border}`, gap:12 }}>
-          {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>← Back</Btn> : <span/>}
-          {step<2
-            ? <Btn onClick={()=>setStep(s=>s+1)}>Next →</Btn>
-            : <Btn variant="amber" onClick={submit} style={{ opacity:saving?.6:1 }}>{saving?"Submitting…":"Submit Application"}</Btn>
-          }
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── GUIDE DASHBOARD ──────────────────────────────────────────────────────────
 function GuideDashboard({ user, profile, onProfileUpdate }) {
   const [activeTab, setTab]     = useState("requests");
@@ -4210,17 +4192,154 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
   );
 }
 
+// ─── TOURIST GUIDE REVIEW SYSTEM ─────────────────────────────────────────────
+async function submitGuideReview(review) {
+  if (!window.firebase?.firestore) return;
+  await window.firebase.firestore().collection("guideReviews").add({
+    ...review,
+    status: "pending", // admin must approve before it shows
+    createdAt: new Date().toISOString(),
+  });
+}
+async function loadGuideReviews(status="pending") {
+  if (!window.firebase?.firestore) return [];
+  const snap = await window.firebase.firestore().collection("guideReviews")
+    .where("status","==",status).orderBy("createdAt","desc").limit(50).get();
+  return snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+async function updateReviewStatus(reviewId, status) {
+  await window.firebase.firestore().collection("guideReviews").doc(reviewId).update({ status });
+  // If approved, also append to guide's profile reviews array
+}
+
+function GuideReviewModal({ onClose, user }) {
+  const [form, setForm]     = useState({ guideName:"", tripRef:"", rating:5, title:"", body:"", touristName:"" });
+  const [submitting, setSub]= useState(false);
+  const [done, setDone]     = useState(false);
+  const [errors, setErrors] = useState({});
+  const upd = (k,v) => { setForm(f=>({...f,[k]:v})); setErrors(e=>({...e,[k]:null})); };
+
+  const validate = () => {
+    const e={};
+    if (!form.guideName.trim())              e.guideName="Guide name is required";
+    if (!form.tripRef.trim())                e.tripRef="Trip reference is required";
+    if (form.body.trim().length < 20)        e.body="Review must be at least 20 characters";
+    if (!form.title.trim())                  e.title="Title is required";
+    if (!form.touristName.trim())            e.touristName="Your name is required";
+    setErrors(e); return Object.keys(e).length===0;
+  };
+
+  const submit = async () => {
+    if (!validate()) return;
+    setSub(true);
+    try {
+      await submitGuideReview({ ...form, touristEmail:user?.email||"anonymous", touristUid:user?.uid||"" });
+      setDone(true);
+    } catch(e) { alert("Error submitting review: "+e.message); }
+    setSub(false);
+  };
+
+  return (
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(6px)" }}>
+      <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:480, boxShadow:"0 20px 60px rgba(0,0,0,.25)", overflow:"hidden", maxHeight:"90vh", display:"flex", flexDirection:"column" }}>
+        {/* Header */}
+        <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"1.2rem 1.4rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+          <div>
+            <div style={{ fontFamily:serif, fontSize:17, fontWeight:700, color:"#fff" }}>Review a Guide</div>
+            <div style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginTop:2 }}>Your review helps other tourists choose the right guide</div>
+          </div>
+          <button onClick={onClose} style={{ width:32, height:32, borderRadius:"50%", border:"1px solid rgba(255,255,255,.3)", background:"rgba(255,255,255,.1)", color:"#fff", fontSize:16, cursor:"pointer" }}>✕</button>
+        </div>
+
+        {done ? (
+          <div style={{ padding:"2rem", textAlign:"center" }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>✅</div>
+            <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>Review submitted!</h3>
+            <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:20 }}>Thank you. Our admin team will verify your review against the trip records within 24 hours before it goes live.</p>
+            <Btn onClick={onClose}>Close</Btn>
+          </div>
+        ) : (
+          <div style={{ padding:"1.2rem 1.4rem", overflowY:"auto", flex:1 }}>
+            {/* Star rating */}
+            <div style={{ marginBottom:16, textAlign:"center" }}>
+              <label style={{ fontSize:12, fontWeight:600, color:C.inkSoft, display:"block", marginBottom:8 }}>Overall rating</label>
+              <div style={{ display:"flex", justifyContent:"center", gap:8 }}>
+                {[1,2,3,4,5].map(n=>(
+                  <button key={n} onClick={()=>upd("rating",n)} style={{ fontSize:28, background:"none", border:"none", cursor:"pointer", transform:form.rating>=n?"scale(1.2)":"scale(1)", transition:"transform .15s" }}>
+                    {form.rating>=n?"⭐":"☆"}
+                  </button>
+                ))}
+              </div>
+              <div style={{ fontSize:12, color:C.inkSoft, marginTop:4 }}>
+                {["","Poor","Below average","Average","Good","Excellent"][form.rating]}
+              </div>
+            </div>
+
+            {/* Fields */}
+            {[
+              ["Your name","touristName","text","e.g. John Smith"],
+              ["Guide name","guideName","text","Full name of the guide"],
+              ["Trip reference / booking number","tripRef","text","e.g. CT-2024-001 or your itinerary title"],
+              ["Review title","title","text","e.g. Amazing cultural tour!"],
+            ].map(([label,key,type,ph])=>(
+              <div key={key} style={{ marginBottom:12 }}>
+                <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:4 }}>
+                  {label} <span style={{ color:C.coral }}>*</span>
+                </label>
+                <input type={type} value={form[key]} onChange={e=>upd(key,e.target.value)} placeholder={ph}
+                  style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${errors[key]?C.coral:C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+                {errors[key] && <div style={{ fontSize:11, color:C.coral, marginTop:3 }}>⚠️ {errors[key]}</div>}
+              </div>
+            ))}
+            <div style={{ marginBottom:16 }}>
+              <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:4 }}>
+                Your experience <span style={{ color:C.coral }}>*</span>
+                <span style={{ fontWeight:400, color:C.inkSoft, marginLeft:8 }}>({form.body.length}/20 min)</span>
+              </label>
+              <textarea value={form.body} onChange={e=>upd("body",e.target.value)} rows={4} placeholder="Describe your experience with this guide in detail..."
+                style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${errors.body?C.coral:C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
+              {errors.body && <div style={{ fontSize:11, color:C.coral, marginTop:3 }}>⚠️ {errors.body}</div>}
+            </div>
+
+            <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"10px 12px", fontSize:11, color:C.amber, marginBottom:16, lineHeight:1.6 }}>
+              ⚠️ Reviews are moderated. Our admin team verifies trip records before publishing. False reviews will be removed.
+            </div>
+
+            <button onClick={submit} disabled={submitting} style={{ width:"100%", padding:"13px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:submitting?"wait":"pointer", fontFamily:sans, opacity:submitting?.6:1 }}>
+              {submitting?"Submitting…":"Submit review"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 function AdminPanel({ onClose }) {
   const ADMIN_PWD = import.meta.env.VITE_ADMIN_PASSWORD || "ceylontrails2024";
   const [authed,    setAuthed]  = useState(()=>sessionStorage.getItem("ct_admin")==="1");
   const [pwd,       setPwd]     = useState("");
   const [guides,    setGuides]  = useState([]);
+  const [reviews,   setReviews] = useState([]);
   const [loading,   setLoading] = useState(false);
   const [selected,  setSelected]= useState(null);
   const [filterTab, setFilter]  = useState("pending");
   const [rejMsg,    setRejMsg]  = useState("");
   const [actioning, setActioning]=useState(false);
+
+  const loadReviews = async () => {
+    try {
+      if (!window.firebase?.firestore) {
+        await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+      }
+      const [pending, approved] = await Promise.all([
+        loadGuideReviews("pending"),
+        loadGuideReviews("approved"),
+      ]);
+      setReviews([...pending, ...approved]);
+    } catch(e) { console.warn("Reviews load failed:", e.message); }
+  };
 
   const login = () => {
     if (pwd===ADMIN_PWD){ sessionStorage.setItem("ct_admin","1"); setAuthed(true); loadGuides(); }
@@ -4297,21 +4416,37 @@ function AdminPanel({ onClose }) {
         {/* Left: guide list */}
         <div style={{ width:320, background:"#fff", borderRight:"1px solid #E0E6ED", display:"flex", flexDirection:"column", flexShrink:0 }}>
           {/* Filter tabs */}
-          <div style={{ display:"flex", borderBottom:"1px solid #E0E6ED" }}>
-            {["pending","approved","rejected"].map(s=>(
-              <button key={s} onClick={()=>setFilter(s)} style={{ flex:1, padding:"12px 8px", border:"none", background:filterTab===s?"#EEF4FF":"transparent", color:filterTab===s?"#2D4A6A":"#64748B", fontSize:12, fontWeight:filterTab===s?700:400, cursor:"pointer", fontFamily:sans, borderBottom:filterTab===s?"2.5px solid #2D4A6A":"2.5px solid transparent", textTransform:"capitalize" }}>
-                {s} <span style={{ background:filterTab===s?"#2D4A6A":"#E2E8F0", color:filterTab===s?"#fff":"#64748B", fontSize:10, fontWeight:700, padding:"1px 6px", borderRadius:10, marginLeft:4 }}>
-                  {guides.filter(g=>g.status===s).length}
+          <div style={{ display:"flex", borderBottom:"1px solid #E0E6ED", overflowX:"auto" }}>
+            {["pending","approved","rejected","reviews"].map(s=>(
+              <button key={s} onClick={()=>{ setFilter(s); if(s==="reviews") loadReviews(); }} style={{ flex:1, padding:"12px 8px", border:"none", background:filterTab===s?"#EEF4FF":"transparent", color:filterTab===s?"#2D4A6A":"#64748B", fontSize:11, fontWeight:filterTab===s?700:400, cursor:"pointer", fontFamily:sans, borderBottom:filterTab===s?"2.5px solid #2D4A6A":"2.5px solid transparent", textTransform:"capitalize", whiteSpace:"nowrap" }}>
+                {s==="reviews"?"📝 Reviews":s} <span style={{ background:filterTab===s?"#2D4A6A":"#E2E8F0", color:filterTab===s?"#fff":"#64748B", fontSize:10, fontWeight:700, padding:"1px 6px", borderRadius:10, marginLeft:4 }}>
+                  {s==="reviews" ? reviews.length : guides.filter(g=>g.status===s).length}
                 </span>
               </button>
             ))}
           </div>
 
-          {/* Guide list */}
+          {/* Guide or Review list */}
           <div style={{ flex:1, overflowY:"auto" }}>
-            {loading && <div style={{ padding:"2rem", textAlign:"center", color:"#64748B", fontSize:13 }}>Loading guides…</div>}
-            {!loading && filtered.length===0 && <div style={{ padding:"2rem", textAlign:"center", color:"#64748B", fontSize:13 }}>No {filterTab} guides</div>}
-            {filtered.map(g=>(
+            {loading && <div style={{ padding:"2rem", textAlign:"center", color:"#64748B", fontSize:13 }}>Loading…</div>}
+
+            {/* Reviews tab */}
+            {filterTab==="reviews" && reviews.map(r=>(
+              <div key={r.id} style={{ padding:"12px 14px", borderBottom:"1px solid #F0F4F8", cursor:"pointer", background:selected?.id===r.id?"#EEF4FF":"transparent" }}
+                onClick={()=>setSelected({...r, _isReview:true})}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#1A2A3A", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.title||"Review"}</div>
+                  <span style={{ fontSize:10, padding:"2px 8px", borderRadius:20, background:r.status==="approved"?"#DCFCE7":"#FEF9C3", color:r.status==="approved"?"#16A34A":"#CA8A04", fontWeight:700, flexShrink:0, marginLeft:6 }}>{r.status}</span>
+                </div>
+                <div style={{ fontSize:11, color:"#64748B" }}>Guide: {r.guideName} · Trip: {r.tripRef}</div>
+                <div style={{ fontSize:11, color:"#64748B", marginTop:2 }}>By: {r.touristName} · {"⭐".repeat(r.rating)}</div>
+              </div>
+            ))}
+            {filterTab==="reviews" && reviews.length===0 && <div style={{ padding:"2rem", textAlign:"center", color:"#64748B", fontSize:13 }}>No reviews yet</div>}
+
+            {/* Guides list */}
+            {filterTab!=="reviews" && !loading && filtered.length===0 && <div style={{ padding:"2rem", textAlign:"center", color:"#64748B", fontSize:13 }}>No {filterTab} guides</div>}
+            {filterTab!=="reviews" && filtered.map(g=>(
               <div key={g.uid} onClick={()=>setSelected(g)} style={{ padding:"14px 16px", borderBottom:"1px solid #F0F4F8", cursor:"pointer", background:selected?.uid===g.uid?"#EEF4FF":"transparent", transition:"background .15s" }}>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                   <div style={{ width:40, height:40, borderRadius:"50%", overflow:"hidden", flexShrink:0, background:"#E2E8F0" }}>
@@ -4328,12 +4463,47 @@ function AdminPanel({ onClose }) {
           </div>
         </div>
 
-        {/* Right: guide detail */}
+        {/* Right: guide or review detail */}
         <div style={{ flex:1, overflowY:"auto", padding:"1.5rem" }}>
           {!selected ? (
             <div style={{ height:"100%", display:"flex", alignItems:"center", justifyContent:"center", color:"#94A3B8", flexDirection:"column", gap:12 }}>
               <span style={{ fontSize:48 }}>👈</span>
-              <p style={{ fontSize:14 }}>Select a guide to review</p>
+              <p style={{ fontSize:14 }}>Select an item to review</p>
+            </div>
+          ) : selected._isReview ? (
+            /* ── Review detail ── */
+            <div style={{ maxWidth:600 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:10 }}>
+                <h2 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#1A2A3A" }}>{selected.title}</h2>
+                <span style={{ fontSize:12, padding:"5px 14px", borderRadius:20, background:selected.status==="approved"?"#DCFCE7":"#FEF9C3", color:selected.status==="approved"?"#16A34A":"#CA8A04", fontWeight:700, border:`1px solid ${selected.status==="approved"?"#86EFAC":"#FDE047"}` }}>{selected.status}</span>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+                {[["Tourist",selected.touristName],["Email",selected.touristEmail],["Guide",selected.guideName],["Trip Ref",selected.tripRef],["Rating","⭐".repeat(selected.rating)],["Submitted",selected.createdAt?new Date(selected.createdAt).toLocaleDateString():"—"]].map(([l,v])=>(
+                  <div key={l} style={{ background:"#fff", borderRadius:10, padding:"10px 14px", border:"1px solid #E0E6ED" }}>
+                    <div style={{ fontSize:11, color:"#64748B", marginBottom:3, fontWeight:600 }}>{l}</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:"#1A2A3A" }}>{v||"—"}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background:"#fff", borderRadius:12, padding:"14px", border:"1px solid #E0E6ED", marginBottom:20 }}>
+                <div style={{ fontSize:12, fontWeight:600, color:"#64748B", marginBottom:8 }}>Review content</div>
+                <p style={{ fontSize:13, color:"#1A2A3A", lineHeight:1.7 }}>{selected.body}</p>
+              </div>
+              <div style={{ background:"#FEF9C3", border:"1px solid #FDE047", borderRadius:12, padding:"12px 14px", marginBottom:16, fontSize:12, color:"#92400E", lineHeight:1.6 }}>
+                ⚠️ <strong>Verify before approving:</strong> Check that trip reference "{selected.tripRef}" matches actual booking records. The guide "{selected.guideName}" should confirm this tour took place.
+              </div>
+              <div style={{ display:"flex", gap:10 }}>
+                {selected.status!=="approved" && (
+                  <button onClick={async()=>{ setActioning(true); await updateReviewStatus(selected.id,"approved"); setReviews(rs=>rs.map(r=>r.id===selected.id?{...r,status:"approved"}:r)); setSelected(s=>({...s,status:"approved"})); setActioning(false); }} disabled={actioning}
+                    style={{ flex:1, padding:"12px", background:"#16A34A", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning?.6:1 }}>
+                    ✅ Approve & Publish
+                  </button>
+                )}
+                <button onClick={async()=>{ if(!window.confirm("Delete this review permanently?")) return; setActioning(true); await window.firebase.firestore().collection("guideReviews").doc(selected.id).delete(); setReviews(rs=>rs.filter(r=>r.id!==selected.id)); setSelected(null); setActioning(false); }} disabled={actioning}
+                  style={{ flex:1, padding:"12px", background:"#DC2626", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning?.6:1 }}>
+                  🗑️ Delete Review
+                </button>
+              </div>
             </div>
           ) : (
             <div style={{ maxWidth:700 }}>
@@ -4434,6 +4604,7 @@ function AdminPanel({ onClose }) {
               )}
             </div>
           )}
+          )}
         </div>
       </div>
     </div>
@@ -4441,7 +4612,6 @@ function AdminPanel({ onClose }) {
 }
 
 // ─── GUIDE PORTAL PAGE ────────────────────────────────────────────────────────
-function GuidePortalPage({ setPage }) {
   const { user, signInEmail, signUpEmail, signInGoogle } = useAuth();
   const [guideProfile, setGuideProfile] = useState(null);
   const [loading, setLoading]           = useState(true);
@@ -4584,9 +4754,9 @@ export default function App() {
 function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, setSaved, showLogin, setLogin, showWelcome, setWelcome, welcomeUser, handleLoginSuccess, wishlist }) {
   const { user, signOut } = useAuth();
   const premium = usePremium();
-  const [showAdmin, setShowAdmin] = useState(()=>window.location.search.includes("admin"));
+  const [showAdmin,  setShowAdmin]  = useState(()=>window.location.search.includes("admin"));
+  const [showReview, setShowReview] = useState(false);
 
-  // Watch for ?admin in URL
   useEffect(()=>{
     const check = () => setShowAdmin(window.location.search.includes("admin"));
     window.addEventListener("popstate", check);
@@ -4608,9 +4778,15 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
       <WishlistPanel wishlist={wishlist} savedItin={savedItin} setSavedItin={setSaved}/>
       <EmergencyButton/>
 
-      {showLogin && <LoginModal onClose={()=>setLogin(false)} onSuccess={handleLoginSuccess}/>}
+      {/* Floating "Review a guide" button */}
+      <button onClick={()=>setShowReview(true)} style={{ position:"fixed", bottom:90, right:24, zIndex:490, background:C.teal, color:"#fff", border:"none", borderRadius:20, padding:"8px 14px", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:sans, boxShadow:"0 2px 12px rgba(0,0,0,.2)", display:"flex", alignItems:"center", gap:6 }}>
+        ⭐ Review a guide
+      </button>
+
+      {showLogin  && <LoginModal onClose={()=>setLogin(false)} onSuccess={handleLoginSuccess}/>}
       {showWelcome && <WelcomeToast user={welcomeUser} onDone={()=>setWelcome(false)}/>}
-      {showAdmin && <AdminPanel onClose={()=>{ setShowAdmin(false); window.history.replaceState({},"",window.location.pathname); }}/>}
+      {showReview && <GuideReviewModal onClose={()=>setShowReview(false)} user={user}/>}
+      {showAdmin  && <AdminPanel onClose={()=>{ setShowAdmin(false); window.history.replaceState({},"",window.location.pathname); }}/>}
     </div>
   );
 }
