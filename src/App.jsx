@@ -2507,13 +2507,384 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 }
 
 // ─── GUIDE DRAWER ────────────────────────────────────────────────────────────
-function GuideDrawer({ open, onClose, itin }) {
-  const [screen, setScreen] = useState("terms");
-  const [termsOk, setTermsOk] = useState(false);
-  const [selected, setSelected] = useState(null);
-  useEffect(()=>{ if(open){ setScreen("terms"); setTermsOk(false); setSelected(null); } }, [open]);
-  const g = selected!=null ? GUIDES.find(x=>x.id===selected) : null;
-  if (!open) return null;
+function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
+  const [screen,    setScreen]   = useState("terms");
+  const [termsOk,   setTermsOk]  = useState(false);
+  const [selected,  setSelected] = useState(null);
+  const [guides,    setGuides]   = useState([]);
+  const [loadingG,  setLoadingG] = useState(false);
+  const [myRequests,setMyRequests]=useState([]);
+  const [showReqs,  setShowReqs] = useState(false);
+  const [sendMsg,   setSendMsg]  = useState("");
+  const [sending,   setSending]  = useState(false);
+  const [payModal,  setPayModal] = useState(null); // {request}
+  const [paying,    setPaying]   = useState(false);
+  const [payStep,   setPayStep]  = useState("confirm");
+
+  useEffect(()=>{
+    if(open){ setScreen("terms"); setTermsOk(false); setSelected(null); setShowReqs(false); }
+  },[open]);
+
+  const loadGuides = async () => {
+    setLoadingG(true);
+    // Load Firestore if needed
+    if(window.firebase && !window.firebase.firestore){
+      await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+    }
+    const fromFirestore = await loadApprovedGuides();
+    if(fromFirestore.length > 0){
+      setGuides(fromFirestore);
+    } else {
+      // Fallback to static guides if Firestore empty
+      setGuides(GUIDES.map(g=>({
+        uid:String(g.id), fullName:g.name, specialty:g.specialty,
+        areas:g.areas, langs:g.langs.split(" · "),
+        experience:g.exp, rating:g.rating, reviews:g.reviews,
+        bio:g.bio, sltdaNo:"SLTDA-VERIFIED", status:"approved",
+        specialties:g.specialty.split(" & "), photo:"",
+        tours:g.tours, rev1:g.rev1, rev2:g.rev2,
+        // Keep gradient data for avatar fallback
+        initials:g.initials, g1:g.g1, g2:g.g2, gtxt:g.gtxt,
+      })));
+    }
+    setLoadingG(false);
+  };
+
+  const loadMyRequests = async () => {
+    if(!user) return;
+    if(window.firebase && !window.firebase.firestore){
+      await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+    }
+    const reqs = await loadTouristRequests(user.uid);
+    setMyRequests(reqs);
+  };
+
+  const sendRequest = async () => {
+    if(!user){ onLoginNeeded(); return; }
+    if(!selected) return;
+    setSending(true);
+    try {
+      await saveTripRequest({
+        guideId:      selected.uid || String(selected.id),
+        guideName:    selected.fullName || selected.name,
+        guideEmail:   selected.email || "",
+        touristUid:   user.uid,
+        touristEmail: user.email,
+        touristName:  user.displayName || user.email?.split("@")[0] || "Tourist",
+        itinTitle:    itin?.title || "Custom trip",
+        itinTagline:  itin?.tagline || "",
+        itinDays:     itin?.days?.length || 0,
+        itinData:     itin ? JSON.stringify(itin).slice(0,2000) : "",
+        message:      sendMsg,
+        status:       "pending",
+      });
+      setScreen("success");
+      setSendMsg("");
+    } catch(e){ alert("Error sending request: "+e.message); }
+    setSending(false);
+  };
+
+  const handleAcceptBid = async () => {
+    if(!payModal) return;
+    setPaying(true);
+    // Simulate PayPal processing
+    setTimeout(async()=>{
+      try{
+        await acceptBidAndPay(payModal.id, Number(payModal.bid?.price||0));
+        setMyRequests(rs=>rs.map(r=>r.id===payModal.id?{...r,status:"accepted",payment:{total:Number(payModal.bid?.price),commission:Math.round(Number(payModal.bid?.price)*0.15*100)/100,guideAmount:Math.round(Number(payModal.bid?.price)*0.85*100)/100}}:r));
+        setPayStep("success");
+      } catch(e){ alert("Payment error: "+e.message); }
+      setPaying(false);
+    }, 2000);
+  };
+
+  if(!open) return null;
+
+  const g = selected;
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:600, backdropFilter:"blur(3px)" }}/>
+      <div style={{ position:"fixed", top:0, right:0, bottom:0, width:500, maxWidth:"100vw", background:C.white, zIndex:700, boxShadow:"-8px 0 48px rgba(0,0,0,.18)", display:"flex", flexDirection:"column", animation:"slideIn .25s ease" }}>
+        <style>{`@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}`}</style>
+
+        {/* Header */}
+        <div style={{ padding:"16px 20px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+          <div>
+            <div style={{ fontFamily:serif, fontSize:17, fontWeight:700, color:C.ink }}>
+              {screen==="terms"?"Before you continue":screen==="list"?"Find a Guide":screen==="portfolio"&&g?g.fullName||g.name:screen==="request"?"Send trip request":screen==="success"?"Request sent!":"Find a Guide"}
+            </div>
+            {screen==="list"&&<div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>{guides.length} SLTDA-verified guides available</div>}
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            {screen==="portfolio"&&<button onClick={()=>setScreen("list")} style={{ fontSize:12, fontWeight:600, color:C.teal, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>← All guides</button>}
+            {screen==="request"&&<button onClick={()=>setScreen("portfolio")} style={{ fontSize:12, fontWeight:600, color:C.teal, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>← Back</button>}
+            <button onClick={onClose} style={{ width:32, height:32, borderRadius:"50%", border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:15, color:C.inkSoft }}>✕</button>
+          </div>
+        </div>
+
+        {/* My requests tab (when logged in) */}
+        {screen==="list" && user && (
+          <div style={{ padding:"8px 20px", borderBottom:`1px solid ${C.border}`, display:"flex", gap:8 }}>
+            <button onClick={()=>setShowReqs(false)} style={{ flex:1, padding:"8px", background:!showReqs?C.teal:"transparent", color:!showReqs?"#fff":C.inkSoft, border:"none", borderRadius:8, cursor:"pointer", fontSize:13, fontWeight:600, fontFamily:sans }}>Browse guides</button>
+            <button onClick={()=>{ setShowReqs(true); loadMyRequests(); }} style={{ flex:1, padding:"8px", background:showReqs?C.teal:"transparent", color:showReqs?"#fff":C.inkSoft, border:"none", borderRadius:8, cursor:"pointer", fontSize:13, fontWeight:600, fontFamily:sans }}>My requests {myRequests.filter(r=>r.bid&&r.status!=="accepted").length>0&&`(${myRequests.filter(r=>r.bid&&r.status!=="accepted").length} bids)`}</button>
+          </div>
+        )}
+
+        <div style={{ flex:1, overflowY:"auto", padding:"20px" }}>
+
+          {/* ── Terms ── */}
+          {screen==="terms"&&(
+            <>
+              <p style={{ fontSize:14, color:C.inkSoft, marginBottom:16, lineHeight:1.7 }}>Please read and accept the following before browsing certified guides.</p>
+              <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:12, padding:"14px 16px", maxHeight:220, overflowY:"auto", fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:16 }}>
+                {[["1. Guide verification","All guides are SLTDA-verified. Certifications reviewed annually."],["2. Booking & payment","Payments processed through CeylonTrails. 15% commission applies. No hidden fees to tourists."],["3. Bid requests","Guides respond within 24 hours. No obligation to accept any bid."],["4. Cancellation","48+ hours before trip: full refund. Within 48 hours: 25% fee may apply."],["5. Liability","CeylonTrails is an intermediary. Guides carry SLTDA-mandated insurance."],["6. Reviews","Honest reviews encouraged. Fraudulent reviews will be removed."],["7. Privacy","Your details only shared with guides you explicitly select."]].map(([t,d])=><p key={t} style={{ marginBottom:10 }}><strong style={{ color:C.ink }}>{t}</strong> — {d}</p>)}
+              </div>
+              <label style={{ display:"flex", alignItems:"center", gap:10, fontSize:14, color:C.ink, cursor:"pointer", padding:"12px 14px", border:`1px solid ${C.border}`, borderRadius:12, background:C.surface, marginBottom:20 }}>
+                <input type="checkbox" checked={termsOk} onChange={e=>setTermsOk(e.target.checked)} style={{ accentColor:C.teal, width:16, height:16 }}/>
+                I have read and agree to CeylonTrails' terms and conditions
+              </label>
+              <Btn full onClick={()=>{ if(!termsOk){alert("Please accept the terms.");return;} loadGuides(); setScreen("list"); }}>Accept & browse guides →</Btn>
+            </>
+          )}
+
+          {/* ── My Requests (bids received) ── */}
+          {screen==="list" && showReqs && (
+            <>
+              {myRequests.length===0 && <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}><div style={{ fontSize:40, marginBottom:12 }}>📩</div><p>No trip requests sent yet. Browse guides and send a request first.</p></div>}
+              {myRequests.map(req=>{
+                const commission = req.bid?.price ? Math.round(Number(req.bid.price)*0.15*100)/100 : 0;
+                const guideGets  = req.bid?.price ? Math.round(Number(req.bid.price)*0.85*100)/100 : 0;
+                return (
+                  <div key={req.id} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, padding:"1.2rem", marginBottom:12, background:C.white }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:8, marginBottom:10 }}>
+                      <div>
+                        <div style={{ fontSize:14, fontWeight:700, color:C.ink }}>{req.guideName}</div>
+                        <div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>{req.itinTitle} · {req.itinDays} days</div>
+                      </div>
+                      <span style={{ fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20,
+                        background:req.status==="accepted"?C.tealLight:req.bid?C.amberLight:C.surface,
+                        color:req.status==="accepted"?C.teal:req.bid?C.amber:C.inkSoft,
+                        border:`1px solid ${req.status==="accepted"?"#9FE1CB":req.bid?"#F0D48A":C.border}` }}>
+                        {req.status==="accepted"?"✅ Confirmed":req.bid?"💬 Bid received":"⏳ Awaiting bid"}
+                      </span>
+                    </div>
+                    {req.bid && req.status!=="accepted" && (
+                      <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"12px 14px", marginBottom:12 }}>
+                        <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:4 }}>Bid from {req.guideName}</div>
+                        <div style={{ fontSize:20, fontWeight:800, color:C.amber, marginBottom:4 }}>${req.bid.price} USD</div>
+                        <div style={{ fontSize:11, color:C.inkSoft, marginBottom:6 }}>📅 {req.bid.dates}</div>
+                        {req.bid.message && <div style={{ fontSize:12, color:C.ink, fontStyle:"italic", borderLeft:`3px solid ${C.amber}`, paddingLeft:8, lineHeight:1.6, marginBottom:8 }}>"{req.bid.message}"</div>}
+                        {/* Commission breakdown */}
+                        <div style={{ background:"rgba(255,255,255,.7)", borderRadius:8, padding:"8px 10px", fontSize:11, color:C.ink, marginBottom:10 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}><span>Guide receives (85%)</span><span style={{ fontWeight:700, color:C.teal }}>${guideGets}</span></div>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}><span>CeylonTrails commission (15%)</span><span style={{ fontWeight:700, color:C.inkSoft }}>${commission}</span></div>
+                          <div style={{ display:"flex", justifyContent:"space-between", paddingTop:4, borderTop:`1px solid ${C.border}` }}><span style={{ fontWeight:700 }}>You pay total</span><span style={{ fontWeight:800, color:C.ink }}>${req.bid.price}</span></div>
+                        </div>
+                        <div style={{ display:"flex", gap:8 }}>
+                          <button onClick={()=>{ setPayModal(req); setPayStep("confirm"); }} style={{ flex:1, padding:"10px", background:C.teal, color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans }}>✅ Accept & Pay</button>
+                          <button onClick={async()=>{ await window.firebase.firestore().collection("tripRequests").doc(req.id).update({status:"declined"}); setMyRequests(rs=>rs.map(r=>r.id===req.id?{...r,status:"declined"}:r)); }} style={{ flex:1, padding:"10px", background:"none", color:C.coral, border:`1px solid ${C.coral}`, borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>❌ Decline</button>
+                        </div>
+                      </div>
+                    )}
+                    {req.status==="accepted" && req.payment && (
+                      <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:10, padding:"10px 14px", fontSize:12, color:C.teal }}>
+                        ✅ Booking confirmed · Paid ${req.payment.total} · Guide receives ${req.payment.guideAmount}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
+
+          {/* ── Guide list ── */}
+          {screen==="list" && !showReqs && (
+            <>
+              {loadingG && <div style={{ textAlign:"center", padding:"3rem" }}><div style={{ width:36, height:36, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto 12px" }}/><p style={{ fontSize:13, color:C.inkSoft }}>Loading certified guides…</p></div>}
+              {!loadingG && guides.length===0 && <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}><div style={{ fontSize:40, marginBottom:12 }}>🧭</div><p>No approved guides yet. Check back soon!</p></div>}
+              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                {guides.map(g=>(
+                  <div key={g.uid||g.id} onClick={()=>{ setSelected(g); setScreen("portfolio"); }} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, padding:"14px 16px", cursor:"pointer", background:C.white, transition:"border-color .2s,box-shadow .2s" }}
+                    onMouseEnter={e=>{ e.currentTarget.style.borderColor=C.tealMid; e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,.08)"; }}
+                    onMouseLeave={e=>{ e.currentTarget.style.borderColor=C.border; e.currentTarget.style.boxShadow="none"; }}>
+                    <div style={{ display:"flex", gap:12, alignItems:"flex-start", marginBottom:10 }}>
+                      {/* Photo or avatar */}
+                      {g.photo
+                        ? <img src={g.photo} alt={g.fullName||g.name} style={{ width:52, height:52, borderRadius:14, objectFit:"cover", flexShrink:0 }}/>
+                        : g.initials
+                          ? <Av g={g} size={52}/>
+                          : <div style={{ width:52, height:52, borderRadius:14, background:C.teal, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontFamily:serif, fontSize:18, fontWeight:700, flexShrink:0 }}>{(g.fullName||"G")[0]}</div>
+                      }
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:15, fontWeight:600, color:C.ink, marginBottom:2 }}>{g.fullName||g.name}</div>
+                        <div style={{ fontSize:12, color:C.inkSoft, marginBottom:6 }}>{g.specialty||(g.specialties||[]).slice(0,2).join(", ")}</div>
+                        <Pill green>🛡️ SLTDA Verified</Pill>
+                      </div>
+                      <div style={{ textAlign:"right", flexShrink:0 }}>
+                        {g.rating>0 && <div style={{ fontSize:13, fontWeight:600, color:C.ink }}><Stars n={Math.floor(g.rating)}/> {g.rating}</div>}
+                        <div style={{ fontSize:11, color:C.inkSoft, marginTop:2 }}>{g.experience} yrs exp</div>
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:C.inkSoft, paddingTop:10, borderTop:`1px solid ${C.border}`, flexWrap:"wrap", gap:4 }}>
+                      <span>🗣️ {Array.isArray(g.languages)?g.languages.slice(0,3).join(" · "):g.langs}</span>
+                      <span>📍 {Array.isArray(g.areas)?g.areas.slice(0,2).join(", "):g.areas?.slice(0,30)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ── Guide portfolio ── */}
+          {screen==="portfolio" && g && (
+            <>
+              <div style={{ display:"flex", gap:14, alignItems:"flex-start", marginBottom:16 }}>
+                {g.photo
+                  ? <img src={g.photo} alt={g.fullName} style={{ width:72, height:72, borderRadius:18, objectFit:"cover", flexShrink:0 }}/>
+                  : g.initials
+                    ? <Av g={g} size={72} r={18}/>
+                    : <div style={{ width:72, height:72, borderRadius:18, background:C.teal, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontFamily:serif, fontSize:26, fontWeight:700, flexShrink:0 }}>{(g.fullName||"G")[0]}</div>
+                }
+                <div>
+                  <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>{g.fullName||g.name}</div>
+                  <div style={{ fontSize:13, color:C.inkSoft, marginBottom:10 }}>{g.specialty||(g.specialties||[]).slice(0,2).join(", ")}</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                    <Pill green>🛡️ SLTDA Certified</Pill>
+                    {g.rating>0&&<Pill amber>★ {g.rating}</Pill>}
+                    <span style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20, background:"#E5F0FC", color:"#185FA5", border:"1px solid #B4D0EF" }}>{g.experience} yrs</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:12, padding:"12px 14px", fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:14 }}>
+                {g.bio||"No bio yet."}
+              </div>
+
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:14 }}>
+                {[
+                  ["Languages", Array.isArray(g.languages)?g.languages.join(", "):g.langs],
+                  ["Areas", Array.isArray(g.areas)?g.areas.join(", "):g.areas],
+                  ["Reviews", `${g.reviews||0} verified`],
+                  ["Experience", `${g.experience} years`]
+                ].map(([l,v])=>(
+                  <div key={l} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 12px" }}>
+                    <div style={{ fontSize:10, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:4, fontWeight:600 }}>{l}</div>
+                    <div style={{ fontSize:12, fontWeight:600, color:C.ink, lineHeight:1.4 }}>{v||"—"}</div>
+                  </div>
+                ))}
+              </div>
+
+              {(g.specialties||g.tours)&&<>
+                <p style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:8 }}>{g.specialties?"Specialties":"Signature Tours"}</p>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
+                  {(g.specialties||g.tours||[]).map(t=><Pill key={t}>{t}</Pill>)}
+                </div>
+              </>}
+
+              {/* Request bid box */}
+              <div style={{ background:"linear-gradient(135deg,#FDF5E0,#FFFBF0)", border:"1.5px solid #F0D48A", borderRadius:16, padding:"18px" }}>
+                <h4 style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:C.ink, marginBottom:8 }}>📩 Request a bid from {(g.fullName||g.name)?.split(" ")[0]}</h4>
+                {itin&&<div style={{ background:"rgba(255,255,255,.65)", borderRadius:10, padding:"10px 12px", marginBottom:14, border:"1px solid rgba(194,122,14,.2)", fontSize:12, color:C.inkSoft }}><strong style={{ color:C.ink, fontSize:13, display:"block", marginBottom:3 }}>📋 {itin.title}</strong>{itin.tagline}</div>}
+                <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.6, marginBottom:12 }}>Add a personal message to help the guide understand your needs:</p>
+                <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={3} placeholder="e.g. We're a family of 4 visiting in January, interested in cultural sites and local food..."
+                  style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box", marginBottom:12 }}/>
+                <Btn variant="amber" full onClick={()=>sendRequest()} style={{ opacity:sending?.6:1 }}>
+                  {sending?"Sending…":"Submit bid request →"}
+                </Btn>
+                <div style={{ fontSize:11, color:C.inkSoft, marginTop:8, textAlign:"center" }}>No obligation · Guide responds within 24 hours</div>
+              </div>
+            </>
+          )}
+
+          {/* ── Success ── */}
+          {screen==="success" && (
+            <div style={{ textAlign:"center", padding:"3rem 1rem" }}>
+              <div style={{ width:72, height:72, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 18px", fontSize:30 }}>✅</div>
+              <h3 style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink, marginBottom:10 }}>Request sent!</h3>
+              <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, maxWidth:340, margin:"0 auto 20px" }}>The guide will review your itinerary and respond with a bid within 24 hours. Check "My requests" to see their reply.</p>
+              <div style={{ background:C.tealPale, border:"1px solid #B2E5D0", borderRadius:12, padding:"12px 16px", marginBottom:20, fontSize:13, color:C.teal, textAlign:"left", lineHeight:1.6 }}>💡 No obligation — you can request bids from multiple guides and compare before deciding.</div>
+              <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+                <Btn onClick={()=>{ setScreen("list"); setShowReqs(false); }}>Find another guide</Btn>
+                <Btn variant="outline" onClick={()=>{ setScreen("list"); setShowReqs(true); loadMyRequests(); }}>View my requests</Btn>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      {/* Payment modal */}
+      {payModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.65)", zIndex:800, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(6px)" }}>
+          <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:420, boxShadow:"0 24px 80px rgba(0,0,0,.3)", overflow:"hidden" }}>
+            {payStep==="confirm" && (
+              <>
+                <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"1.5rem", textAlign:"center" }}>
+                  <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#fff", marginBottom:4 }}>Confirm & Pay</div>
+                  <div style={{ fontSize:13, color:"rgba(255,255,255,.8)" }}>Booking with {payModal.guideName}</div>
+                </div>
+                <div style={{ padding:"1.5rem" }}>
+                  <div style={{ background:C.surface, borderRadius:14, padding:"16px", marginBottom:16 }}>
+                    <div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:12 }}>Payment breakdown</div>
+                    {[
+                      ["Total amount", `$${payModal.bid?.price} USD`],
+                      ["Guide receives (85%)", `$${Math.round(Number(payModal.bid?.price)*0.85*100)/100}`],
+                      ["CeylonTrails commission (15%)", `$${Math.round(Number(payModal.bid?.price)*0.15*100)/100}`],
+                      ["Dates", payModal.bid?.dates||"As agreed"],
+                    ].map(([l,v])=>(
+                      <div key={l} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+                        <span style={{ color:C.inkSoft }}>{l}</span><span style={{ fontWeight:700, color:C.ink }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"10px 14px", fontSize:12, color:C.amber, marginBottom:16, lineHeight:1.6 }}>
+                    ⚠️ By paying, you confirm acceptance of the guide's bid and CeylonTrails terms.
+                  </div>
+                  <button onClick={()=>setPayStep("paypal")} style={{ width:"100%", padding:"14px", background:"#0070BA", color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+                    <span style={{ fontWeight:900, fontSize:16 }}>Pay</span><span style={{ fontWeight:300, fontSize:16, color:"#80CFFF" }}>Pal</span>
+                    <span>→ Pay ${payModal.bid?.price}</span>
+                  </button>
+                  <button onClick={()=>setPayModal(null)} style={{ width:"100%", padding:"10px", background:"none", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.inkSoft, cursor:"pointer", fontFamily:sans }}>Cancel</button>
+                </div>
+              </>
+            )}
+
+            {payStep==="paypal" && (
+              <div style={{ padding:"1.5rem" }}>
+                <div style={{ textAlign:"center", marginBottom:16 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#0070BA", marginBottom:4 }}>PayPal Checkout</div>
+                  <div style={{ fontSize:12, color:C.inkSoft }}>CeylonTrails — Guide Booking · ${payModal.bid?.price}</div>
+                </div>
+                <div style={{ background:"#F5F7FA", borderRadius:10, padding:"12px", marginBottom:14, textAlign:"center", fontSize:16, fontWeight:700 }}>Total: ${payModal.bid?.price} USD</div>
+                <input readOnly value="tourist@email.com" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:8, boxSizing:"border-box" }}/>
+                <input readOnly type="password" value="••••••••" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:14, boxSizing:"border-box" }}/>
+                <button onClick={handleAcceptBid} disabled={paying} style={{ width:"100%", padding:"13px", background:paying?"#aaa":"#0070BA", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:paying?"wait":"pointer", fontFamily:sans, marginBottom:8 }}>
+                  {paying?<span style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}><span style={{ width:16, height:16, border:"2px solid rgba(255,255,255,.4)", borderTopColor:"#fff", borderRadius:"50%", display:"inline-block", animation:"spin .8s linear infinite" }}/> Processing…</span>:`Pay $${payModal.bid?.price}`}
+                </button>
+                <button onClick={()=>setPayStep("confirm")} style={{ width:"100%", padding:"10px", background:"none", border:"none", color:C.inkSoft, fontSize:12, cursor:"pointer", fontFamily:sans }}>← Back</button>
+                <div style={{ textAlign:"center", fontSize:10, color:C.inkSoft, marginTop:6 }}>🔒 Demo mode — no real charge</div>
+              </div>
+            )}
+
+            {payStep==="success" && (
+              <div style={{ padding:"2rem", textAlign:"center" }}>
+                <div style={{ width:72, height:72, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:32 }}>✅</div>
+                <div style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink, marginBottom:8 }}>Booking Confirmed!</div>
+                <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:8 }}>Payment of <strong>${payModal.bid?.price}</strong> processed successfully.</p>
+                <div style={{ background:C.tealPale, borderRadius:10, padding:"10px 14px", fontSize:12, color:C.teal, marginBottom:20, textAlign:"left" }}>
+                  <div>✓ Guide receives: <strong>${Math.round(Number(payModal.bid?.price)*0.85*100)/100}</strong></div>
+                  <div>✓ CeylonTrails commission: <strong>${Math.round(Number(payModal.bid?.price)*0.15*100)/100}</strong></div>
+                </div>
+                <button onClick={()=>{ setPayModal(null); setPayStep("confirm"); }} style={{ width:"100%", padding:"13px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans }}>Done</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
   return (
     <>
       <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:600, backdropFilter:"blur(3px)" }}/>
@@ -3434,7 +3805,66 @@ const GUIDE_LANGUAGES   = ["English","Sinhala","Tamil","German","French","Japane
 const GUIDE_AREAS       = ["Colombo & Western","Kandy & Central","Galle & Southern","Sigiriya & Cultural Triangle","Yala & Wildlife","Ella & Uva","Trincomalee & East","Jaffna & North","All Island"];
 
 // ─── FIREBASE HELPERS ─────────────────────────────────────────────────────────
-async function saveGuideProfile(uid, data) {
+async function loadApprovedGuides() {
+  if (!window.firebase?.firestore) return [];
+  try {
+    const snap = await window.firebase.firestore().collection("guides")
+      .where("status","==","approved").orderBy("registeredAt","desc").limit(20).get();
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch(e) { console.warn("loadApprovedGuides:", e.message); return []; }
+}
+
+async function saveTripRequest(request) {
+  if (!window.firebase?.firestore) return null;
+  const ref = await window.firebase.firestore().collection("tripRequests").add({
+    ...request, createdAt:new Date().toISOString(), status:"pending"
+  });
+  return ref.id;
+}
+
+async function loadTouristRequests(touristUid) {
+  if (!window.firebase?.firestore) return [];
+  try {
+    const snap = await window.firebase.firestore().collection("tripRequests")
+      .where("touristUid","==",touristUid).orderBy("createdAt","desc").limit(20).get();
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch(e) { console.warn("loadTouristRequests:", e.message); return []; }
+}
+
+async function acceptBidAndPay(requestId, bidAmount) {
+  if (!window.firebase?.firestore) return;
+  const commission = Math.round(bidAmount * 0.15 * 100) / 100;
+  const guideAmount = Math.round((bidAmount - commission) * 100) / 100;
+  await window.firebase.firestore().collection("tripRequests").doc(requestId).update({
+    status:"accepted",
+    payment:{ total:bidAmount, commission, guideAmount, paidAt:new Date().toISOString(), method:"PayPal" },
+    acceptedAt: new Date().toISOString(),
+  });
+}
+
+const GUIDE_TERMS = `CEYLONTRAILS GUIDE TERMS & RULES
+
+By submitting a bid, you agree to the following:
+
+1. COMMISSION: CeylonTrails deducts 15% from each booking. You receive 85% of the agreed price.
+
+2. CONDUCT: You must behave professionally at all times. Harassment, discrimination or misconduct will result in immediate removal from the platform.
+
+3. PUNCTUALITY: You must arrive on time. Lateness of more than 30 minutes without notice may result in a full refund to the tourist.
+
+4. ACCURACY: Your bid must cover all services stated. Hidden charges to tourists are strictly prohibited.
+
+5. CANCELLATION: Cancelling within 48 hours of a confirmed booking without a valid reason incurs a penalty deducted from your next payment.
+
+6. SLTDA COMPLIANCE: Your licence must remain valid. Expired licence = suspended account.
+
+7. PAYMENTS: All payments are processed through CeylonTrails. Accepting cash directly from tourists for platform-booked tours is not permitted.
+
+8. DISPUTES: All disputes are mediated by CeylonTrails. Our decision is final.
+
+By proceeding, you confirm you have read and agree to all terms above.`;
+
+
   if (!window.firebase) return;
   await window.firebase.firestore().collection("guides").doc(uid).set(data, { merge:true });
 }
@@ -3505,6 +3935,26 @@ async function sendAdminNotification(guideName, guideEmail, sltdaNo) {
       admin_url:   window.location.origin + "?admin",
     });
   } catch(e) { console.warn("Email notification failed:", e.message); }
+}
+
+// ─── GUIDE REGISTER FIELD HELPER (outside component to prevent remount) ───────
+function GuideField({ label, value, onChange, type="text", placeholder, hint, error }) {
+  return (
+    <div style={{ marginBottom:14 }}>
+      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>
+        {label} <span style={{ color:C.coral }}>*</span>
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${error?C.coral:C.border}`, borderRadius:10, fontSize:14, fontFamily:sans, outline:"none", boxSizing:"border-box", transition:"border-color .15s" }}
+      />
+      {error && <div style={{ fontSize:11, color:C.coral, marginTop:4 }}>⚠️ {error}</div>}
+      {hint && !error && <div style={{ fontSize:11, color:C.inkSoft, marginTop:4 }}>{hint}</div>}
+    </div>
+  );
 }
 
 // ─── GUIDE REGISTER (with validation + photo upload) ─────────────────────────
@@ -3587,18 +4037,6 @@ function GuideRegister({ user, onComplete }) {
     setSaving(false);
   };
 
-  const Field = ({ label, k, type="text", placeholder, hint }) => (
-    <div style={{ marginBottom:14 }}>
-      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>
-        {label} <span style={{ color:C.coral }}>*</span>
-      </label>
-      <input type={type} value={form[k]} onChange={e=>upd(k,e.target.value)} placeholder={placeholder}
-        style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${errors[k]?C.coral:C.border}`, borderRadius:10, fontSize:14, fontFamily:sans, outline:"none", boxSizing:"border-box", transition:"border-color .15s" }}/>
-      {errors[k] && <div style={{ fontSize:11, color:C.coral, marginTop:4 }}>⚠️ {errors[k]}</div>}
-      {hint && !errors[k] && <div style={{ fontSize:11, color:C.inkSoft, marginTop:4 }}>{hint}</div>}
-    </div>
-  );
-
   const steps = [
     // Step 0 — Personal + uploads
     <>
@@ -3626,11 +4064,11 @@ function GuideRegister({ user, onComplete }) {
         <input ref={photoRef} type="file" accept="image/*" onChange={handlePhoto} style={{ display:"none" }}/>
       </div>
 
-      <Field label="Full name (as on NIC)" k="fullName" placeholder="e.g. Chaminda Perera" hint="Letters and spaces only"/>
-      <Field label="Phone number" k="phone" type="tel" placeholder="+94 77 123 4567" hint="Include country code"/>
-      <Field label="NIC number" k="nic" placeholder="e.g. 199012345678 or 900123456V" hint="Old format: 9 digits + V/X · New format: 12 digits"/>
-      <Field label="Home address" k="address" placeholder="Street, City, Province"/>
-      <Field label="SLTDA Licence number" k="sltdaNo" placeholder="e.g. SLTDA/GT/2024/001"/>
+      <GuideField label="Full name (as on NIC)" value={form.fullName} onChange={e=>upd("fullName",e.target.value)} placeholder="e.g. Chaminda Perera" hint="Letters and spaces only" error={errors.fullName}/>
+      <GuideField label="Phone number" value={form.phone} onChange={e=>upd("phone",e.target.value)} type="tel" placeholder="+94 77 123 4567" hint="Include country code" error={errors.phone}/>
+      <GuideField label="NIC number" value={form.nic} onChange={e=>upd("nic",e.target.value)} placeholder="e.g. 199012345678 or 900123456V" hint="Old format: 9 digits + V/X · New format: 12 digits" error={errors.nic}/>
+      <GuideField label="Home address" value={form.address} onChange={e=>upd("address",e.target.value)} placeholder="Street, City, Province" error={errors.address}/>
+      <GuideField label="SLTDA Licence number" value={form.sltdaNo} onChange={e=>upd("sltdaNo",e.target.value)} placeholder="e.g. SLTDA/GT/2024/001" error={errors.sltdaNo}/>
 
       {/* Licence document upload */}
       <div style={{ marginBottom:8 }}>
@@ -3814,10 +4252,20 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
       {/* Bid modal */}
       {bidModal && (
         <div onClick={e=>e.target===e.currentTarget&&setBid(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.55)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(4px)" }}>
-          <div style={{ background:"#fff", borderRadius:20, width:"100%", maxWidth:480, padding:"1.5rem", boxShadow:"0 20px 60px rgba(0,0,0,.25)" }}>
-            <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:4 }}>Submit your bid</h3>
-            <p style={{ fontSize:12, color:C.inkSoft, marginBottom:16 }}>For: <strong>{bidModal.itinTitle||"Trip request"}</strong></p>
-            {[["Price (USD total)","price","number","e.g. 250"],["Available dates","dates","text","e.g. 15–20 Jan 2026"]].map(([l,k,t,ph])=>(
+          <div style={{ background:"#fff", borderRadius:20, width:"100%", maxWidth:480, padding:"1.5rem", boxShadow:"0 20px 60px rgba(0,0,0,.25)", maxHeight:"85vh", display:"flex", flexDirection:"column" }}>
+            <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:4, flexShrink:0 }}>Submit your bid</h3>
+            <p style={{ fontSize:12, color:C.inkSoft, marginBottom:12, flexShrink:0 }}>For: <strong>{bidModal.itinTitle||"Trip request"}</strong></p>
+
+            {/* Guide Terms */}
+            <div style={{ background:"#F8FAFC", border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 12px", marginBottom:12, maxHeight:120, overflowY:"auto", fontSize:11, color:C.inkSoft, lineHeight:1.6, flexShrink:0 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:C.ink, marginBottom:6 }}>📋 CeylonTrails Guide Rules (read before bidding)</div>
+              {GUIDE_TERMS.split('\n').filter(l=>l.trim()).map((l,i)=>(
+                <div key={i} style={{ marginBottom:3, color:l.startsWith('CEYLON')||l.match(/^\d+\./)? C.ink:C.inkSoft, fontWeight:l.match(/^\d+\./)?600:400 }}>{l}</div>
+              ))}
+            </div>
+
+            <div style={{ overflowY:"auto", flex:1 }}>
+              {[["Price (USD total)","price","number","e.g. 250"],["Available dates","dates","text","e.g. 15–20 Jan 2026"]].map(([l,k,t,ph])=>(
               <div key={k} style={{ marginBottom:12 }}>
                 <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>{l}</label>
                 <input type={t} value={bidText[k]} onChange={e=>setBidText(b=>({...b,[k]:e.target.value}))} placeholder={ph}
@@ -3827,9 +4275,10 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
             <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>Message to tourist</label>
             <textarea value={bidText.message} onChange={e=>setBidText(b=>({...b,message:e.target.value}))} rows={3} placeholder="Hello! I would love to guide you through Sri Lanka..."
               style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box", marginBottom:16 }}/>
-            <div style={{ display:"flex", gap:10 }}>
+            <div style={{ display:"flex", gap:10, marginTop:12 }}>
               <Btn onClick={submitBidHandler} style={{ flex:1 }}>Send bid →</Btn>
               <Btn variant="outline" onClick={()=>setBid(null)}>Cancel</Btn>
+            </div>
             </div>
           </div>
         </div>
