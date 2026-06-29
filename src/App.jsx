@@ -1827,34 +1827,6 @@ function DraggableItinerary({ days, onUpdate, itinId, premium }) {
   );
 }
 
-  const handleDragStart = (dayIdx, actIdx) => setDragging({dayIdx, actIdx});
-  const handleDragOver  = (e, dayIdx, actIdx) => { e.preventDefault(); setDragOver({dayIdx, actIdx}); };
-  const handleDrop      = (e, toDayIdx, toActIdx) => {
-    e.preventDefault();
-    if (!dragging) return;
-    const { dayIdx:fromDay, actIdx:fromAct } = dragging;
-    if (fromDay===toDayIdx && fromAct===toActIdx) { setDragging(null); setDragOver(null); return; }
-    const newDays = days.map(d=>({...d, activities:[...d.activities]}));
-    const [moved] = newDays[fromDay].activities.splice(fromAct, 1);
-    newDays[toDayIdx].activities.splice(toActIdx, 0, moved);
-    // Re-assign times sequentially within each affected day
-    [fromDay, toDayIdx].forEach(di=>{
-      newDays[di].activities.forEach((a,i)=>{
-        const baseHour = 7 + i*2;
-        a.time = `${String(baseHour).padStart(2,"0")}:00`;
-      });
-    });
-    onUpdate(newDays);
-    setDragging(null); setDragOver(null);
-  };
-  const handleSwapDone = (dayIdx, actIdx, newAct) => {
-    const newDays = days.map(d=>({...d, activities:[...d.activities]}));
-    const old = newDays[dayIdx].activities[actIdx];
-    newDays[dayIdx].activities[actIdx] = { ...old, ...newAct, type: old.type, time: old.time };
-    onUpdate(newDays);
-    setSwap(null);
-  };
-
 const TRAVEL_OPTS = [
   {v:"beach",    i:"🏖️", l:"Beach & Coast",      s:"Sun, sand, surf & sea"},
   {v:"hills",    i:"⛰️", l:"Hill Country",        s:"Tea trails, mist & waterfalls"},
@@ -3784,100 +3756,6 @@ function GuideRegister({ user, onComplete }) {
   );
 }
 
-  const submit = async () => {
-    setSaving(true);
-    try {
-      await saveGuideProfile(user.uid, {
-        ...form, email:user.email, uid:user.uid,
-        status:"pending", role:"guide",
-        registeredAt: new Date().toISOString(),
-        availability:"available", tripsCompleted:0, rating:0, reviews:[],
-      });
-      // Also load Firestore SDK if not loaded
-      onComplete();
-    } catch(e) { alert("Error saving profile: "+e.message); }
-    setSaving(false);
-  };
-
-  const steps = [
-    // Step 0 — Personal details
-    <>
-      <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>Personal Information</h3>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20 }}>This information will be verified by the Sri Lanka Tourism Development Authority.</p>
-      {[
-        ["Full name (as on NIC)","fullName","text","e.g. Chaminda Perera"],
-        ["Phone number","phone","tel","e.g. +94 77 123 4567"],
-        ["NIC number","nic","text","e.g. 199012345678"],
-        ["Home address","address","text","City, Province"],
-        ["SLTDA Licence number","sltdaNo","text","e.g. SLTDA/GT/2024/001"],
-      ].map(([label,key,type,ph])=>(
-        <div key={key} style={{ marginBottom:14 }}>
-          <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>{label}</label>
-          <input type={type} value={form[key]} onChange={e=>upd(key,e.target.value)} placeholder={ph}
-            style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:14, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
-        </div>
-      ))}
-    </>,
-
-    // Step 1 — Professional details
-    <>
-      <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>Professional Details</h3>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Tell tourists about your expertise and experience.</p>
-
-      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Years of experience</label>
-      <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:16 }}>
-        <button onClick={()=>upd("experience",Math.max(1,form.experience-1))} style={{ width:36, height:36, borderRadius:"50%", border:`1.5px solid ${C.border}`, background:"none", fontSize:18, cursor:"pointer" }}>−</button>
-        <span style={{ fontSize:20, fontWeight:700, color:C.teal, minWidth:32, textAlign:"center" }}>{form.experience}</span>
-        <button onClick={()=>upd("experience",Math.min(40,form.experience+1))} style={{ width:36, height:36, borderRadius:"50%", border:`1.5px solid ${C.border}`, background:"none", fontSize:18, cursor:"pointer" }}>+</button>
-        <span style={{ fontSize:13, color:C.inkSoft }}>years</span>
-      </div>
-
-      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Languages spoken</label>
-      <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
-        {GUIDE_LANGUAGES.map(l=><button key={l} onClick={()=>tog("languages",l)} style={{ padding:"6px 14px", borderRadius:20, border:`1.5px solid ${form.languages.includes(l)?C.teal:C.border}`, background:form.languages.includes(l)?C.tealLight:"#fff", color:form.languages.includes(l)?C.teal:C.inkSoft, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{l}</button>)}
-      </div>
-
-      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Specialties</label>
-      <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
-        {GUIDE_SPECIALTIES.map(s=><button key={s} onClick={()=>tog("specialties",s)} style={{ padding:"6px 14px", borderRadius:20, border:`1.5px solid ${form.specialties.includes(s)?C.teal:C.border}`, background:form.specialties.includes(s)?C.tealLight:"#fff", color:form.specialties.includes(s)?C.teal:C.inkSoft, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{s}</button>)}
-      </div>
-
-      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Areas covered</label>
-      <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
-        {GUIDE_AREAS.map(a=><button key={a} onClick={()=>tog("areas",a)} style={{ padding:"6px 14px", borderRadius:20, border:`1.5px solid ${form.areas.includes(a)?C.teal:C.border}`, background:form.areas.includes(a)?C.tealLight:"#fff", color:form.areas.includes(a)?C.teal:C.inkSoft, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{a}</button>)}
-      </div>
-
-      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Bio (tell tourists about yourself)</label>
-      <textarea value={form.bio} onChange={e=>upd("bio",e.target.value)} rows={4} placeholder="I grew up in Kandy and have been guiding for 8 years. I specialise in cultural and hill country tours..."
-        style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
-    </>,
-
-    // Step 2 — Review & submit
-    <>
-      <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:4 }}>Review & Submit</h3>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Your application will be reviewed and you'll receive an email within 2–3 business days.</p>
-      <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"16px" }}>
-        {[
-          ["👤 Name", form.fullName],
-          ["📞 Phone", form.phone],
-          ["🪪 NIC", form.nic],
-          ["🛡️ SLTDA No", form.sltdaNo],
-          ["⭐ Experience", `${form.experience} years`],
-          ["🗣️ Languages", form.languages.join(", ")||"None selected"],
-          ["🎯 Specialties", form.specialties.join(", ")||"None selected"],
-          ["📍 Areas", form.areas.join(", ")||"None selected"],
-        ].map(([l,v])=>(
-          <div key={l} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
-            <span style={{ minWidth:120, color:C.inkSoft }}>{l}</span>
-            <span style={{ fontWeight:600, color:C.ink, flex:1 }}>{v||"—"}</span>
-          </div>
-        ))}
-      </div>
-      <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"12px 14px", marginTop:14, fontSize:12, color:C.amber, lineHeight:1.6 }}>
-        ⚠️ By submitting, you confirm that all information is accurate and your SLTDA licence is valid. CeylonTrails will verify your details within 2–3 business days.
-      </div>
-    </>,
-  ];
 
 // ─── GUIDE DASHBOARD ──────────────────────────────────────────────────────────
 function GuideDashboard({ user, profile, onProfileUpdate }) {
@@ -4604,7 +4482,6 @@ function AdminPanel({ onClose }) {
               )}
             </div>
           )}
-          )}
         </div>
       </div>
     </div>
@@ -4612,6 +4489,7 @@ function AdminPanel({ onClose }) {
 }
 
 // ─── GUIDE PORTAL PAGE ────────────────────────────────────────────────────────
+function GuidePortalPage({ setPage }) {
   const { user, signInEmail, signUpEmail, signInGoogle } = useAuth();
   const [guideProfile, setGuideProfile] = useState(null);
   const [loading, setLoading]           = useState(true);
