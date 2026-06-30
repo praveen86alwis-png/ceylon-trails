@@ -9,11 +9,12 @@ export default async function handler(req, res) {
   const KEY = process.env.GOOGLE_PLACES_KEY;
   if (!KEY) return res.status(200).json({ error:"no_key", results:[] });
 
-  // Parse the URL path: /api/places/search, /api/places/details, /api/places/photo
+  // Parse the URL path: /api/places/search, /api/places/details, /api/places/photo, /api/places/nearby
   const urlPath = req.url || "";
   const action = urlPath.includes("/search") ? "search"
                : urlPath.includes("/details") ? "details"
                : urlPath.includes("/photo") ? "photo"
+               : urlPath.includes("/nearby") ? "nearby"
                : null;
 
   if (!action) return res.status(400).json({ error:"Invalid endpoint" });
@@ -33,7 +34,16 @@ export default async function handler(req, res) {
     if (action === "details") {
       const place_id = req.query.place_id;
       if (!place_id) return res.status(400).json({ error:"Missing place_id" });
-      url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(place_id)}&fields=name,rating,formatted_phone_number,website,opening_hours,reviews,photos,formatted_address,price_level,user_ratings_total&key=${KEY}`;
+      url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(place_id)}&fields=name,rating,formatted_phone_number,website,opening_hours,reviews,photos,formatted_address,price_level,user_ratings_total,geometry&key=${KEY}`;
+      upstream = await fetch(url);
+      const data = await upstream.json();
+      return res.status(200).json(data);
+    }
+
+    if (action === "nearby") {
+      const { lat, lng, type = "tourist_attraction", radius = "1500" } = req.query;
+      if (!lat || !lng) return res.status(400).json({ error:"Missing lat/lng" });
+      url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${encodeURIComponent(type)}&key=${KEY}`;
       upstream = await fetch(url);
       const data = await upstream.json();
       return res.status(200).json(data);

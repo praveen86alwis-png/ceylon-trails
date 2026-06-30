@@ -37,58 +37,126 @@ const DEST_CATS = [
   { id:"wildlife",  label:"🐘 Wildlife",        color:["#145840","#0A2A20"] },
   { id:"adventure", label:"🧗 Adventure",       color:["#C45230","#7A2010"] },
   { id:"rural",     label:"🌾 Rural",           color:["#7A6010","#4A3A08"] },
+  { id:"hidden",    label:"💎 Hidden Gems",     color:["#5B3A8E","#3A1F5E"] },
 ];
 
 const DESTINATIONS = {
   beaches:[
-    { name:"Mirissa",        tag:"Whale watching capital",      desc:"A crescent of golden sand fringed with palms. Blue-whale sightings Nov–Apr.",          best:"Nov–Apr", crowd:"Moderate", wiki:"Mirissa" },
-    { name:"Unawatuna",      tag:"Coral reef swimming",         desc:"Calm waters for snorkelling. The reef is 200m offshore with sea turtles & parrotfish.", best:"Dec–Mar", crowd:"High",     wiki:"Unawatuna" },
-    { name:"Hikkaduwa",      tag:"Surf & reef life",            desc:"Sri Lanka's original beach resort — consistent surf, glass-bottom boats, nesting turtles.", best:"Nov–Apr", crowd:"High",  wiki:"Hikkaduwa" },
-    { name:"Tangalle",       tag:"Secluded & serene",           desc:"Undeveloped beach with rock pools, fishing catamarans, extraordinary sunsets.",           best:"Dec–Apr", crowd:"Low",      wiki:"Tangalle" },
-    { name:"Arugam Bay",     tag:"East coast surf mecca",       desc:"World-class right-hand point breaks on the east coast — warm and dry when west is wet.",  best:"May–Oct", crowd:"Moderate", wiki:"Arugam Bay" },
-    { name:"Nilaveli",       tag:"Pigeon Island snorkelling",   desc:"Crystal waters off the northeast, home to blacktip reef sharks and hawksbill turtles.",   best:"May–Sep", crowd:"Low",      wiki:"Nilaveli" },
+    { name:"Mirissa",        tag:"Whale watching capital",      desc:"A crescent of golden sand fringed with palms. Blue-whale sightings Nov–Apr.",          best:"Nov–Apr", crowd:"Moderate", wiki:"Mirissa", lat:5.9483, lng:80.4589 },
+    { name:"Unawatuna",      tag:"Coral reef swimming",         desc:"Calm waters for snorkelling. The reef is 200m offshore with sea turtles & parrotfish.", best:"Dec–Mar", crowd:"High",     wiki:"Unawatuna", lat:6.0108, lng:80.2492 },
+    { name:"Hikkaduwa",      tag:"Surf & reef life",            desc:"Sri Lanka's original beach resort — consistent surf, glass-bottom boats, nesting turtles.", best:"Nov–Apr", crowd:"High",  wiki:"Hikkaduwa", lat:6.1395, lng:80.1063 },
+    { name:"Tangalle",       tag:"Secluded & serene",           desc:"Undeveloped beach with rock pools, fishing catamarans, extraordinary sunsets.",           best:"Dec–Apr", crowd:"Low",      wiki:"Tangalle", lat:6.0241, lng:80.7937 },
+    { name:"Arugam Bay",     tag:"East coast surf mecca",       desc:"World-class right-hand point breaks on the east coast — warm and dry when west is wet.",  best:"May–Oct", crowd:"Moderate", wiki:"Arugam Bay", lat:6.8404, lng:81.8360 },
+    { name:"Nilaveli",       tag:"Pigeon Island snorkelling",   desc:"Crystal waters off the northeast, home to blacktip reef sharks and hawksbill turtles.",   best:"May–Sep", crowd:"Low",      wiki:"Nilaveli", lat:8.6916, lng:81.1956 },
+    { name:"Bentota",        tag:"Watersports & river safari",  desc:"Golden beach meets the Bentota river — jet-skiing, banana boats and mangrove safaris.",   best:"Nov–Apr", crowd:"Moderate", wiki:"Bentota", lat:6.4260, lng:79.9959 },
+    { name:"Pasikuda",       tag:"Shallow turquoise bay",       desc:"One of the few beaches where you can walk far out into calm, shallow, swimmable water.",  best:"Apr–Sep", crowd:"Low",      wiki:"Pasikuda", lat:7.9219, lng:81.5650 },
   ],
   hills:[
-    { name:"Ella",           tag:"Nine Arch Bridge & tea",      desc:"Misty village at 1000m. Walk tea ridges to Little Adam's Peak, watch the steam train.",   best:"Jan–Mar", crowd:"High",     wiki:"Ella, Sri Lanka" },
-    { name:"Kandy",          tag:"Cultural heartland",          desc:"Cultural capital in a lush highland bowl. Temple of the Tooth — arrive for evening puja.", best:"Year-round", crowd:"High",  wiki:"Kandy" },
-    { name:"Nuwara Eliya",   tag:"'Little England' tea country",desc:"Colonial bungalows, rose gardens, manicured tea estates at 1868m.",                       best:"Mar–May", crowd:"Moderate", wiki:"Nuwara Eliya" },
-    { name:"Haputale",       tag:"Off-the-beaten ridge",        desc:"A ridge town with drops on both sides — see the Indian Ocean and highlands simultaneously.", best:"Jan–Apr", crowd:"Low",    wiki:"Haputale" },
-    { name:"Horton Plains",  tag:"World's End cliff",           desc:"High-altitude plateau at 2100m with cloud forest and the dramatic 1000m cliff drop.",      best:"Jan–Mar", crowd:"Moderate", wiki:"Horton Plains National Park" },
-    { name:"Knuckles Range", tag:"UNESCO wilderness trek",       desc:"UNESCO-listed range — 34 waterfalls, 13 peaks, villages unchanged for centuries.",          best:"Feb–Apr", crowd:"Low",     wiki:"Knuckles Mountain Range" },
+    { name:"Ella",           tag:"Nine Arch Bridge & tea",      desc:"Misty village at 1000m. Walk tea ridges to Little Adam's Peak, watch the steam train.",   best:"Jan–Mar", crowd:"High",     wiki:"Ella, Sri Lanka", lat:6.8667, lng:81.0466 },
+    { name:"Kandy",          tag:"Cultural heartland",          desc:"Cultural capital in a lush highland bowl. Temple of the Tooth — arrive for evening puja.", best:"Year-round", crowd:"High",  wiki:"Kandy", lat:7.2906, lng:80.6337 },
+    { name:"Nuwara Eliya",   tag:"'Little England' tea country",desc:"Colonial bungalows, rose gardens, manicured tea estates at 1868m.",                       best:"Mar–May", crowd:"Moderate", wiki:"Nuwara Eliya", lat:6.9497, lng:80.7891 },
+    { name:"Haputale",       tag:"Off-the-beaten ridge",        desc:"A ridge town with drops on both sides — see the Indian Ocean and highlands simultaneously.", best:"Jan–Apr", crowd:"Low",    wiki:"Haputale", lat:6.7670, lng:80.9550 },
+    { name:"Horton Plains",  tag:"World's End cliff",           desc:"High-altitude plateau at 2100m with cloud forest and the dramatic 1000m cliff drop.",      best:"Jan–Mar", crowd:"Moderate", wiki:"Horton Plains National Park", lat:6.8021, lng:80.7958 },
+    { name:"Knuckles Range", tag:"UNESCO wilderness trek",       desc:"UNESCO-listed range — 34 waterfalls, 13 peaks, villages unchanged for centuries.",          best:"Feb–Apr", crowd:"Low",     wiki:"Knuckles Mountain Range", lat:7.4500, lng:80.7833 },
+    { name:"Bandarawela",    tag:"Quiet hill station",          desc:"Less touristy than Ella, with colonial architecture and easy access to tea factories.",   best:"Jan–Apr", crowd:"Low",      wiki:"Bandarawela", lat:6.8294, lng:80.9886 },
   ],
   cultural:[
-    { name:"Sigiriya",       tag:"Lion Rock fortress",          desc:"5th-century rock citadel rising 200m from the jungle. Cloud maiden frescoes, mirror wall.", best:"Year-round", crowd:"High", wiki:"Sigiriya" },
-    { name:"Anuradhapura",   tag:"Ancient sacred city",         desc:"One of the oldest continuously inhabited cities. The 2300-year-old sacred Bo tree.",       best:"Year-round", crowd:"Moderate", wiki:"Anuradhapura" },
-    { name:"Polonnaruwa",    tag:"Medieval capital ruins",       desc:"Compact ruins toured by bicycle in a day. Gal Vihara Buddha sculptures unmissable.",       best:"Year-round", crowd:"Moderate", wiki:"Polonnaruwa" },
-    { name:"Dambulla Cave Temple", tag:"Golden Rock sanctuary", desc:"Five cave temples painted floor-to-ceiling with murals, 153 Buddha statues.",              best:"Year-round", crowd:"Moderate", wiki:"Dambulla cave temple" },
-    { name:"Galle Fort",     tag:"Dutch colonial ramparts",     desc:"UNESCO 17th-century Dutch fort with cobbled streets and the best café scene in the south.", best:"Nov–Apr", crowd:"High",     wiki:"Galle Fort" },
-    { name:"Jaffna",         tag:"Tamil culture & cuisine",     desc:"Sri Lanka's north — Hindu temples with soaring gopurams, the island's spiciest cuisine.",  best:"May–Sep", crowd:"Low",      wiki:"Jaffna" },
+    { name:"Sigiriya",       tag:"Lion Rock fortress",          desc:"5th-century rock citadel rising 200m from the jungle. Cloud maiden frescoes, mirror wall.", best:"Year-round", crowd:"High", wiki:"Sigiriya", lat:7.9570, lng:80.7603 },
+    { name:"Anuradhapura",   tag:"Ancient sacred city",         desc:"One of the oldest continuously inhabited cities. The 2300-year-old sacred Bo tree.",       best:"Year-round", crowd:"Moderate", wiki:"Anuradhapura", lat:8.3114, lng:80.4037 },
+    { name:"Polonnaruwa",    tag:"Medieval capital ruins",       desc:"Compact ruins toured by bicycle in a day. Gal Vihara Buddha sculptures unmissable.",       best:"Year-round", crowd:"Moderate", wiki:"Polonnaruwa", lat:7.9403, lng:81.0188 },
+    { name:"Dambulla Cave Temple", tag:"Golden Rock sanctuary", desc:"Five cave temples painted floor-to-ceiling with murals, 153 Buddha statues.",              best:"Year-round", crowd:"Moderate", wiki:"Dambulla cave temple", lat:7.8675, lng:80.6517 },
+    { name:"Galle Fort",     tag:"Dutch colonial ramparts",     desc:"UNESCO 17th-century Dutch fort with cobbled streets and the best café scene in the south.", best:"Nov–Apr", crowd:"High",     wiki:"Galle Fort", lat:6.0269, lng:80.2167 },
+    { name:"Jaffna",         tag:"Tamil culture & cuisine",     desc:"Sri Lanka's north — Hindu temples with soaring gopurams, the island's spiciest cuisine.",  best:"May–Sep", crowd:"Low",      wiki:"Jaffna", lat:9.6615, lng:80.0255 },
+    { name:"Kandy Temple of the Tooth", tag:"Sri Lanka's holiest relic", desc:"Houses the sacred tooth relic of the Buddha — evening puja ceremony is unmissable.", best:"Year-round", crowd:"High", wiki:"Temple of the Sacred Tooth Relic", lat:7.2936, lng:80.6413 },
   ],
   wildlife:[
-    { name:"Yala National Park",    tag:"Highest leopard density",    desc:"World's highest leopard density per km². Sloth bears, crocs, 200+ bird species.",  best:"Feb–Jul", crowd:"High",     wiki:"Yala National Park" },
-    { name:"Wilpattu National Park",tag:"Secretive & untouched",      desc:"Sri Lanka's largest park — lakes where leopards and sloth bears appear in silence.", best:"Feb–Oct", crowd:"Low",      wiki:"Wilpattu National Park" },
-    { name:"Udawalawe",             tag:"Elephant sanctuary",         desc:"Herds of 30–50 elephants cross the grasslands at dusk. Also the Elephant Transit Home.", best:"Year-round", crowd:"Moderate", wiki:"Udawalawa National Park" },
-    { name:"Sinharaja Rainforest",  tag:"UNESCO biosphere reserve",   desc:"Last wet lowland rainforest — 26 of Sri Lanka's 33 endemic birds found here.",     best:"Aug–Sep", crowd:"Low",      wiki:"Sinharaja Forest Reserve" },
-    { name:"Minneriya",             tag:"The Gathering",              desc:"300+ wild elephants gather at the Minneriya tank Jul–Oct — largest in Asia.",        best:"Jul–Oct", crowd:"Moderate", wiki:"Minneriya National Park" },
-    { name:"Bundala",               tag:"Flamingo wetlands",          desc:"Thousands of migratory flamingos and painted storks. Far quieter than Yala.",        best:"Sep–Mar", crowd:"Low",      wiki:"Bundala National Park" },
+    { name:"Yala National Park",    tag:"Highest leopard density",    desc:"World's highest leopard density per km². Sloth bears, crocs, 200+ bird species.",  best:"Feb–Jul", crowd:"High",     wiki:"Yala National Park", lat:6.3725, lng:81.5185 },
+    { name:"Wilpattu National Park",tag:"Secretive & untouched",      desc:"Sri Lanka's largest park — lakes where leopards and sloth bears appear in silence.", best:"Feb–Oct", crowd:"Low",      wiki:"Wilpattu National Park", lat:8.4500, lng:80.0333 },
+    { name:"Udawalawe",             tag:"Elephant sanctuary",         desc:"Herds of 30–50 elephants cross the grasslands at dusk. Also the Elephant Transit Home.", best:"Year-round", crowd:"Moderate", wiki:"Udawalawa National Park", lat:6.4567, lng:80.8986 },
+    { name:"Sinharaja Rainforest",  tag:"UNESCO biosphere reserve",   desc:"Last wet lowland rainforest — 26 of Sri Lanka's 33 endemic birds found here.",     best:"Aug–Sep", crowd:"Low",      wiki:"Sinharaja Forest Reserve", lat:6.4093, lng:80.4904 },
+    { name:"Minneriya",             tag:"The Gathering",              desc:"300+ wild elephants gather at the Minneriya tank Jul–Oct — largest in Asia.",        best:"Jul–Oct", crowd:"Moderate", wiki:"Minneriya National Park", lat:8.0333, lng:80.8833 },
+    { name:"Bundala",               tag:"Flamingo wetlands",          desc:"Thousands of migratory flamingos and painted storks. Far quieter than Yala.",        best:"Sep–Mar", crowd:"Low",      wiki:"Bundala National Park", lat:6.1972, lng:81.2206 },
+    { name:"Kumana National Park",  tag:"Birdwatcher's paradise",     desc:"Remote eastern park with vast bird colonies — far fewer visitors than Yala.",        best:"May–Sep", crowd:"Low",      wiki:"Kumana National Park", lat:6.5667, lng:81.6667 },
   ],
   adventure:[
-    { name:"Adam's Peak",           tag:"Sacred pilgrimage climb",    desc:"5,243-step night climb to Sri Lanka's holiest summit. Triangular shadow at sunrise.", best:"Dec–May", crowd:"High",  wiki:"Adam's Peak" },
-    { name:"Ella Rock Hike",        tag:"Ridge walk above the clouds",desc:"3-hour hike through tea estates to 360° highland views. Best with a local guide.",   best:"Jan–Apr", crowd:"Moderate", wiki:"Ella Rock" },
-    { name:"Kitulgala White Water", tag:"Class 3–4 rapids",           desc:"The Kelani River — filming location of 'Bridge on the River Kwai'. Best rafting.",   best:"May–Dec", crowd:"Moderate", wiki:"Kitulgala" },
-    { name:"Pidurutalagala",        tag:"Sri Lanka's highest peak",   desc:"2,524m peak in the Central Highlands — shola forests, cloud forest, open grassland.", best:"Jan–Apr", crowd:"Low",    wiki:"Pidurutalagala" },
-    { name:"Kite Surfing, Kalpitiya",tag:"Best kite conditions in Asia","desc":"15–25 knot winds 9 months/year — one of Asia's top kite surfing destinations.", best:"May–Oct", crowd:"Low",    wiki:"Kalpitiya" },
-    { name:"Knuckles Camping",      tag:"Multi-day trek & wild camp", desc:"UNESCO Knuckles Range — 2–4 day treks through waterfalls and endemic orchid habitats.", best:"Feb–Apr", crowd:"Low",  wiki:"Knuckles Mountain Range" },
+    { name:"Adam's Peak",           tag:"Sacred pilgrimage climb",    desc:"5,243-step night climb to Sri Lanka's holiest summit. Triangular shadow at sunrise.", best:"Dec–May", crowd:"High",  wiki:"Adam's Peak", lat:6.8094, lng:80.4994 },
+    { name:"Ella Rock Hike",        tag:"Ridge walk above the clouds",desc:"3-hour hike through tea estates to 360° highland views. Best with a local guide.",   best:"Jan–Apr", crowd:"Moderate", wiki:"Ella Rock", lat:6.8500, lng:81.0333 },
+    { name:"Kitulgala White Water", tag:"Class 3–4 rapids",           desc:"The Kelani River — filming location of 'Bridge on the River Kwai'. Best rafting.",   best:"May–Dec", crowd:"Moderate", wiki:"Kitulgala", lat:6.9897, lng:80.4178 },
+    { name:"Pidurutalagala",        tag:"Sri Lanka's highest peak",   desc:"2,524m peak in the Central Highlands — shola forests, cloud forest, open grassland.", best:"Jan–Apr", crowd:"Low",    wiki:"Pidurutalagala", lat:6.9719, lng:80.7647 },
+    { name:"Kite Surfing, Kalpitiya",tag:"Best kite conditions in Asia",desc:"15–25 knot winds 9 months/year — one of Asia's top kite surfing destinations.", best:"May–Oct", crowd:"Low",    wiki:"Kalpitiya", lat:8.2333, lng:79.7667 },
+    { name:"Knuckles Camping",      tag:"Multi-day trek & wild camp", desc:"UNESCO Knuckles Range — 2–4 day treks through waterfalls and endemic orchid habitats.", best:"Feb–Apr", crowd:"Low",  wiki:"Knuckles Mountain Range", lat:7.4500, lng:80.7833 },
+    { name:"Bodu Bala Surf, Weligama", tag:"Learn to surf",          desc:"Gentle beginner-friendly waves — the best place in Sri Lanka to take your first surf lesson.", best:"Nov–Apr", crowd:"Moderate", wiki:"Weligama", lat:5.9740, lng:80.4297 },
   ],
   rural:[
-    { name:"Knuckles Villages",     tag:"Untouched mountain hamlets", desc:"Ancient villages tucked into the UNESCO Knuckles Range — homestays with farming families who still follow centuries-old traditions.", best:"Feb–Apr", crowd:"Low", wiki:"Knuckles Mountain Range" },
-    { name:"Weligama Fisher Village",tag:"Dawn fish auction at sea",  desc:"Wake before sunrise to join the famous stilt fishermen. Watch the morning catch auctioned on the beach as the village comes to life.", best:"Nov–Apr", crowd:"Low", wiki:"Weligama" },
-    { name:"Dambulla Farming Village",tag:"Paddy fields & spice gardens","desc":"Spend a day with a Sri Lankan farming family — plant paddy, harvest spices, cook over a wood fire and eat together on the floor.", best:"Year-round", crowd:"Low", wiki:"Dambulla" },
-    { name:"Mahiyanganaya",         tag:"Vedda indigenous community", desc:"Meet the Vedda people, Sri Lanka's original indigenous inhabitants, who still maintain hunter-gatherer traditions in the jungle.", best:"Year-round", crowd:"Low", wiki:"Mahiyanganaya" },
-    { name:"Belihuloya Valley",     tag:"Hidden river valley retreat",desc:"A little-known valley of paddy terraces, waterfalls and spice plantations near Ratnapura. Completely off the tourist trail.", best:"Year-round", crowd:"Low", wiki:"Belihuloya" },
-    { name:"Tangalle Village Coast",tag:"Fishing village life",       desc:"Behind Tangalle's famous beach lies a maze of lagoon-side fishing villages — catamarans, crab baskets and roadside coconut sellers.", best:"Dec–Apr", crowd:"Low", wiki:"Tangalle" },
+    { name:"Knuckles Villages",     tag:"Untouched mountain hamlets", desc:"Ancient villages tucked into the UNESCO Knuckles Range — homestays with farming families who still follow centuries-old traditions.", best:"Feb–Apr", crowd:"Low", wiki:"Knuckles Mountain Range", lat:7.4500, lng:80.7833 },
+    { name:"Weligama Fisher Village",tag:"Dawn fish auction at sea",  desc:"Wake before sunrise to join the famous stilt fishermen. Watch the morning catch auctioned on the beach as the village comes to life.", best:"Nov–Apr", crowd:"Low", wiki:"Weligama", lat:5.9740, lng:80.4297 },
+    { name:"Dambulla Farming Village",tag:"Paddy fields & spice gardens","desc":"Spend a day with a Sri Lankan farming family — plant paddy, harvest spices, cook over a wood fire and eat together on the floor.", best:"Year-round", crowd:"Low", wiki:"Dambulla", lat:7.8675, lng:80.6517 },
+    { name:"Mahiyanganaya",         tag:"Vedda indigenous community", desc:"Meet the Vedda people, Sri Lanka's original indigenous inhabitants, who still maintain hunter-gatherer traditions in the jungle.", best:"Year-round", crowd:"Low", wiki:"Mahiyanganaya", lat:7.3333, lng:81.0167 },
+    { name:"Belihuloya Valley",     tag:"Hidden river valley retreat",desc:"A little-known valley of paddy terraces, waterfalls and spice plantations near Ratnapura. Completely off the tourist trail.", best:"Year-round", crowd:"Low", wiki:"Belihuloya", lat:6.6333, lng:80.7167 },
+    { name:"Tangalle Village Coast",tag:"Fishing village life",       desc:"Behind Tangalle's famous beach lies a maze of lagoon-side fishing villages — catamarans, crab baskets and roadside coconut sellers.", best:"Dec–Apr", crowd:"Low", wiki:"Tangalle", lat:6.0241, lng:80.7937 },
+    { name:"Madu River Village",    tag:"Cinnamon island canoe trip", desc:"Paddle through mangroves to a cinnamon-peeling village deep in the Madu River wetlands.", best:"Year-round", crowd:"Low", wiki:"Madu River", lat:6.2667, lng:80.0500 },
+  ],
+  hidden:[
+    { name:"Riverston",             tag:"Sri Lanka's Mini World's End", desc:"A lesser-known cliff viewpoint in the Knuckles range with the same dramatic drop as Horton Plains — but almost no tourists.", best:"Jan–Apr", crowd:"Low", wiki:"Riverston, Sri Lanka", lat:7.4860, lng:80.7370 },
+    { name:"Meemure Village",       tag:"Sri Lanka's most remote village", desc:"Only reachable on foot or by jeep through the Knuckles — a time-capsule village with no real road access.", best:"Jan–Apr", crowd:"Low", wiki:"Meemure", lat:7.4090, lng:80.7960 },
+    { name:"Diyaluma Falls",        tag:"Sri Lanka's 2nd tallest waterfall", desc:"220m falls with natural infinity pools at the top — hike up for a swim with almost no crowds.", best:"Year-round", crowd:"Low", wiki:"Diyaluma Falls", lat:6.7333, lng:81.0167 },
+    { name:"Ritigala",              tag:"Forgotten monastery ruins",  desc:"Jungle-swallowed 1st-century monastic ruins on a misty mountain — one of Sri Lanka's least visited ancient sites.", best:"Year-round", crowd:"Low", wiki:"Ritigala", lat:8.1167, lng:80.6500 },
+    { name:"Hiriwadunna Village",   tag:"Bullock cart & catamaran tour", desc:"A tiny village near Sigiriya where you ride a bullock cart, paddle a catamaran, and eat a home-cooked rural lunch.", best:"Year-round", crowd:"Low", wiki:"Hiriwadunna", lat:7.9000, lng:80.7000 },
+    { name:"Bopath Ella Falls",     tag:"Bodhi-leaf shaped waterfall", desc:"A perfectly leaf-shaped waterfall near Ratnapura that almost no foreign tourists know about.", best:"Year-round", crowd:"Low", wiki:"Bopath Ella Falls", lat:6.6833, lng:80.3833 },
+    { name:"Madunagala Hot Springs",tag:"Natural volcanic hot springs", desc:"Rare natural hot water springs in the south, believed to have healing properties — completely undeveloped.", best:"Year-round", crowd:"Low", wiki:"Madunagala", lat:6.2167, lng:80.9167 },
   ],
 };
+
+// Curated gallery image keywords for the small photo strip shown per place card
+const PLACE_GALLERY_KEYWORDS = {};
+Object.values(DESTINATIONS).flat().forEach(p => {
+  PLACE_GALLERY_KEYWORDS[p.name] = [
+    `${p.name} Sri Lanka landscape`,
+    `${p.name} Sri Lanka aerial view`,
+    `${p.name} Sri Lanka close up`,
+  ];
+});
+
+// ─── SHARED GEO LOOKUP (place name → lat/lng) ────────────────────────────────
+// Built from DESTINATIONS region data — used to intelligently match a newly
+// added place (from Destinations or the Sri Lanka Map) to the closest day
+// in the tourist's existing itinerary, rather than always dumping it on Day 1.
+const PLACE_GEO = {};
+Object.values(DESTINATIONS).flat().forEach(p => {
+  if (p.lat && p.lng) PLACE_GEO[p.name] = { lat:p.lat, lng:p.lng };
+});
+
+function haversineKm(a, b) {
+  if (!a || !b) return 99999;
+  const R = 6371, dLat = (b.lat-a.lat)*Math.PI/180, dLng = (b.lng-a.lng)*Math.PI/180;
+  const x = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+}
+
+// Finds the index of the itinerary day whose location is geographically
+// closest to the new place being added. Falls back to Day 1 if no
+// coordinates are known for either side (can't compute a sensible match).
+function findBestMatchingDay(itin, placeName, placeLatLng) {
+  if (!itin?.days?.length) return 0;
+  const targetGeo = placeLatLng || PLACE_GEO[placeName];
+  if (!targetGeo) return 0; // unknown location — safest is Day 1
+
+  let bestIdx = 0, bestDist = Infinity;
+  itin.days.forEach((d, i) => {
+    // Try to resolve this day's location string against known place coordinates
+    const dayLocClean = (d.location||"").split(",")[0].trim();
+    const dayGeo = PLACE_GEO[dayLocClean] ||
+      Object.keys(PLACE_GEO).find(k => dayLocClean.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(dayLocClean.toLowerCase()));
+    const resolvedGeo = typeof dayGeo === "string" ? PLACE_GEO[dayGeo] : dayGeo;
+    if (resolvedGeo) {
+      const dist = haversineKm(targetGeo, resolvedGeo);
+      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    }
+  });
+  // If nothing matched within 60km of any day, it doesn't really belong anywhere specific —
+  // still place it on the closest day found (better than always defaulting to Day 1 blindly)
+  return bestIdx;
+}
 
 // ─── GUIDE DATA ──────────────────────────────────────────────────────────────
 const GUIDES = [
@@ -907,25 +975,33 @@ const PROVINCE_MAP = {
   // Beaches
   "Mirissa":"Southern Province", "Unawatuna":"Southern Province", "Hikkaduwa":"Southern Province",
   "Tangalle":"Southern Province", "Arugam Bay":"Eastern Province", "Nilaveli":"Eastern Province",
+  "Bentota":"Southern Province", "Pasikuda":"Eastern Province",
   // Hills
   "Ella":"Uva Province", "Kandy":"Central Province", "Nuwara Eliya":"Central Province",
   "Haputale":"Uva Province", "Horton Plains":"Central Province", "Knuckles Range":"Central Province",
+  "Bandarawela":"Uva Province",
   // Cultural
   "Sigiriya":"North Central Province", "Anuradhapura":"North Central Province",
   "Polonnaruwa":"North Central Province", "Dambulla Cave Temple":"Central Province",
-  "Galle Fort":"Southern Province", "Jaffna":"Northern Province",
+  "Galle Fort":"Southern Province", "Jaffna":"Northern Province", "Kandy Temple of the Tooth":"Central Province",
   // Wildlife
   "Yala National Park":"Southern Province", "Wilpattu National Park":"North Western Province",
   "Udawalawe":"Southern Province", "Sinharaja Rainforest":"Southern Province",
-  "Minneriya":"North Central Province", "Bundala":"Southern Province",
+  "Minneriya":"North Central Province", "Bundala":"Southern Province", "Kumana National Park":"Eastern Province",
   // Adventure
   "Adam's Peak":"Sabaragamuwa Province", "Ella Rock Hike":"Uva Province",
   "Kitulgala White Water":"Sabaragamuwa Province", "Pidurutalagala":"Central Province",
   "Kite Surfing, Kalpitiya":"North Western Province", "Knuckles Camping":"Central Province",
+  "Bodu Bala Surf, Weligama":"Southern Province",
   // Rural
   "Knuckles Villages":"Central Province", "Weligama Fisher Village":"Southern Province",
   "Dambulla Farming Village":"Central Province", "Mahiyanganaya":"Uva Province",
   "Belihuloya Valley":"Sabaragamuwa Province", "Tangalle Village Coast":"Southern Province",
+  "Madu River Village":"Southern Province",
+  // Hidden Gems
+  "Riverston":"Central Province", "Meemure Village":"Central Province", "Diyaluma Falls":"Uva Province",
+  "Ritigala":"North Central Province", "Hiriwadunna Village":"North Central Province",
+  "Bopath Ella Falls":"Sabaragamuwa Province", "Madunagala Hot Springs":"Southern Province",
 };
 
 // Regions grouped under "Places to Visit"
@@ -936,17 +1012,18 @@ const PLACES_REGIONS = [
   { id:"wildlife", label:"🐘 Wildlife & Nature", province:"Southern & NW",      color:["#145840","#0A2A20"] },
   { id:"adventure",label:"🧗 Adventure",         province:"Central & Sabara.",  color:["#C45230","#7A2010"] },
   { id:"rural",    label:"🌾 Rural Sri Lanka",   province:"All provinces",      color:["#7A6010","#4A3A08"] },
+  { id:"hidden",   label:"💎 Hidden Gems",       province:"Off the beaten path", color:["#5B3A8E","#3A1F5E"] },
 ];
 
 const ALL_TABS = [
+  { id:"places",      label:"📍 Places to Visit",  type:"places_regions" },
   { id:"hotels",      label:"🏨 Hotels",          type:"places" },
   { id:"restaurants", label:"🍛 Restaurants",      type:"places" },
-  { id:"places",      label:"📍 Places to Visit",  type:"places_regions" },
 ];
 
 
 function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
-  const init = sessionStorage.getItem("explorecat") || "hotels";
+  const init = sessionStorage.getItem("explorecat") || "places";
   const [activeTab, setActiveTab]       = useState(init);
   const [activeRegion, setActiveRegion] = useState("beaches"); // sub-region under Places to Visit
   const [gallery, setGallery]           = useState(null);
@@ -989,7 +1066,25 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
       mapQuery:`${place.name}, Sri Lanka`,
     };
     if (savedItin) {
-      setSavedItin({...savedItin, days:savedItin.days.map((d,i)=>i===0?{...d,activities:[...d.activities,newAct]}:d)});
+      const dayIdx = findBestMatchingDay(savedItin, place.name, place.geometry?.location);
+      setSavedItin({...savedItin, days:savedItin.days.map((d,i)=>i===dayIdx?{...d,activities:[...d.activities,newAct]}:d)});
+      setToast(true); setTimeout(()=>setToast(false),2500);
+    } else { alert("Create an itinerary first from 'Plan a trip', then come back to add places."); }
+  };
+
+  // Adds a curated "Places to Visit" card (region data, has lat/lng) to the closest matching day
+  const addPlaceToItin = (place) => {
+    const newAct = {
+      time:"15:00", type:"sightseeing",
+      place:place.name, area:PROVINCE_MAP[place.name]||"Sri Lanka",
+      text:place.desc||`Visit ${place.name}`,
+      why:place.tag||"Added from Destinations", hours:"", price:"",
+      mapQuery:`${place.name}, Sri Lanka`,
+      unsplashQuery:`${place.name} Sri Lanka`,
+    };
+    if (savedItin) {
+      const dayIdx = findBestMatchingDay(savedItin, place.name, place.lat&&place.lng?{lat:place.lat,lng:place.lng}:null);
+      setSavedItin({...savedItin, days:savedItin.days.map((d,i)=>i===dayIdx?{...d,activities:[...d.activities,newAct]}:d)});
       setToast(true); setTimeout(()=>setToast(false),2500);
     } else { alert("Create an itinerary first from 'Plan a trip', then come back to add places."); }
   };
@@ -1108,9 +1203,20 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
                       }}>{p.crowd} crowds</span>
                     </div>
                     <p style={{ fontSize:12, color:C.inkSoft, lineHeight:1.6, marginBottom:10 }}>{p.desc}</p>
+                    {/* Mini gallery preview strip — click any thumbnail to open full gallery */}
+                    <div style={{ display:"flex", gap:4, marginBottom:10 }} onClick={e=>e.stopPropagation()}>
+                      {(PLACE_GALLERY_KEYWORDS[p.name]||[]).slice(0,3).map((kw,i)=>(
+                        <div key={i} onClick={()=>setGallery(p)} style={{ flex:1, height:44, borderRadius:6, overflow:"hidden", cursor:"pointer" }}>
+                          <img src={`https://source.unsplash.com/200x150/?${encodeURIComponent(kw)}&sig=${i}`} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0}/>
+                        </div>
+                      ))}
+                    </div>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:8, borderTop:`1px solid ${C.border}` }}>
                       <span style={{ fontSize:11, color:C.inkSoft }}>📅 Best: <strong style={{ color:C.ink }}>{p.best}</strong></span>
-                      <button onClick={e=>{ e.stopPropagation(); setPage("journey"); }} style={{ fontSize:12, fontWeight:600, color:C.teal, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>Plan trip →</button>
+                      <div style={{ display:"flex", gap:8 }}>
+                        <button onClick={e=>{ e.stopPropagation(); addPlaceToItin(p); }} style={{ fontSize:11, fontWeight:600, padding:"4px 10px", background:C.teal, color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontFamily:sans }}>+ Add to trip</button>
+                        <button onClick={e=>{ e.stopPropagation(); setPage("journey"); }} style={{ fontSize:12, fontWeight:600, color:C.teal, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>Plan trip →</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1128,7 +1234,7 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
       </div>
 
       {selected && (
-        <PlaceDetailPanel place={selected} wishlist={wishlist} onAddToItin={()=>{ addToItin(selected); setSelected(null); }} onClose={()=>setSelected(null)}/>
+        <PlaceDetailPanel place={selected} wishlist={wishlist} onAddToItin={()=>{ addToItin(selected); setSelected(null); }} onClose={()=>setSelected(null)} category={activeTab}/>
       )}
     </div>
   );
@@ -1186,7 +1292,7 @@ function PlacesTabContent({ catId, places, loading, error, tab, wishlist, select
         </div>
       )}
       {!loading && !error && places.length===0 && <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}><div style={{ fontSize:40, marginBottom:10 }}>🔍</div><p>No results found.</p></div>}
-      {selected && <PlaceDetailPanel place={selected} wishlist={wishlist} onAddToItin={()=>{ addToItin(selected); setSelected(null); }} onClose={()=>setSelected(null)}/>}
+      {selected && <PlaceDetailPanel place={selected} wishlist={wishlist} onAddToItin={()=>{ addToItin(selected); setSelected(null); }} onClose={()=>setSelected(null)} category={catId}/>}
     </>
   );
 }
@@ -1954,7 +2060,7 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
     // Restore wizard answers if user just logged in mid-wizard
     const saved = sessionStorage.getItem("ct_wizard_ans");
     if (saved) { sessionStorage.removeItem("ct_wizard_ans"); try { return JSON.parse(saved); } catch {} }
-    return { days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00" };
+    return { days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true };
   });
   const [loading, setLoad] = useState(false);
   const [itin, setItin]    = useState(savedItin||null);
@@ -1989,7 +2095,7 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   };
 
   const generate = async () => {
-    setStep(11); setLoad(true);
+    setStep(10); setLoad(true);
 
     // ── Geo-aware city database ────────────────────────────────────────────────
     // Each city has real lat/lng so we can rank by ACTUAL distance from the
@@ -2101,6 +2207,11 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
       ? `TRIP STARTS AT ${ans.startTime} (AFTERNOON): Day 1 should have drive to hotel + check-in + 1-2 light afternoon activities + dinner. Avoid heavy sightseeing on Day 1.`
       : `TRIP STARTS AT ${ans.startTime} (MORNING): Day 1 is a full day. Start with drive from ${customStart} to first destination, then full activities.`;
 
+    // ── Round trip note (return to starting point on the last day) ────────────
+    const roundTripNote = ans.roundTrip
+      ? `RETURN JOURNEY (CRITICAL): This is a ROUND TRIP — the tourist must end up back at ${customStart} on the final day. The LAST activity of the LAST day MUST be a transport/drive activity from wherever they are back to ${customStart}${ans.startCity==="airport"?" (so they can catch their departure flight)":""}, with a realistic drive time. Plan the route for the final 1-2 days so the geography naturally brings them back toward ${customStart} rather than ending far away.`
+      : `ONE-WAY TRIP: The tourist does NOT need to return to ${customStart} — the trip can end wherever makes the most sense for their route. No need to plan a return journey.`;
+
     // ── Budget → Hotel tier ─────────────────────────────────────────────────────
     const hotelTier = ans.budget==="luxury"
       ? "5-star luxury resort (e.g. Jetwing, Aman, Cape Weligama, Shangri-La, Anantara)"
@@ -2130,6 +2241,8 @@ ${customNote ? `- ${customNote}` : ""}
 ${startTimeNote}
 
 ${hotelStrategyNote}
+
+${roundTripNote}
 
 HOTEL RULES (CRITICAL):
 - Select ONE specific real hotel per destination matching "${hotelTier}"
@@ -2177,6 +2290,12 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       const clean = raw.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "").trim();
       const parsed = JSON.parse(clean);
       if (!parsed.days || !parsed.days.length) throw new Error("No days returned");
+      // Attach trip meta so it travels with the itinerary into guide requests, PDF, etc.
+      parsed.tripMeta = {
+        startDate: ans.startDate, endDate: ans.endDate, startTime: ans.startTime,
+        startLocation: customStart, roundTrip: ans.roundTrip,
+        endLocation: ans.roundTrip ? customStart : (parsed.days.slice(-1)[0]?.location || customStart),
+      };
       setItin(parsed); setSavedItin(parsed); setItinDays(parsed.days);
     } catch(err) {
       console.error("AI error:", err);
@@ -2218,8 +2337,13 @@ Return ONLY valid raw JSON — no markdown, no backticks:
           ]
         });
       }
-      setItin({ title:`${N}-Day ${styleLabel}`, tagline:styleTagline, hotel:{name:hotelName,area:fbCity,stars:ans.budget==="luxury"?5:3,why:`Well located for exploring ${fbCity}`}, highlights:[`Stay in ${fbCity}`,"Local cuisine daily","Authentic experiences"], days:fallDays.slice(0,N) });
-      setSavedItin({ title:`${N}-Day ${styleLabel}`, tagline:styleTagline, hotel:{name:hotelName,area:fbCity,stars:ans.budget==="luxury"?5:3,why:`Well located for exploring ${fbCity}`}, highlights:[`Stay in ${fbCity}`,"Local cuisine daily","Authentic experiences"], days:fallDays.slice(0,N) });
+      const fbTripMeta = {
+        startDate: ans.startDate, endDate: ans.endDate, startTime: ans.startTime,
+        startLocation: customStart, roundTrip: ans.roundTrip,
+        endLocation: ans.roundTrip ? customStart : fbCity,
+      };
+      setItin({ title:`${N}-Day ${styleLabel}`, tagline:styleTagline, hotel:{name:hotelName,area:fbCity,stars:ans.budget==="luxury"?5:3,why:`Well located for exploring ${fbCity}`}, highlights:[`Stay in ${fbCity}`,"Local cuisine daily","Authentic experiences"], days:fallDays.slice(0,N), tripMeta:fbTripMeta });
+      setSavedItin({ title:`${N}-Day ${styleLabel}`, tagline:styleTagline, hotel:{name:hotelName,area:fbCity,stars:ans.budget==="luxury"?5:3,why:`Well located for exploring ${fbCity}`}, highlights:[`Stay in ${fbCity}`,"Local cuisine daily","Authentic experiences"], days:fallDays.slice(0,N), tripMeta:fbTripMeta });
       setItinDays(fallDays.slice(0,N));
     }
     setLoad(false);
@@ -2227,7 +2351,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 
   // Auto-generate if user just logged in at last step
   useEffect(()=>{
-    if (user && step===10 && !itin && !loading && !didAutoGenerate.current) {
+    if (user && step===9 && !itin && !loading && !didAutoGenerate.current) {
       didAutoGenerate.current = true;
       generate();
     }
@@ -2235,7 +2359,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
   }, [user]);
 
   // Result page
-  if (step===11) {
+  if (step===10) {
     if (loading) return (
       <div style={{ minHeight:"80vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:20, padding:"2rem" }}>
         <div style={{ width:56, height:56, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite" }}/>
@@ -2293,20 +2417,24 @@ Return ONLY valid raw JSON — no markdown, no backticks:
           </div>
         </div>
         <div style={{ maxWidth:820, margin:"0 auto", padding:"2.5rem 2rem" }}>
-          {/* Start → End journey banner */}
-          <div style={{ display:"flex", alignItems:"center", gap:12, background:"#fff", border:`1.5px solid ${C.border}`, borderRadius:14, padding:"14px 18px", marginBottom:20 }}>
-            <div style={{ textAlign:"center", flex:1 }}>
-              <div style={{ fontSize:10, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:3 }}>Starting point</div>
+          {/* Start → End journey banner with full date/time/location */}
+          <div className="trip-banner" style={{ display:"flex", alignItems:"center", gap:12, background:"#fff", border:`1.5px solid ${C.border}`, borderRadius:14, padding:"16px 18px", marginBottom:20, flexWrap:"wrap" }}>
+            <div style={{ textAlign:"center", flex:1, minWidth:140 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:3 }}>Trip starts</div>
               <div style={{ fontSize:14, fontWeight:700, color:C.teal }}>📍 {startLabel}</div>
+              {ans.startDate && <div style={{ fontSize:11, color:C.inkSoft, marginTop:2 }}>{new Date(ans.startDate).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}</div>}
+              <div style={{ fontSize:11, color:C.inkSoft }}>🕐 {ans.startTime||"09:00"}</div>
             </div>
             <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2, flexShrink:0 }}>
               <div style={{ width:60, height:2, background:`linear-gradient(90deg,${C.teal},${C.amber})`, borderRadius:2 }}/>
-              <div style={{ fontSize:11, color:C.inkSoft, fontWeight:600 }}>{ans.days}d · {ans.nights}n</div>
+              <div style={{ fontSize:11, color:C.inkSoft, fontWeight:600 }}>{ans.days}d · {ans.nights}n {ans.roundTrip?"🔁":"➡️"}</div>
               <div style={{ width:60, height:2, background:`linear-gradient(90deg,${C.teal},${C.amber})`, borderRadius:2 }}/>
             </div>
-            <div style={{ textAlign:"center", flex:1 }}>
-              <div style={{ fontSize:10, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:3 }}>Ending point</div>
-              <div style={{ fontSize:14, fontWeight:700, color:C.amber }}>🏁 {(itinDays||itin.days).slice(-1)[0]?.location || startLabel}</div>
+            <div style={{ textAlign:"center", flex:1, minWidth:140 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:3 }}>Trip ends</div>
+              <div style={{ fontSize:14, fontWeight:700, color:C.amber }}>🏁 {ans.roundTrip ? startLabel : ((itinDays||itin.days).slice(-1)[0]?.location || startLabel)}</div>
+              {ans.endDate && <div style={{ fontSize:11, color:C.inkSoft, marginTop:2 }}>{new Date(ans.endDate).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}</div>}
+              <div style={{ fontSize:11, color:C.inkSoft }}>{ans.roundTrip ? "Return journey" : "End of trip"}</div>
             </div>
           </div>
 
@@ -2326,7 +2454,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
               <Btn variant="amber" onClick={onGuideOpen}>Find a guide & request bid →</Btn>
               <Btn variant="outline" onClick={downloadPDF}>📄 Download PDF</Btn>
-              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00" }); }}>↺ New itinerary</Btn>
+              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true }); }}>↺ New itinerary</Btn>
             </div>
           </div>
         </div>
@@ -2335,38 +2463,69 @@ Return ONLY valid raw JSON — no markdown, no backticks:
   }
 
   // Wizard steps
-  const STEPS_TOTAL = 11;
+  const STEPS_TOTAL = 10;
   const steps = [
-    // 0: Starting point
+    // 0: Starting point + calendar date range
     <>
       <StepDots cur={0} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>Where does your trip start?</h2>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>We'll plan your first day transfer from here</p>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10 }}>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>Where and when does your trip start?</h2>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick your dates and we'll count the days automatically</p>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10, marginBottom:18 }}>
         {START_OPTS.map(o=><OptBtn key={o.v} sel={ans.startCity===o.v} onClick={()=>upd("startCity",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
       </div>
       {ans.startCity==="custom" && (
         <input value={ans.customStart||""} onChange={e=>upd("customStart",e.target.value)} placeholder="e.g. Galle, Negombo, Kandy…"
-          style={{ width:"100%", marginTop:10, padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+          style={{ width:"100%", marginBottom:18, padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
       )}
-    </>,
-    <>
-      <StepDots cur={0} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:24 }}>How long is your trip?</h2>
-      <div style={{ display:"flex", alignItems:"center", gap:20, padding:"18px 0", borderBottom:`1px solid ${C.border}` }}>
-        <span style={{ flex:1, fontSize:14, fontWeight:500, color:C.ink }}>📅 Days in Sri Lanka</span>
-        <div style={{ display:"flex", alignItems:"center", gap:16 }}>
-          <button onClick={()=>adjDays(-1)} style={{ width:36, height:36, borderRadius:"50%", border:`1.5px solid ${C.border}`, background:C.surface, fontSize:18, cursor:"pointer", color:C.ink, fontFamily:sans }}>−</button>
-          <span style={{ fontSize:20, fontWeight:700, color:C.teal, minWidth:32, textAlign:"center" }}>{ans.days}</span>
-          <button onClick={()=>adjDays(1)} style={{ width:36, height:36, borderRadius:"50%", border:`1.5px solid ${C.border}`, background:C.surface, fontSize:18, cursor:"pointer", color:C.ink, fontFamily:sans }}>+</button>
+
+      {/* Calendar date range */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
+        <div>
+          <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>📅 From</label>
+          <input type="date" value={ans.startDate||""} min={new Date().toISOString().split("T")[0]}
+            onChange={e=>{
+              const newStart = e.target.value;
+              setAns(a=>{
+                const next = {...a, startDate:newStart};
+                // Auto-recalculate days/nights if end date already set
+                if (a.endDate && newStart) {
+                  const d = Math.max(1, Math.round((new Date(a.endDate)-new Date(newStart))/86400000)+1);
+                  next.days = d; next.nights = d-1;
+                }
+                return next;
+              });
+            }}
+            style={{ width:"100%", padding:"11px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+        </div>
+        <div>
+          <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>📅 To</label>
+          <input type="date" value={ans.endDate||""} min={ans.startDate||new Date().toISOString().split("T")[0]}
+            onChange={e=>{
+              const newEnd = e.target.value;
+              setAns(a=>{
+                const next = {...a, endDate:newEnd};
+                if (a.startDate && newEnd) {
+                  const d = Math.max(1, Math.round((new Date(newEnd)-new Date(a.startDate))/86400000)+1);
+                  next.days = d; next.nights = d-1;
+                }
+                return next;
+              });
+            }}
+            style={{ width:"100%", padding:"11px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
         </div>
       </div>
-      <div style={{ display:"flex", alignItems:"center", gap:20, padding:"18px 0" }}>
-        <span style={{ flex:1, fontSize:14, fontWeight:500, color:C.ink }}>🌙 Nights</span>
-        <span style={{ fontSize:20, fontWeight:700, color:C.inkSoft, minWidth:32, textAlign:"center", paddingRight:52 }}>{ans.nights}</span>
-      </div>
-      <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:12, padding:"10px 14px", fontSize:12, color:C.teal, marginTop:4 }}>
-        💡 Nights are always days − 1. A 5-day trip = 4 nights.
+
+      {ans.startDate && ans.endDate && (
+        <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:12, padding:"10px 14px", fontSize:12, color:C.teal, marginBottom:14 }}>
+          💡 {ans.days} {ans.days===1?"day":"days"}, {ans.nights} {ans.nights===1?"night":"nights"} — {new Date(ans.startDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} to {new Date(ans.endDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}
+        </div>
+      )}
+
+      {/* Round trip choice */}
+      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:8 }}>At the end of the trip, do you want to return to your starting point?</label>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+        <OptBtn sel={ans.roundTrip===true} onClick={()=>upd("roundTrip",true)} icon="🔁" label="Yes, round trip" sub="End back where I started"/>
+        <OptBtn sel={ans.roundTrip===false} onClick={()=>upd("roundTrip",false)} icon="➡️" label="No, one-way" sub="I'll end up somewhere else"/>
       </div>
     </>,
 
@@ -2540,9 +2699,11 @@ Return ONLY valid raw JSON — no markdown, no backticks:
           <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"16px 18px" }}>
             <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:10 }}>📋 Trip summary</div>
             {[
+              ["📅","Dates",ans.startDate&&ans.endDate?`${new Date(ans.startDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} → ${new Date(ans.endDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}`:"Not set"],
               ["📅","Duration",`${ans.days} days, ${ans.nights} nights`],
               ["🕐","Start time",ans.startTime||"09:00"],
               ["📍","Starting from",ans.startCity==="airport"?"BIA Airport":ans.startCity==="colombo"?"Colombo":ans.customStart||"Colombo"],
+              ["🔁","Trip type",ans.roundTrip?"Round trip — returning to start":"One-way"],
               ["🗺️","Style",ans.travel||"Not selected"],
               ["👥","Group",ans.group||"Not selected"],
               ["💰","Budget",ans.budget||"Not selected"],
@@ -2578,8 +2739,14 @@ Return ONLY valid raw JSON — no markdown, no backticks:
           {steps[step]}
           <div className="wizard-btn-row" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:28, paddingTop:20, borderTop:`1px solid ${C.border}`, gap:12 }}>
             {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>← Back</Btn> : <span/>}
-            {step<10
-              ? <Btn onClick={()=>setStep(s=>s+1)}>Next →</Btn>
+            {step<9
+              ? <Btn onClick={()=>{
+                  if (step===0) {
+                    if (!ans.startDate || !ans.endDate) { alert("Please pick your start and end dates."); return; }
+                    if (ans.roundTrip===undefined) { alert("Please choose whether this is a round trip or one-way."); return; }
+                  }
+                  setStep(s=>s+1);
+                }}>Next →</Btn>
               : <Btn variant="amber" onClick={()=>{
                   if(!user){
                     // Save wizard state so it survives login
@@ -2612,6 +2779,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
   const [payModal,  setPayModal] = useState(null); // {request}
   const [paying,    setPaying]   = useState(false);
   const [payStep,   setPayStep]  = useState("confirm");
+  const [payTermsOk, setPayTermsOk] = useState(false);
 
   useEffect(()=>{
     if(open){ setScreen("terms"); setTermsOk(false); setSelected(null); setShowReqs(false); }
@@ -2669,6 +2837,13 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
         itinTagline:  itin?.tagline || "",
         itinDays:     itin?.days?.length || 0,
         itinData:     itin ? JSON.stringify(itin).slice(0,2000) : "",
+        // Trip start/end details — so the guide knows exactly when and where
+        tripStartDate: itin?.tripMeta?.startDate || "",
+        tripEndDate:   itin?.tripMeta?.endDate || "",
+        tripStartTime: itin?.tripMeta?.startTime || "",
+        tripStartLocation: itin?.tripMeta?.startLocation || "",
+        tripEndLocation:   itin?.tripMeta?.endLocation || "",
+        tripRoundTrip: itin?.tripMeta?.roundTrip ?? null,
         message:      sendMsg,
         status:       "pending",
       });
@@ -2757,12 +2932,17 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
                         <div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>{req.itinTitle} · {req.itinDays} days</div>
                       </div>
                       <span style={{ fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20,
-                        background:req.status==="accepted"?C.tealLight:req.bid?C.amberLight:C.surface,
-                        color:req.status==="accepted"?C.teal:req.bid?C.amber:C.inkSoft,
-                        border:`1px solid ${req.status==="accepted"?"#9FE1CB":req.bid?"#F0D48A":C.border}` }}>
-                        {req.status==="accepted"?"✅ Confirmed":req.bid?"💬 Bid received":"⏳ Awaiting bid"}
+                        background:req.status==="accepted"?C.tealLight:req.status==="guide_declined"?"#FEE2E2":req.bid?C.amberLight:C.surface,
+                        color:req.status==="accepted"?C.teal:req.status==="guide_declined"?"#DC2626":req.bid?C.amber:C.inkSoft,
+                        border:`1px solid ${req.status==="accepted"?"#9FE1CB":req.status==="guide_declined"?"#FECACA":req.bid?"#F0D48A":C.border}` }}>
+                        {req.status==="accepted"?"✅ Confirmed":req.status==="guide_declined"?"🚫 Guide unavailable":req.bid?"💬 Bid received":"⏳ Awaiting bid"}
                       </span>
                     </div>
+                    {req.status==="guide_declined" && (
+                      <div style={{ background:"#FEF2F2", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#DC2626" }}>
+                        {req.guideName} isn't able to take this trip. Try browsing other guides.
+                      </div>
+                    )}
                     {req.bid && req.status!=="accepted" && (
                       <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"12px 14px", marginBottom:12 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:4 }}>Bid from {req.guideName}</div>
@@ -2776,7 +2956,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
                           <div style={{ display:"flex", justifyContent:"space-between", paddingTop:4, borderTop:`1px solid ${C.border}` }}><span style={{ fontWeight:700 }}>You pay total</span><span style={{ fontWeight:800, color:C.ink }}>${req.bid.price}</span></div>
                         </div>
                         <div style={{ display:"flex", gap:8 }}>
-                          <button onClick={()=>{ setPayModal(req); setPayStep("confirm"); }} style={{ flex:1, padding:"10px", background:C.teal, color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans }}>✅ Accept & Pay</button>
+                          <button onClick={()=>{ setPayModal(req); setPayStep("confirm"); setPayTermsOk(false); }} style={{ flex:1, padding:"10px", background:C.teal, color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans }}>✅ Accept & Pay</button>
                           <button onClick={async()=>{ await window.firebase.firestore().collection("tripRequests").doc(req.id).update({status:"declined"}); setMyRequests(rs=>rs.map(r=>r.id===req.id?{...r,status:"declined"}:r)); }} style={{ flex:1, padding:"10px", background:"none", color:C.coral, border:`1px solid ${C.coral}`, borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>❌ Decline</button>
                         </div>
                       </div>
@@ -2940,7 +3120,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
                   <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#fff", marginBottom:4 }}>Confirm & Pay</div>
                   <div style={{ fontSize:13, color:"rgba(255,255,255,.8)" }}>Booking with {payModal.guideName}</div>
                 </div>
-                <div style={{ padding:"1.5rem" }}>
+                <div style={{ padding:"1.5rem", maxHeight:"70vh", overflowY:"auto" }}>
                   <div style={{ background:C.surface, borderRadius:14, padding:"16px", marginBottom:16 }}>
                     <div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:12 }}>Payment breakdown</div>
                     {[
@@ -2954,14 +3134,27 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
                       </div>
                     ))}
                   </div>
-                  <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"10px 14px", fontSize:12, color:C.amber, marginBottom:16, lineHeight:1.6 }}>
-                    ⚠️ By paying, you confirm acceptance of the guide's bid and CeylonTrails terms.
+
+                  {/* Payment terms & conditions */}
+                  <div style={{ fontSize:12, fontWeight:700, color:C.ink, marginBottom:8 }}>📋 Payment Terms & Conditions</div>
+                  <div style={{ background:"#F8FAFC", border:`1px solid ${C.border}`, borderRadius:10, padding:"12px 14px", maxHeight:160, overflowY:"auto", fontSize:11, color:C.inkSoft, lineHeight:1.7, marginBottom:14 }}>
+                    <p style={{ marginBottom:8 }}><strong style={{ color:C.ink }}>1. Booking confirmation —</strong> Payment confirms your booking with this guide for the agreed dates and price. The guide is notified immediately.</p>
+                    <p style={{ marginBottom:8 }}><strong style={{ color:C.ink }}>2. Commission —</strong> CeylonTrails retains 15% of the total as a platform fee; the guide receives 85%.</p>
+                    <p style={{ marginBottom:8 }}><strong style={{ color:C.ink }}>3. Cancellation —</strong> Cancelling 48+ hours before the trip start date qualifies for a full refund. Within 48 hours, a 25% cancellation fee may apply.</p>
+                    <p style={{ marginBottom:8 }}><strong style={{ color:C.ink }}>4. Refunds —</strong> If the guide cancels or fails to show up, you receive a full refund. Refunds are processed within 5-7 business days.</p>
+                    <p style={{ marginBottom:8 }}><strong style={{ color:C.ink }}>5. Disputes —</strong> Any disagreement about service quality should be reported to CeylonTrails within 48 hours of the trip ending. Our decision on refunds is final.</p>
+                    <p style={{ marginBottom:0 }}><strong style={{ color:C.ink }}>6. Payment security —</strong> This is a demo PayPal flow — no real charge will be made. Live payments will go through PayPal's secure checkout once enabled.</p>
                   </div>
-                  <button onClick={()=>setPayStep("paypal")} style={{ width:"100%", padding:"14px", background:"#0070BA", color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+                  <label style={{ display:"flex", alignItems:"flex-start", gap:10, fontSize:12, color:C.ink, cursor:"pointer", padding:"10px 12px", border:`1px solid ${C.border}`, borderRadius:10, background:C.surface, marginBottom:16 }}>
+                    <input type="checkbox" checked={payTermsOk} onChange={e=>setPayTermsOk(e.target.checked)} style={{ accentColor:C.teal, width:16, height:16, marginTop:2, flexShrink:0 }}/>
+                    I have read and agree to the payment terms and cancellation policy above
+                  </label>
+
+                  <button onClick={()=>{ if(!payTermsOk){ alert("Please accept the payment terms to continue."); return; } setPayStep("paypal"); }} style={{ width:"100%", padding:"14px", background:payTermsOk?"#0070BA":"#9CA3AF", color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:700, cursor:payTermsOk?"pointer":"not-allowed", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
                     <span style={{ fontWeight:900, fontSize:16 }}>Pay</span><span style={{ fontWeight:300, fontSize:16, color:"#80CFFF" }}>Pal</span>
                     <span>→ Pay ${payModal.bid?.price}</span>
                   </button>
-                  <button onClick={()=>setPayModal(null)} style={{ width:"100%", padding:"10px", background:"none", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.inkSoft, cursor:"pointer", fontFamily:sans }}>Cancel</button>
+                  <button onClick={()=>{ setPayModal(null); setPayTermsOk(false); }} style={{ width:"100%", padding:"10px", background:"none", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.inkSoft, cursor:"pointer", fontFamily:sans }}>Cancel</button>
                 </div>
               </>
             )}
@@ -3040,6 +3233,14 @@ async function placesDetails(place_id) {
   const res = await fetch(`${PLACES_BASE}/details?place_id=${encodeURIComponent(place_id)}`);
   if (!res.ok) { const e = await res.json(); throw new Error(e.error||"Details failed"); }
   return res.json();
+}
+async function placesNearby(lat, lng, type="tourist_attraction", radius=1500) {
+  try {
+    const res = await fetch(`${PLACES_BASE}/nearby?lat=${lat}&lng=${lng}&type=${type}&radius=${radius}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.results || [];
+  } catch { return []; }
 }
 function photoUrl(ref, maxwidth=800) {
   return `${PLACES_BASE}/photo?ref=${encodeURIComponent(ref)}&maxwidth=${maxwidth}`;
@@ -3214,20 +3415,37 @@ function ExplorePage({ setPage, savedItin, setSavedItin }) {
           wishlist={wishlist}
           onAddToItin={()=>{ addToItin(selected); setSelected(null); }}
           onClose={()=>setSelected(null)}
+          category={cat}
         />
       )}
     </div>
   );
 }
 
-function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose }) {
+function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose, category }) {
   const [details, setDetails]   = useState(null);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [loadingD, setLoadingD] = useState(true);
+  const [nearby, setNearby]     = useState([]);
+  const [loadingNearby, setLN]  = useState(false);
 
   useEffect(()=>{
     placesDetails(p.place_id)
-      .then(d=>{ setDetails(d.result); setLoadingD(false); })
+      .then(async d=>{
+        setDetails(d.result); setLoadingD(false);
+        // Fetch nearby attractions once we have coordinates
+        const loc = d.result?.geometry?.location;
+        if (loc) {
+          setLN(true);
+          // Hotels/restaurants → show nearby tourist attractions.
+          // For restaurants we also blend in nearby parks/scenic spots ("relaxing places").
+          const nearbyType = category==="restaurants" ? "park" : "tourist_attraction";
+          const results = await placesNearby(loc.lat, loc.lng, nearbyType, 2000);
+          // Filter out the place itself and cap at 5
+          setNearby((results||[]).filter(r=>r.place_id!==p.place_id).slice(0,5));
+          setLN(false);
+        }
+      })
       .catch(()=>setLoadingD(false));
   },[p.place_id]);
 
@@ -3253,7 +3471,7 @@ function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose }) {
 
           <h2 style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink, marginBottom:4 }}>{p.name}</h2>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-            <span style={{ color:C.amberMid }}>{"★".repeat(Math.round(p.rating||0))}</span>
+            <span style={{ color:C.amberMid, fontSize:15 }}>{"★".repeat(Math.round(p.rating||0))}{"☆".repeat(5-Math.round(p.rating||0))}</span>
             <span style={{ fontSize:13, color:C.inkSoft }}>{p.rating} · {(p.user_ratings_total||0).toLocaleString()} reviews</span>
           </div>
           <p style={{ fontSize:13, color:C.inkSoft, marginBottom:14 }}>📍 {p.formatted_address}</p>
@@ -3272,6 +3490,28 @@ function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose }) {
               🌐 <span style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{d.website.replace(/^https?:\/\/(www\.)?/,"")}</span>
               <span style={{ flexShrink:0, fontSize:11, opacity:.7 }}>↗</span>
             </a>
+          )}
+
+          {/* Nearby places — attractions for hotels, relaxing spots for restaurants */}
+          {(loadingNearby || nearby.length>0) && (
+            <div style={{ marginBottom:14 }}>
+              <p style={{ fontSize:12, fontWeight:700, color:C.ink, textTransform:"uppercase", letterSpacing:.8, marginBottom:8 }}>
+                {category==="restaurants" ? "🌳 Nearby relaxing spots" : "📍 Nearby places of interest"}
+              </p>
+              {loadingNearby && <div style={{ fontSize:12, color:C.inkSoft }}>Finding nearby places…</div>}
+              {!loadingNearby && nearby.map(n=>(
+                <a key={n.place_id} href={`https://maps.google.com/?q=${encodeURIComponent(n.name+", Sri Lanka")}`} target="_blank" rel="noopener noreferrer"
+                  style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:10, textDecoration:"none", marginBottom:4, transition:"background .15s" }}
+                  onMouseEnter={e=>e.currentTarget.style.background=C.surface} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  <span style={{ fontSize:16, flexShrink:0 }}>{category==="restaurants"?"🌿":"🏛️"}</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:12, fontWeight:600, color:C.ink, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{n.name}</div>
+                    {n.rating && <div style={{ fontSize:10, color:C.inkSoft }}>{n.rating}★ · {((n.vicinity||"").split(",")[0])}</div>}
+                  </div>
+                  <span style={{ fontSize:11, color:C.teal, flexShrink:0 }}>↗</span>
+                </a>
+              ))}
+            </div>
           )}
 
           {/* Reviews */}
@@ -3328,10 +3568,24 @@ const MAP_PINS = [
 ];
 
 
-function SriLankaMapPage({ setPage }) {
+function SriLankaMapPage({ setPage, savedItin, setSavedItin }) {
   const mapRef    = useRef(null);
   const mapObj    = useRef(null);
   const [selectedPin, setSelectedPin] = useState(null);
+  const [addedToast, setAddedToast]   = useState(false);
+
+  const addPinToItin = (pin) => {
+    const newAct = {
+      time:"15:00", type:"sightseeing",
+      place:pin.name, area:"Sri Lanka",
+      text:pin.fact, why:"Added from the Sri Lanka Map", hours:"", price:"",
+      mapQuery:`${pin.name}, Sri Lanka`,
+      unsplashQuery:`${pin.name} Sri Lanka`,
+    };
+    const dayIdx = findBestMatchingDay(savedItin, pin.name, { lat:pin.lat, lng:pin.lng });
+    setSavedItin({ ...savedItin, days: savedItin.days.map((d,i)=>i===dayIdx?{...d,activities:[...d.activities,newAct]}:d) });
+    setAddedToast(true); setTimeout(()=>setAddedToast(false), 2500);
+  };
 
   useEffect(()=>{
     if (mapObj.current || !mapRef.current) return;
@@ -3400,6 +3654,11 @@ function SriLankaMapPage({ setPage }) {
 
   return (
     <div style={{ minHeight:"100vh", background:C.surface }}>
+      {addedToast && (
+        <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", background:C.teal, color:"#fff", padding:"12px 24px", borderRadius:30, fontSize:14, fontWeight:600, zIndex:800, boxShadow:"0 4px 20px rgba(0,0,0,.2)", whiteSpace:"nowrap" }}>
+          ✅ Added to your itinerary!
+        </div>
+      )}
       <style>{`
         @keyframes mapPinBounce {
           0%,100% { transform:translateY(0); }
@@ -3441,9 +3700,15 @@ function SriLankaMapPage({ setPage }) {
                 <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>{selectedPin.name}</h3>
                 <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.65, marginBottom:16 }}>{selectedPin.fact}</p>
                 <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                  <Btn onClick={()=>{ setPage("journey"); sessionStorage.setItem("suggestDest", selectedPin.name); }} style={{ width:"100%", justifyContent:"center" }}>
-                    ✨ Plan a trip here
-                  </Btn>
+                  {savedItin ? (
+                    <Btn variant="amber" onClick={()=>addPinToItin(selectedPin)} style={{ width:"100%", justifyContent:"center" }}>
+                      ➕ Add to my trip
+                    </Btn>
+                  ) : (
+                    <Btn onClick={()=>{ setPage("journey"); sessionStorage.setItem("suggestDest", selectedPin.name); }} style={{ width:"100%", justifyContent:"center" }}>
+                      ✨ Plan a trip here
+                    </Btn>
+                  )}
                   <a href={`https://maps.google.com/?q=${encodeURIComponent(selectedPin.name+", Sri Lanka")}`}
                     target="_blank" rel="noopener noreferrer"
                     style={{ display:"block", textAlign:"center", padding:"10px", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.teal, textDecoration:"none", fontWeight:600 }}>
@@ -4460,6 +4725,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                 pending:  { label:"⏳ Awaiting your bid", bg:C.amberLight, fg:C.amber, bd:"#F0D48A" },
                 accepted: { label:"✅ Booking confirmed & paid", bg:C.tealLight, fg:C.teal, bd:"#9FE1CB" },
                 declined: { label:"❌ Tourist declined",   bg:"#FEE2E2",   fg:"#DC2626", bd:"#FECACA" },
+                guide_declined: { label:"🚫 You declined", bg:"#F1F5F9", fg:"#64748B", bd:"#E2E8F0" },
               };
               const sm = req.bid && req.status==="pending" ? { label:"✓ Bid sent — waiting on tourist", bg:C.tealLight, fg:C.teal, bd:"#9FE1CB" } : (statusMeta[req.status] || statusMeta.pending);
               return (
@@ -4474,6 +4740,14 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                   </span>
                 </div>
                 {req.itinTagline && <p style={{ fontSize:13, color:C.inkSoft, marginBottom:10 }}>{req.itinTagline}</p>}
+                {(req.tripStartDate || req.tripStartLocation) && (
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:10, background:C.surface, borderRadius:8, padding:"8px 12px", marginBottom:10, fontSize:11, color:C.inkSoft }}>
+                    {req.tripStartDate && <span>📅 {new Date(req.tripStartDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}{req.tripEndDate?` → ${new Date(req.tripEndDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}`:""}</span>}
+                    {req.tripStartTime && <span>🕐 Starts {req.tripStartTime}</span>}
+                    {req.tripStartLocation && <span>📍 From {req.tripStartLocation}</span>}
+                    {req.tripRoundTrip!=null && <span>{req.tripRoundTrip?"🔁 Round trip":"➡️ One-way"}</span>}
+                  </div>
+                )}
                 {req.message && <div style={{ background:C.surface, borderRadius:8, padding:"8px 12px", fontSize:12, color:C.ink, marginBottom:10, borderLeft:`3px solid ${C.border}` }}>"{req.message}"</div>}
                 {req.bid && (
                   <div style={{ background:req.status==="declined"?"#FEF2F2":C.tealPale, borderRadius:8, padding:"8px 12px", fontSize:12, color:req.status==="declined"?"#DC2626":C.teal, marginBottom:req.status==="declined"?10:0 }}>
@@ -4481,7 +4755,21 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                   </div>
                 )}
                 {!req.bid && req.status==="pending" && (
-                  <Btn onClick={()=>{ setBid(req); setBidText({ price:"", message:"", dates:"" }); }}>Submit bid →</Btn>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <Btn onClick={()=>{ setBid(req); setBidText({ price:"", message:"", dates:"" }); }} style={{ flex:1 }}>Submit bid →</Btn>
+                    <button onClick={async()=>{
+                      if(!window.confirm("Decline this trip request? The tourist will be notified you're not available.")) return;
+                      await window.firebase.firestore().collection("tripRequests").doc(req.id).update({ status:"guide_declined" });
+                      setRequests(rs=>rs.map(r=>r.id===req.id?{...r,status:"guide_declined"}:r));
+                    }} style={{ padding:"0 16px", background:"none", color:C.coral, border:`1.5px solid ${C.coral}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
+                      Decline
+                    </button>
+                  </div>
+                )}
+                {req.status==="guide_declined" && (
+                  <div style={{ background:"#F1F5F9", borderRadius:8, padding:"8px 12px", fontSize:12, color:"#64748B" }}>
+                    You declined this request — the tourist has been notified.
+                  </div>
                 )}
                 {req.status==="declined" && (
                   <Btn variant="outline" onClick={()=>{ setBid(req); setBidText({ price:"", message:"", dates:"" }); }}>Send a new bid →</Btn>
@@ -5214,7 +5502,7 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
       {page==="home"         && <HomePage         setPage={setPage} onGuideOpen={openGuide}/>}
       {page==="destinations" && <DestinationsPage setPage={setPage} onGuideOpen={openGuide} savedItin={savedItin} setSavedItin={setSaved}/>}
       {page==="journey"      && <JourneyPage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} onGuideOpen={openGuide} user={user} onLoginNeeded={()=>setLogin(true)} premium={premium}/>}
-      {page==="srilankamap" && <SriLankaMapPage  setPage={setPage}/>}
+      {page==="srilankamap" && <SriLankaMapPage  setPage={setPage} savedItin={savedItin} setSavedItin={setSaved}/>}
       {page==="guideportal"  && <GuidePortalPage  setPage={setPage}/>}
 
       <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin} user={user} onLoginNeeded={()=>setLogin(true)}/>

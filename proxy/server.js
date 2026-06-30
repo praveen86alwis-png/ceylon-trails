@@ -69,9 +69,25 @@ app.get("/api/places/details", async (req, res) => {
   const { place_id } = req.query;
   if (!place_id) return res.status(400).json({ error:"Missing place_id" });
   try {
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(place_id)}&fields=name,rating,formatted_phone_number,website,opening_hours,reviews,photos,formatted_address,price_level,user_ratings_total&key=${GKEY}`;
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(place_id)}&fields=name,rating,formatted_phone_number,website,opening_hours,reviews,photos,formatted_address,price_level,user_ratings_total,geometry&key=${GKEY}`;
     const r   = await fetch(url);
     const d   = await r.json();
+    res.json(d);
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Nearby places (landmarks/attractions near a hotel or restaurant) ─────────
+app.get("/api/places/nearby", async (req, res) => {
+  if (!GKEY) return res.status(503).json({ error:"no_key" });
+  const { lat, lng, type = "tourist_attraction", radius = 1500 } = req.query;
+  if (!lat || !lng) return res.status(400).json({ error:"Missing lat/lng" });
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${encodeURIComponent(type)}&key=${GKEY}`;
+    const r   = await fetch(url);
+    const d   = await r.json();
+    console.log(`✓ Nearby search: ${type} near ${lat},${lng} (${d.results?.length||0} results)`);
     res.json(d);
   } catch(err) {
     res.status(500).json({ error: err.message });
