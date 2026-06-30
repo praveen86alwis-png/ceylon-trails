@@ -3746,7 +3746,10 @@ By submitting a bid, you agree to the following:
 
 By proceeding, you confirm you have read and agree to all terms above.`;
 
-
+async function saveGuideProfile(uid, data) {
+  if (!window.firebase) return;
+  await window.firebase.firestore().collection("guides").doc(uid).set(data, { merge:true });
+}
 async function getGuideProfile(uid) {
   if (!window.firebase) return null;
   const doc = await window.firebase.firestore().collection("guides").doc(uid).get();
