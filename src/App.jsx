@@ -1954,7 +1954,7 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
     // Restore wizard answers if user just logged in mid-wizard
     const saved = sessionStorage.getItem("ct_wizard_ans");
     if (saved) { sessionStorage.removeItem("ct_wizard_ans"); try { return JSON.parse(saved); } catch {} }
-    return { days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", customPlaces:[], startCity:"airport", startTime:"09:00" };
+    return { days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00" };
   });
   const [loading, setLoad] = useState(false);
   const [itin, setItin]    = useState(savedItin||null);
@@ -1989,10 +1989,41 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   };
 
   const generate = async () => {
-    setStep(10); setLoad(true);
+    setStep(11); setLoad(true);
+
+    // ── Geo-aware city database ────────────────────────────────────────────────
+    // Each city has real lat/lng so we can rank by ACTUAL distance from the
+    // starting point, not just hand the AI a flat alphabetic list.
+    const CITY_GEO = {
+      // Starting points / hubs
+      "Colombo":{lat:6.9271,lng:79.8612}, "Bandaranaike International Airport, Katunayake":{lat:7.1808,lng:79.8841},
+      "Kurunegala":{lat:7.4863,lng:80.3623}, "Jaffna":{lat:9.6615,lng:80.0255}, "Negombo":{lat:7.2083,lng:79.8358},
+      "Anuradhapura":{lat:8.3114,lng:80.4037}, "Trincomalee":{lat:8.5874,lng:81.2152}, "Batticaloa":{lat:7.7170,lng:81.7000},
+      "Galle":{lat:6.0535,lng:80.2210}, "Matara":{lat:5.9549,lng:80.5550}, "Ratnapura":{lat:6.6828,lng:80.4012},
+      "Badulla":{lat:6.9934,lng:81.0550}, "Polonnaruwa":{lat:7.9403,lng:81.0188}, "Kandy":{lat:7.2906,lng:80.6337},
+      // Beach
+      "Mirissa":{lat:5.9483,lng:80.4589}, "Unawatuna":{lat:6.0108,lng:80.2492}, "Hikkaduwa":{lat:6.1395,lng:80.1063},
+      "Tangalle":{lat:6.0241,lng:80.7937}, "Weligama":{lat:5.9740,lng:80.4297}, "Arugam Bay":{lat:6.8404,lng:81.8360},
+      "Nilaveli":{lat:8.6916,lng:81.1956}, "Bentota":{lat:6.4260,lng:79.9959}, "Beruwala":{lat:6.4790,lng:79.9826},
+      "Kalpitiya":{lat:8.2333,lng:79.7667}, "Pasikuda":{lat:7.9219,lng:81.5650}, "Uppuveli":{lat:8.6019,lng:81.2092},
+      // Hills
+      "Nuwara Eliya":{lat:6.9497,lng:80.7891}, "Ella":{lat:6.8667,lng:81.0466}, "Haputale":{lat:6.7670,lng:80.9550},
+      "Bandarawela":{lat:6.8294,lng:80.9886}, "Hatton":{lat:6.8910,lng:80.5957}, "Knuckles":{lat:7.4500,lng:80.7833},
+      "Horton Plains":{lat:6.8021,lng:80.7958},
+      // Cultural
+      "Sigiriya":{lat:7.9570,lng:80.7603}, "Dambulla":{lat:7.8675,lng:80.6517}, "Galle Fort":{lat:6.0269,lng:80.2167},
+      // Wildlife
+      "Yala":{lat:6.3725,lng:81.5185}, "Tissamaharama":{lat:6.2772,lng:81.2855}, "Udawalawe":{lat:6.4567,lng:80.8986},
+      "Sinharaja":{lat:6.4093,lng:80.4904}, "Wilpattu":{lat:8.4500,lng:80.0333}, "Minneriya":{lat:8.0333,lng:80.8833},
+      "Habarana":{lat:8.0362,lng:80.7501}, "Bundala":{lat:6.1972,lng:81.2206},
+      // Adventure
+      "Kitulgala":{lat:6.9897,lng:80.4178}, "Adam's Peak":{lat:6.8094,lng:80.4994}, "Knuckles Range":{lat:7.4500,lng:80.7833},
+      // Rural
+      "Knuckles Villages":{lat:7.4500,lng:80.7833}, "Mahiyanganaya":{lat:7.3333,lng:81.0167}, "Belihuloya":{lat:6.6333,lng:80.7167}, "Matale":{lat:7.4675,lng:80.6234},
+    };
 
     const STYLE_CITIES = {
-      beach:    { allowed:["Negombo","Galle","Unawatuna","Mirissa","Hikkaduwa","Tangalle","Weligama","Arugam Bay","Nilaveli","Trincomalee","Bentota","Beruwala","Kalpitiya"], forbidden:["Kandy","Ella","Nuwara Eliya","Sigiriya","Dambulla","Anuradhapura","Polonnaruwa","Yala","Wilpattu"] },
+      beach:    { allowed:["Negombo","Galle","Unawatuna","Mirissa","Hikkaduwa","Tangalle","Weligama","Arugam Bay","Nilaveli","Trincomalee","Bentota","Beruwala","Kalpitiya","Pasikuda","Uppuveli"], forbidden:["Kandy","Ella","Nuwara Eliya","Sigiriya","Dambulla","Anuradhapura","Polonnaruwa","Yala","Wilpattu"] },
       hills:    { allowed:["Kandy","Nuwara Eliya","Ella","Haputale","Bandarawela","Hatton","Knuckles","Horton Plains"], forbidden:["Mirissa","Hikkaduwa","Galle","Sigiriya","Anuradhapura","Polonnaruwa","Yala"] },
       cultural: { allowed:["Dambulla","Sigiriya","Anuradhapura","Polonnaruwa","Kandy","Galle Fort"], forbidden:["Mirissa","Hikkaduwa","Ella","Nuwara Eliya","Yala"] },
       wildlife: { allowed:["Yala","Tissamaharama","Udawalawe","Sinharaja","Wilpattu","Minneriya","Habarana","Bundala"], forbidden:["Mirissa","Hikkaduwa","Ella","Nuwara Eliya","Sigiriya"] },
@@ -2015,10 +2046,48 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
 
     setStartLabel(customStart);
 
-    const allowedCities = [...cities.allowed];
+    // ── Haversine distance (km) ────────────────────────────────────────────────
+    function distKm(a, b) {
+      if (!a || !b) return 99999; // unknown city = treat as very far, don't prioritise
+      const R = 6371, dLat = (b.lat-a.lat)*Math.PI/180, dLng = (b.lng-a.lng)*Math.PI/180;
+      const x = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+    }
+
+    // Try to resolve the starting point's coordinates — match against known cities
+    // (handles "Bandaranaike International Airport, Katunayake" etc by checking substrings)
+    const startKey = Object.keys(CITY_GEO).find(k =>
+      customStart.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(customStart.toLowerCase().split(",")[0].trim())
+    );
+    const startGeo = startKey ? CITY_GEO[startKey] : null;
+
+    // Rank the style's allowed cities by ACTUAL distance from the starting point.
+    // This is what fixes "Kurunegala → hills always suggests Kandy" — now it ranks
+    // Kandy vs Ella vs Nuwara Eliya etc by real km from Kurunegala, and "Jaffna → beach"
+    // properly prioritises Nilaveli/Trincomalee/Arugam Bay over Negombo (which is far south).
+    let rankedCities = cities.allowed;
+    if (startGeo) {
+      rankedCities = [...cities.allowed].sort((a,b) => {
+        const da = distKm(startGeo, CITY_GEO[a]);
+        const db = distKm(startGeo, CITY_GEO[b]);
+        return da - db;
+      });
+    }
+    const nearestCity = rankedCities[0] || cities.allowed[0];
+    const nearestDist = startGeo && CITY_GEO[nearestCity] ? Math.round(distKm(startGeo, CITY_GEO[nearestCity])) : null;
+
+    const allowedCities = [...rankedCities];
     if (ans.startCity==="custom" && ans.customStart) {
       allowedCities.unshift(ans.customStart.trim() + " (starting point)");
     }
+
+    // ── Hotel-base strategy ────────────────────────────────────────────────────
+    // "base"  = stay in ONE hotel/region for the whole trip, day-trip out and back
+    // "multi" = move to a new hotel/region every 1-3 days, see more of the country
+    const hotelStrategy = ans.hotelStyle || "multi";
+    const hotelStrategyNote = hotelStrategy==="base"
+      ? `HOTEL STRATEGY — SINGLE BASE: The tourist wants to stay in ONE hotel for the ENTIRE trip and take day trips out and back. Pick ONE hotel in ${nearestCity} (the city closest to ${customStart} that matches their travel style — ${nearestDist?`only ${nearestDist}km away`:"a great match"}). Every day's activities must be a round-trip from that same hotel — do NOT check out and move to a new hotel at any point. Activities further away (1-2 hrs) are fine as day trips, but the tourist returns to the SAME hotel each night.`
+      : `HOTEL STRATEGY — MULTI-STOP JOURNEY: The tourist wants to see different parts of the country and is happy to change hotels. Plan a logical route starting near ${customStart}, moving through 2-4 different towns/regions over the trip (geographically sensible order, not backtracking), staying 1-3 nights in each before moving to the next. Start with the city nearest to ${customStart} (${nearestCity}) and progress outward.`;
 
     // ── Start time logic ────────────────────────────────────────────────────────
     const startHour = parseInt((ans.startTime||"09:00").split(":")[0]);
@@ -2060,18 +2129,22 @@ ${customNote ? `- ${customNote}` : ""}
 
 ${startTimeNote}
 
+${hotelStrategyNote}
+
 HOTEL RULES (CRITICAL):
 - Select ONE specific real hotel per destination matching "${hotelTier}"
 - Day 1: First activity = drive from ${customStart} to hotel with REAL drive time (e.g. "45 min drive from Colombo on A3 highway")
 - Day 1: Second activity = hotel check-in with hotel name, area, why chosen
-- Every morning from Day 2 onwards: first activity = breakfast AT THE HOTEL where they slept
+- Every morning: first activity = breakfast AT THE HOTEL where they slept
 - Every evening: last activity = dinner near hotel + return to hotel
 - Last day: include hotel check-out + drive back to ${customStart} if needed
-- Hotel stays in same location unless explicitly moving cities
 
-LOCATION RULES:
-- ALLOWED: ${allowedCities.join(", ")}
-- FORBIDDEN: ${cities.forbidden.length ? cities.forbidden.join(", ") : "none"}
+LOCATION RULES (CRITICAL — DISTANCE FROM STARTING POINT MATTERS):
+- Cities below are listed in order of PROXIMITY to ${customStart} (closest first) — strongly prefer the cities at the TOP of this list, only use cities further down if the trip is long enough to justify the extra travel
+- RANKED BY DISTANCE FROM ${customStart}: ${allowedCities.join(", ")}
+- The single BEST match for a short trip is: ${nearestCity}${nearestDist?` (approx ${nearestDist}km from ${customStart})`:""}
+- FORBIDDEN (wrong region for this style): ${cities.forbidden.length ? cities.forbidden.join(", ") : "none"}
+- Do NOT default to famous/touristy cities (e.g. Kandy, Negombo) just because they're well-known — pick whichever ALLOWED city is geographically closest to the starting point and matches the trip length
 - All activities must be within 30 min of the hotel unless it's an explicitly planned excursion
 
 ${busNote}
@@ -2113,33 +2186,40 @@ Return ONLY valid raw JSON — no markdown, no backticks:
         alert("⚠️ Cannot reach the proxy server.\n\nMake sure you started it:\n  cd proxy\n  npm start");
         return;
       }
-      // Fallback itinerary
-      const destLabel = {beach:"Negombo / Southern Coast",hills:"Kandy & Ella",cultural:"Sigiriya & Anuradhapura",wildlife:"Yala",mixed:"Sri Lanka"}[styleKey]||"Sri Lanka";
-      const hotelName = ans.budget==="luxury" ? "Jetwing Beach" : ans.budget==="mid" ? "Goldi Sands Hotel" : "Kings Gate Hotel";
+      // Fallback itinerary — uses the geo-ranked nearest city for this style,
+      // NOT hardcoded to Negombo. This is what fixes "Jaffna + beach" always
+      // showing Negombo even when Nilaveli/Trincomalee are far closer.
+      const fbCity = nearestCity || "Negombo";
+      const fbArea = `${fbCity}, Sri Lanka`;
+      const styleLabel = {beach:"Beach Escape",hills:"Hill Country Retreat",cultural:"Cultural Discovery",wildlife:"Wildlife Safari",adventure:"Adventure Trip",rural:"Rural Experience",mixed:"Sri Lanka Adventure"}[styleKey]||"Sri Lanka Adventure";
+      const styleTagline = {beach:"Relax and recharge on Sri Lanka's golden coast",hills:"Misty mountains, tea trails and cool highland air",cultural:"Ancient temples, royal ruins and timeless heritage",wildlife:"Safaris and close encounters with Sri Lanka's wildlife",adventure:"Hikes, rapids and adrenaline in the wild",rural:"Village life, farms and authentic local culture",mixed:"A taste of everything Sri Lanka has to offer"}[styleKey]||"A memorable Sri Lanka journey";
+      const fbActType = {beach:"beach",hills:"sightseeing",cultural:"sightseeing",wildlife:"safari",adventure:"hike",rural:"rural",mixed:"sightseeing"}[styleKey]||"sightseeing";
+      const fbActLabel = {beach:"beach time",hills:"a scenic walk",cultural:"the historic sites",wildlife:"a safari drive",adventure:"the trail",rural:"the village",mixed:"the main sights"}[styleKey]||"the main sights";
+      const hotelName = ans.budget==="luxury" ? `${fbCity} Grand Resort` : ans.budget==="mid" ? `${fbCity} Heritage Hotel` : `${fbCity} Traveller's Inn`;
       const fallDays = [{
-        day:1, location:"Negombo, Sri Lanka", theme:"Arrival & settle in",
+        day:1, location:fbArea, theme:"Arrival & settle in",
         hotel: hotelName,
         activities:[
-          {time:ans.startTime||"09:00",type:"transport",place:`${customStart} → Negombo`,area:customStart,text:`Drive from ${customStart} to Negombo along the coastal road.`,why:"Negombo is the closest beach to Colombo — just 45 min away.",hours:"",price:"$15–30 taxi",mapQuery:`Negombo, Sri Lanka`,travelFromPrev:"",unsplashQuery:"Negombo beach Sri Lanka"},
-          {time:"11:00",type:"checkin",place:hotelName,area:"Lewis Place, Negombo",text:`Check in to ${hotelName} on Negombo beach. Drop your bags and freshen up.`,why:"Beachfront location with excellent seafood restaurant on-site.",hours:"Check-in from 2pm, early check-in on request",price:ans.budget==="luxury"?"$150–300/night":ans.budget==="mid"?"$50–100/night":"$20–40/night",mapQuery:`${hotelName}, Negombo, Sri Lanka`,travelFromPrev:"45 min drive",unsplashQuery:"Negombo hotel beach resort"},
-          {time:"13:00",type:"lunch",place:"Lords Restaurant",area:"Lewis Place, Negombo",text:"Fresh grilled lobster and prawn curry on the beachfront terrace.",why:"Best seafood restaurant in Negombo — catch of the day is always exceptional.",hours:"11am–10pm",price:"$15–30",mapQuery:"Lords Restaurant, Negombo, Sri Lanka",travelFromPrev:"5 min walk",unsplashQuery:"Negombo seafood restaurant"},
-          ...(isEveningStart?[]:[{time:"16:00",type:"beach",place:"Negombo Beach",area:"Lewis Place, Negombo",text:"Relax on the golden sand, watch the fishing catamarans return at sunset.",why:"Calm waters, warm sand — perfect introduction to Sri Lanka's coast.",hours:"Always open",price:"Free",mapQuery:"Negombo Beach, Sri Lanka",travelFromPrev:"2 min walk",unsplashQuery:"Negombo beach sunset golden"}]),
-          {time:isEveningStart?"20:00":"19:00",type:"dinner",place:"Bijou Restaurant",area:"Poruthota Road, Negombo",text:"Candlelit dinner with fresh lobster thermidor and coconut prawn curry.",why:"Consistently rated the finest dining in Negombo — book ahead for beachside table.",hours:"6pm–11pm",price:"$20–45",mapQuery:"Bijou Restaurant, Negombo, Sri Lanka",travelFromPrev:"10 min walk",unsplashQuery:"Negombo fine dining seafood"},
+          {time:ans.startTime||"09:00",type:"transport",place:`${customStart} → ${fbCity}`,area:customStart,text:`Drive from ${customStart} to ${fbCity}${nearestDist?` (approx ${nearestDist}km)`:""}.`,why:`${fbCity} is the closest ${styleKey} destination to ${customStart}.`,hours:"",price:"$15–40 taxi",mapQuery:fbArea,travelFromPrev:"",unsplashQuery:`${fbCity} Sri Lanka`},
+          {time:"11:00",type:"checkin",place:hotelName,area:fbArea,text:`Check in to ${hotelName}. Drop your bags and freshen up.`,why:`Well located for exploring ${fbCity} and the surrounding area.`,hours:"Check-in from 2pm, early check-in on request",price:ans.budget==="luxury"?"$150–300/night":ans.budget==="mid"?"$50–100/night":"$20–40/night",mapQuery:`${hotelName}, ${fbArea}`,travelFromPrev:nearestDist?`${Math.round(nearestDist/60)} hr drive`:"drive",unsplashQuery:`${fbCity} hotel Sri Lanka`},
+          {time:"13:00",type:"lunch",place:`${fbCity} Local Kitchen`,area:fbArea,text:"Rice and curry with the day's fresh local specialities.",why:"A great introduction to regional Sri Lankan cooking.",hours:"11am–10pm",price:"$8–20",mapQuery:`restaurant, ${fbArea}`,travelFromPrev:"5 min walk",unsplashQuery:"Sri Lanka rice curry meal"},
+          ...(isEveningStart?[]:[{time:"16:00",type:fbActType,place:`${fbCity} Highlights`,area:fbArea,text:`Spend the afternoon enjoying ${fbActLabel} around ${fbCity}.`,why:`This is exactly what ${fbCity} is known for.`,hours:"Always open",price:"Free–$10",mapQuery:fbArea,travelFromPrev:"10 min drive",unsplashQuery:`${fbCity} Sri Lanka scenery`}]),
+          {time:isEveningStart?"20:00":"19:00",type:"dinner",place:`${fbCity} Dining Room`,area:fbArea,text:"Relaxed dinner with regional dishes and fresh local ingredients.",why:"Consistently well-rated by visitors to the area.",hours:"6pm–11pm",price:"$15–35",mapQuery:`restaurant, ${fbArea}`,travelFromPrev:"10 min walk",unsplashQuery:`${fbCity} dinner restaurant`},
         ]
       }];
       while(fallDays.length<N){
         const n=fallDays.length+1;
-        fallDays.push({day:n,location:"Negombo, Sri Lanka",theme:`Day ${n} — beach & relaxation`,hotel:hotelName,
+        fallDays.push({day:n,location:fbArea,theme:`Day ${n} — exploring ${fbCity}`,hotel:hotelName,
           activities:[
-            {time:"08:00",type:"breakfast",place:hotelName+" Restaurant",area:"Lewis Place, Negombo",text:"Full Sri Lankan breakfast with hoppers, string hoppers and fresh tropical fruit at the hotel.",why:"Start the day well — the hotel breakfast is included and excellent.",hours:"7am–10am",price:"Included",mapQuery:`${hotelName}, Negombo, Sri Lanka`,travelFromPrev:"",unsplashQuery:"Sri Lanka hotel breakfast hoppers"},
-            {time:"10:00",type:"beach",place:"Negombo Beach",area:"Lewis Place, Negombo",text:"Morning swim and sunbathe on Negombo's quiet northern beach.",why:"Less crowded than the main stretch — calm waters perfect for swimming.",hours:"Always open",price:"Free",mapQuery:"Negombo Beach, Sri Lanka",travelFromPrev:"2 min walk",unsplashQuery:"Negombo beach morning swim"},
-            {time:"13:00",type:"lunch",place:"The Icebear Restaurant",area:"Poruthota Road, Negombo",text:"Rice and curry with fresh fish, devilled squid and coconut sambol.",why:"Local favourite — the devilled seafood is extraordinary.",hours:"11am–9pm",price:"$8–15",mapQuery:"Icebear Restaurant, Negombo, Sri Lanka",travelFromPrev:"10 min walk",unsplashQuery:"Sri Lanka rice curry seafood"},
-            {time:"19:00",type:"dinner",place:hotelName+" Beachside Bar",area:"Lewis Place, Negombo",text:"Sunset cocktails and grilled seafood platter on the beach.",why:"Watch the sun set over the Indian Ocean with your feet in the sand.",hours:"5pm–11pm",price:"$20–35",mapQuery:`${hotelName}, Negombo, Sri Lanka`,travelFromPrev:"2 min walk",unsplashQuery:"Negombo beach sunset cocktails"},
+            {time:"08:00",type:"breakfast",place:hotelName+" Restaurant",area:fbArea,text:"Full Sri Lankan breakfast with hoppers, string hoppers and fresh tropical fruit at the hotel.",why:"Start the day well — the hotel breakfast is included and excellent.",hours:"7am–10am",price:"Included",mapQuery:`${hotelName}, ${fbArea}`,travelFromPrev:"",unsplashQuery:"Sri Lanka hotel breakfast hoppers"},
+            {time:"10:00",type:fbActType,place:`${fbCity} Exploration`,area:fbArea,text:`Continue exploring ${fbActLabel} around ${fbCity}.`,why:`One of the best reasons to visit ${fbCity}.`,hours:"Always open",price:"Free–$15",mapQuery:fbArea,travelFromPrev:"15 min drive",unsplashQuery:`${fbCity} Sri Lanka`},
+            {time:"13:00",type:"lunch",place:`${fbCity} Café`,area:fbArea,text:"Local specialities with fresh seasonal ingredients.",why:"A local favourite among visitors to the area.",hours:"11am–9pm",price:"$8–15",mapQuery:`cafe, ${fbArea}`,travelFromPrev:"10 min walk",unsplashQuery:"Sri Lanka local food"},
+            {time:"19:00",type:"dinner",place:hotelName+" Restaurant",area:fbArea,text:"Evening meal back at the hotel after a full day exploring.",why:"Convenient and relaxing after a day out.",hours:"6pm–10pm",price:"$15–30",mapQuery:`${hotelName}, ${fbArea}`,travelFromPrev:"2 min walk",unsplashQuery:`${fbCity} evening dinner`},
           ]
         });
       }
-      setItin({ title:`${N}-Day Beach Escape`, tagline:`Relax and recharge on Sri Lanka's golden coast`, hotel:{name:hotelName,area:"Negombo",stars:ans.budget==="luxury"?5:3,why:"Beachfront location with excellent seafood"}, highlights:["Beachfront hotel","Fresh seafood daily","Sunset views"], days:fallDays.slice(0,N) });
-      setSavedItin({ title:`${N}-Day Beach Escape`, tagline:`Relax and recharge on Sri Lanka's golden coast`, hotel:{name:hotelName,area:"Negombo",stars:ans.budget==="luxury"?5:3,why:"Beachfront location with excellent seafood"}, highlights:["Beachfront hotel","Fresh seafood daily","Sunset views"], days:fallDays.slice(0,N) });
+      setItin({ title:`${N}-Day ${styleLabel}`, tagline:styleTagline, hotel:{name:hotelName,area:fbCity,stars:ans.budget==="luxury"?5:3,why:`Well located for exploring ${fbCity}`}, highlights:[`Stay in ${fbCity}`,"Local cuisine daily","Authentic experiences"], days:fallDays.slice(0,N) });
+      setSavedItin({ title:`${N}-Day ${styleLabel}`, tagline:styleTagline, hotel:{name:hotelName,area:fbCity,stars:ans.budget==="luxury"?5:3,why:`Well located for exploring ${fbCity}`}, highlights:[`Stay in ${fbCity}`,"Local cuisine daily","Authentic experiences"], days:fallDays.slice(0,N) });
       setItinDays(fallDays.slice(0,N));
     }
     setLoad(false);
@@ -2147,7 +2227,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 
   // Auto-generate if user just logged in at last step
   useEffect(()=>{
-    if (user && step===9 && !itin && !loading && !didAutoGenerate.current) {
+    if (user && step===10 && !itin && !loading && !didAutoGenerate.current) {
       didAutoGenerate.current = true;
       generate();
     }
@@ -2155,7 +2235,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
   }, [user]);
 
   // Result page
-  if (step===10) {
+  if (step===11) {
     if (loading) return (
       <div style={{ minHeight:"80vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:20, padding:"2rem" }}>
         <div style={{ width:56, height:56, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite" }}/>
@@ -2246,7 +2326,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
               <Btn variant="amber" onClick={onGuideOpen}>Find a guide & request bid →</Btn>
               <Btn variant="outline" onClick={downloadPDF}>📄 Download PDF</Btn>
-              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", customPlaces:[], startCity:"airport", startTime:"09:00" }); }}>↺ New itinerary</Btn>
+              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00" }); }}>↺ New itinerary</Btn>
             </div>
           </div>
         </div>
@@ -2255,7 +2335,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
   }
 
   // Wizard steps
-  const STEPS_TOTAL = 10;
+  const STEPS_TOTAL = 11;
   const steps = [
     // 0: Starting point
     <>
@@ -2354,9 +2434,20 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       </div>
     </>,
 
-    // 7: Custom places
+    // 7: Hotel base style
     <>
       <StepDots cur={7} total={STEPS_TOTAL}/>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>How do you want to handle hotels?</h2>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Some travellers prefer settling into one place, others love moving around</p>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10 }}>
+        <OptBtn sel={ans.hotelStyle==="base"} onClick={()=>upd("hotelStyle","base")} icon="🏨" label="Stay in one hotel" sub="Pick one base and take day trips out — less packing, more relaxing"/>
+        <OptBtn sel={ans.hotelStyle==="multi"} onClick={()=>upd("hotelStyle","multi")} icon="🧳" label="Move around the country" sub="A new hotel every 1-3 nights — see more places, more variety"/>
+      </div>
+    </>,
+
+    // 8: Custom places
+    <>
+      <StepDots cur={8} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:6 }}>Any specific places you want to visit?</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20, lineHeight:1.6 }}>
         If you already know a place in Sri Lanka you want to include — a temple, a waterfall, a town, a restaurant — add it here and we'll fit it into your itinerary.
@@ -2400,9 +2491,9 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       </div>
     </>,
 
-    // 8: Rural experience opt-in (only shown if rural selected, else skipped visually)
+    // 9: Rural experience opt-in (only shown if rural selected, else skipped visually)
     <>
-      <StepDots cur={8} total={STEPS_TOTAL}/>
+      <StepDots cur={9} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>
         {ans.travel==="rural" ? "What rural experiences interest you?" : "Almost done — any final touches?"}
       </h2>
@@ -2457,6 +2548,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
               ["💰","Budget",ans.budget||"Not selected"],
               ["🚗","Transport",ans.transport||"Not selected"],
               ["⚡","Pace",ans.pace||"balanced"],
+              ["🏨","Hotel style",ans.hotelStyle==="base"?"One base hotel":"Moving around"],
               ...(ans.customPlaces.length?[["📍","Your places",ans.customPlaces.join(", ")]]:[]),
             ].map(([icon,label,val])=>(
               <div key={label} style={{ display:"flex", gap:12, padding:"6px 0", borderBottom:`1px solid ${C.border}`, fontSize:12 }}>
@@ -2486,7 +2578,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
           {steps[step]}
           <div className="wizard-btn-row" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:28, paddingTop:20, borderTop:`1px solid ${C.border}`, gap:12 }}>
             {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>← Back</Btn> : <span/>}
-            {step<9
+            {step<10
               ? <Btn onClick={()=>setStep(s=>s+1)}>Next →</Btn>
               : <Btn variant="amber" onClick={()=>{
                   if(!user){
@@ -2592,7 +2684,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
     // Simulate PayPal processing
     setTimeout(async()=>{
       try{
-        await acceptBidAndPay(payModal.id, Number(payModal.bid?.price||0));
+        await acceptBidAndPay(payModal.id, Number(payModal.bid?.price||0), payModal.guideId);
         setMyRequests(rs=>rs.map(r=>r.id===payModal.id?{...r,status:"accepted",payment:{total:Number(payModal.bid?.price),commission:Math.round(Number(payModal.bid?.price)*0.15*100)/100,guideAmount:Math.round(Number(payModal.bid?.price)*0.85*100)/100}}:r));
         setPayStep("success");
       } catch(e){ alert("Payment error: "+e.message); }
@@ -2721,7 +2813,19 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
                       <div style={{ flex:1 }}>
                         <div style={{ fontSize:15, fontWeight:600, color:C.ink, marginBottom:2 }}>{g.fullName||g.name}</div>
                         <div style={{ fontSize:12, color:C.inkSoft, marginBottom:6 }}>{g.specialty||(g.specialties||[]).slice(0,2).join(", ")}</div>
-                        <Pill green>🛡️ SLTDA Verified</Pill>
+                        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                          <Pill green>🛡️ SLTDA Verified</Pill>
+                          {(() => {
+                            const av = g.availability || "available";
+                            const map = {
+                              available:   { label:"✅ Available",  bg:C.tealLight,   fg:C.teal,   bd:"#9FE1CB" },
+                              "on-trip":   { label: g.freeDate ? `🚗 Free from ${new Date(g.freeDate).toLocaleDateString()}` : "🚗 On a trip", bg:C.amberLight, fg:C.amber, bd:"#F0D48A" },
+                              unavailable: { label:"⏸ Unavailable", bg:"#F1F5F9",      fg:"#64748B", bd:"#E2E8F0" },
+                            };
+                            const m = map[av] || map.available;
+                            return <span style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20, background:m.bg, color:m.fg, border:`1px solid ${m.bd}` }}>{m.label}</span>;
+                          })()}
+                        </div>
                       </div>
                       <div style={{ textAlign:"right", flexShrink:0 }}>
                         {g.rating>0 && <div style={{ fontSize:13, fontWeight:600, color:C.ink }}><Stars n={Math.floor(g.rating)}/> {g.rating}</div>}
@@ -2755,6 +2859,16 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
                     <Pill green>🛡️ SLTDA Certified</Pill>
                     {g.rating>0&&<Pill amber>★ {g.rating}</Pill>}
                     <span style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20, background:"#E5F0FC", color:"#185FA5", border:"1px solid #B4D0EF" }}>{g.experience} yrs</span>
+                    {(() => {
+                      const av = g.availability || "available";
+                      const map = {
+                        available:   { label:"✅ Available now",  bg:C.tealLight,   fg:C.teal,   bd:"#9FE1CB" },
+                        "on-trip":   { label: g.freeDate ? `🚗 Free from ${new Date(g.freeDate).toLocaleDateString()}` : "🚗 Currently on a trip", bg:C.amberLight, fg:C.amber, bd:"#F0D48A" },
+                        unavailable: { label:"⏸ Unavailable",     bg:"#F1F5F9",      fg:"#64748B", bd:"#E2E8F0" },
+                      };
+                      const m = map[av] || map.available;
+                      return <span style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20, background:m.bg, color:m.fg, border:`1px solid ${m.bd}` }}>{m.label}</span>;
+                    })()}
                   </div>
                 </div>
               </div>
@@ -3724,7 +3838,7 @@ async function loadTouristRequests(touristUid) {
   } catch(e) { console.error("loadTouristRequests FAILED:", e.message); return []; }
 }
 
-async function acceptBidAndPay(requestId, bidAmount) {
+async function acceptBidAndPay(requestId, bidAmount, guideId) {
   if (!window.firebase?.firestore) return;
   const commission = Math.round(bidAmount * 0.15 * 100) / 100;
   const guideAmount = Math.round((bidAmount - commission) * 100) / 100;
@@ -3733,6 +3847,17 @@ async function acceptBidAndPay(requestId, bidAmount) {
     payment:{ total:bidAmount, commission, guideAmount, paidAt:new Date().toISOString(), method:"PayPal" },
     acceptedAt: new Date().toISOString(),
   });
+  // Track real earnings on the guide's profile so the Earnings tab reflects actual paid bookings
+  if (guideId) {
+    try {
+      const ref = window.firebase.firestore().collection("guides").doc(guideId);
+      const doc = await ref.get();
+      const prev = doc.exists ? doc.data() : {};
+      const totalEarned = (prev.totalEarned || 0) + guideAmount;
+      const confirmedBookings = (prev.confirmedBookings || 0) + 1;
+      await ref.update({ totalEarned, confirmedBookings });
+    } catch(e) { console.warn("Could not update guide earnings:", e.message); }
+  }
 }
 
 const GUIDE_TERMS = `CEYLONTRAILS GUIDE TERMS & RULES
@@ -4149,11 +4274,24 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
   const [bidText, setBidText]   = useState({ price:"", message:"", dates:"" });
   const [newTour, setNewTour]   = useState({ title:"", location:"", date:"", rating:5, notes:"" });
   const [addingTour, setAddTour]= useState(false);
+  const [notifyToast, setNotifyToast] = useState(null); // one-time toast for declined/paid bids
+  const seenStatuses = useRef({}); // tracks last-seen status per request to detect changes
 
   useEffect(()=>{
     if (activeTab==="requests") {
       setLR(true);
-      loadTripRequests(user.uid).then(r=>{ setRequests(r); setLR(false); }).catch(()=>setLR(false));
+      loadTripRequests(user.uid).then(r=>{
+        // Detect status changes since last load (declined / accepted+paid) for one-time toast
+        r.forEach(req=>{
+          const prevStatus = seenStatuses.current[req.id];
+          if (prevStatus && prevStatus!==req.status) {
+            if (req.status==="declined") setNotifyToast({ type:"declined", text:`A tourist declined your bid for "${req.itinTitle||"a trip"}".` });
+            if (req.status==="accepted") setNotifyToast({ type:"accepted", text:`💰 Payment received for "${req.itinTitle||"a trip"}"! Check your earnings.` });
+          }
+          seenStatuses.current[req.id] = req.status;
+        });
+        setRequests(r); setLR(false);
+      }).catch(()=>setLR(false));
     }
   },[activeTab]);
 
@@ -4163,8 +4301,20 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
     onProfileUpdate({ ...profile, availability:val, freeDate:date||"" });
   };
 
+  // Returns true if the bid dates text-overlaps with another accepted/confirmed booking.
+  // This is a best-effort warning only — dates are free text, so we can't be 100% certain.
+  const checkDateOverlap = (datesText) => {
+    if (!datesText) return null;
+    const confirmed = requests.filter(r => r.status==="accepted" && r.bid?.dates);
+    const overlapping = confirmed.find(r => r.bid.dates.trim().toLowerCase() === datesText.trim().toLowerCase());
+    return overlapping || null;
+  };
+
   const submitBidHandler = async () => {
     if (!bidModal || !bidText.price) return;
+    if (bidModal.bid && !window.confirm("You already submitted a bid for this request. Submit a new one to replace it?")) return;
+    const overlap = checkDateOverlap(bidText.dates);
+    if (overlap && !window.confirm(`⚠️ Warning: these dates look like they may overlap with an already-confirmed booking ("${overlap.itinTitle}"). Submit anyway?`)) return;
     await submitBid(bidModal.id, bidText);
     setRequests(rs=>rs.map(r=>r.id===bidModal.id?{...r,bid:bidText,bidStatus:"submitted"}:r));
     setBid(null); setBidText({ price:"", message:"", dates:"" });
@@ -4191,6 +4341,12 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
 
   return (
     <div style={{ minHeight:"100vh", background:C.surface }}>
+      {/* Notification toast - declined or paid bid */}
+      {notifyToast && (
+        <div onClick={()=>setNotifyToast(null)} style={{ position:"fixed", top:80, left:"50%", transform:"translateX(-50%)", zIndex:1000, background:notifyToast.type==="declined"?C.coral:C.teal, color:"#fff", padding:"14px 22px", borderRadius:16, fontSize:13, fontWeight:600, boxShadow:"0 8px 32px rgba(0,0,0,.25)", cursor:"pointer", maxWidth:"90vw", textAlign:"center" }}>
+          {notifyToast.text} <span style={{ opacity:.7, marginLeft:8 }}>✕</span>
+        </div>
+      )}
       {/* Bid modal */}
       {bidModal && (
         <div onClick={e=>e.target===e.currentTarget&&setBid(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.55)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(4px)" }}>
@@ -4299,28 +4455,39 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                 <p style={{ fontSize:13, lineHeight:1.7 }}>When tourists request a bid from you, they'll appear here. Make sure your profile is complete to attract more requests.</p>
               </div>
             )}
-            {requests.map(req=>(
-              <div key={req.id} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, padding:"1.2rem", marginBottom:12, background:C.white }}>
+            {requests.map(req=>{
+              const statusMeta = {
+                pending:  { label:"⏳ Awaiting your bid", bg:C.amberLight, fg:C.amber, bd:"#F0D48A" },
+                accepted: { label:"✅ Booking confirmed & paid", bg:C.tealLight, fg:C.teal, bd:"#9FE1CB" },
+                declined: { label:"❌ Tourist declined",   bg:"#FEE2E2",   fg:"#DC2626", bd:"#FECACA" },
+              };
+              const sm = req.bid && req.status==="pending" ? { label:"✓ Bid sent — waiting on tourist", bg:C.tealLight, fg:C.teal, bd:"#9FE1CB" } : (statusMeta[req.status] || statusMeta.pending);
+              return (
+              <div key={req.id} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, padding:"1.2rem", marginBottom:12, background:C.white, opacity:req.status==="declined"?.7:1 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:10, marginBottom:10 }}>
                   <div>
                     <div style={{ fontSize:15, fontWeight:700, color:C.ink, marginBottom:3 }}>{req.itinTitle||"Trip Request"}</div>
                     <div style={{ fontSize:12, color:C.inkSoft }}>From: {req.touristName||req.touristEmail||"Tourist"} · {req.itinDays||"?"} days · {req.group||"solo"}</div>
                   </div>
-                  <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20, background:req.bid?C.tealLight:C.amberLight, color:req.bid?C.teal:C.amber, border:`1px solid ${req.bid?"#9FE1CB":"#F0D48A"}` }}>
-                    {req.bid?"✓ Bid sent":"⏳ Awaiting your bid"}
+                  <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20, background:sm.bg, color:sm.fg, border:`1px solid ${sm.bd}`, whiteSpace:"nowrap" }}>
+                    {sm.label}
                   </span>
                 </div>
                 {req.itinTagline && <p style={{ fontSize:13, color:C.inkSoft, marginBottom:10 }}>{req.itinTagline}</p>}
                 {req.message && <div style={{ background:C.surface, borderRadius:8, padding:"8px 12px", fontSize:12, color:C.ink, marginBottom:10, borderLeft:`3px solid ${C.border}` }}>"{req.message}"</div>}
-                {req.bid ? (
-                  <div style={{ background:C.tealPale, borderRadius:8, padding:"8px 12px", fontSize:12, color:C.teal }}>
+                {req.bid && (
+                  <div style={{ background:req.status==="declined"?"#FEF2F2":C.tealPale, borderRadius:8, padding:"8px 12px", fontSize:12, color:req.status==="declined"?"#DC2626":C.teal, marginBottom:req.status==="declined"?10:0 }}>
                     Your bid: <strong>${req.bid.price}</strong> · {req.bid.dates}
                   </div>
-                ) : (
+                )}
+                {!req.bid && req.status==="pending" && (
                   <Btn onClick={()=>{ setBid(req); setBidText({ price:"", message:"", dates:"" }); }}>Submit bid →</Btn>
                 )}
+                {req.status==="declined" && (
+                  <Btn variant="outline" onClick={()=>{ setBid(req); setBidText({ price:"", message:"", dates:"" }); }}>Send a new bid →</Btn>
+                )}
               </div>
-            ))}
+            );})}
             {/* Demo requests if empty */}
             {!loadingReqs && requests.length===0 && (
               <div style={{ marginTop:16, background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:12, padding:"12px 16px", fontSize:12, color:C.teal }}>
@@ -4441,10 +4608,13 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
             <div style={{ fontSize:48, marginBottom:16 }}>💰</div>
             <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>Earnings Dashboard</h3>
             <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, maxWidth:400, margin:"0 auto 24px" }}>
-              Track your completed bookings and earnings here. Connect your payment account to receive direct payouts.
+              Earnings update automatically whenever a tourist accepts and pays for one of your bids.
             </p>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, maxWidth:500, margin:"0 auto" }}>
-              {[["$0","This month"],["$0","Total earned"],[`${profile?.tripsCompleted||0}`,"Tours done"]].map(([v,l])=>(
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, maxWidth:500, margin:"0 auto" }}>
+              {[
+                [`$${(profile?.totalEarned||0).toFixed(2)}`,"Total earned (85% share)"],
+                [`${profile?.confirmedBookings||0}`,"Confirmed bookings"],
+              ].map(([v,l])=>(
                 <div key={l} style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:14, padding:"1rem" }}>
                   <div style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.teal }}>{v}</div>
                   <div style={{ fontSize:11, color:C.inkSoft, marginTop:4 }}>{l}</div>
@@ -4452,7 +4622,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
               ))}
             </div>
             <div style={{ marginTop:24, background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:12, padding:"12px 16px", fontSize:12, color:C.amber, maxWidth:400, margin:"24px auto 0" }}>
-              💡 Full earnings tracking and payouts coming soon. Contact support@ceylontrails.lk to set up direct payments.
+              💡 This reflects demo PayPal payments processed in-app. Contact support@ceylontrails.lk to set up real bank payouts.
             </div>
           </div>
         )}
