@@ -10,9 +10,11 @@ const app       = express();
 const PORT      = process.env.PORT || 3001;
 const GROQ_KEY  = process.env.GROQ_API_KEY;
 const GKEY      = process.env.GOOGLE_PLACES_KEY;
+const PEXELS_KEY= process.env.PEXELS_API_KEY;
 
 if (!GROQ_KEY) { console.error("❌  GROQ_API_KEY not set"); process.exit(1); }
 if (!GKEY)     { console.warn("⚠️   GOOGLE_PLACES_KEY not set — Places features disabled"); }
+if (!PEXELS_KEY) { console.warn("⚠️   PEXELS_API_KEY not set — destination photos disabled"); }
 
 app.use(cors({ origin: ["http://localhost:3000","http://localhost:5173","http://localhost:5174"] }));
 app.use(express.json({ limit: "2mb" }));
@@ -107,6 +109,36 @@ app.get("/api/places/photo", async (req, res) => {
     r.body.pipe(res);
   } catch(err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Pexels image search (replaces dead source.unsplash.com) ─────────────────
+// Simple in-memory cache to avoid re-hitting Pexels for the same query repeatedly
+const pexelsCache = new Map();
+app.get("/api/photos/search", async (req, res) => {
+  if (!PEXELS_KEY) return res.status(503).json({ error:"no_key", photos:[] });
+  const { query, count = 6 } = req.query;
+  if (!query) return res.status(400).json({ error:"Missing query" });
+  const cacheKey = `${query}::${count}`;
+  if (pexelsCache.has(cacheKey)) return res.json(pexelsCache.get(cacheKey));
+  try {
+    const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&orientation=landscape`;
+    const r   = await fetch(url, { headers: { Authorization: PEXELS_KEY } });
+    const d   = await r.json();
+    const photos = (d.photos||[]).map(p => ({
+      id: p.id,
+      url: p.src.large,
+      url_small: p.src.medium,
+      width: p.width, height: p.height,
+      photographer: p.photographer,
+      photographer_url: p.photographer_url,
+    }));
+    const result = { photos };
+    pexelsCache.set(cacheKey, result);
+    console.log(`✓ Pexels search: ${query} (${photos.length} results)`);
+    res.json(result);
+  } catch(err) {
+    res.status(500).json({ error: err.message, photos:[] });
   }
 });
 

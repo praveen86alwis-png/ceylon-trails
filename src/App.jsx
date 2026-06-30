@@ -50,6 +50,13 @@ const DESTINATIONS = {
     { name:"Nilaveli",       tag:"Pigeon Island snorkelling",   desc:"Crystal waters off the northeast, home to blacktip reef sharks and hawksbill turtles.",   best:"May–Sep", crowd:"Low",      wiki:"Nilaveli", lat:8.6916, lng:81.1956 },
     { name:"Bentota",        tag:"Watersports & river safari",  desc:"Golden beach meets the Bentota river — jet-skiing, banana boats and mangrove safaris.",   best:"Nov–Apr", crowd:"Moderate", wiki:"Bentota", lat:6.4260, lng:79.9959 },
     { name:"Pasikuda",       tag:"Shallow turquoise bay",       desc:"One of the few beaches where you can walk far out into calm, shallow, swimmable water.",  best:"Apr–Sep", crowd:"Low",      wiki:"Pasikuda", lat:7.9219, lng:81.5650 },
+    { name:"Uppuveli",       tag:"Trinco's quiet sister beach", desc:"A long, calm stretch near Trincomalee — far fewer crowds than Nilaveli, easy snorkelling access.", best:"May–Sep", crowd:"Low", wiki:"Uppuveli", lat:8.6019, lng:81.2092 },
+    { name:"Talalla",        tag:"Yoga retreat beach",          desc:"A quiet southern beach known for wellness retreats, gentle surf and almost no development.", best:"Dec–Mar", crowd:"Low", wiki:"Talalla", lat:5.9667, lng:80.6500 },
+    { name:"Polhena",        tag:"Natural reef pool",           desc:"A shallow reef-protected lagoon near Matara — safe swimming for families and beginner snorkellers.", best:"Dec–Mar", crowd:"Low", wiki:"Polhena Beach", lat:5.9333, lng:80.5500 },
+    { name:"Marble Beach",   tag:"Pristine military-protected cove", desc:"A near-untouched cove near Trincomalee inside a navy base — turquoise water, white sand, zero crowds.", best:"May–Sep", crowd:"Low", wiki:"Marble Beach Trincomalee", lat:8.5167, lng:81.2333 },
+    { name:"Kalkudah",       tag:"East coast hidden bay",        desc:"A sheltered, shallow bay next to Pasikuda — calmer water and far fewer tourists.", best:"Apr–Sep", crowd:"Low", wiki:"Kalkudah", lat:7.9333, lng:81.5500 },
+    { name:"Goyambokka",     tag:"Secret rocky cove",            desc:"A series of small private coves near Tangalle, accessible by a short jungle path — total seclusion.", best:"Dec–Apr", crowd:"Low", wiki:"Goyambokka Beach", lat:6.0083, lng:80.7833 },
+    { name:"Dalawella",      tag:"Famous swing & rock pool beach", desc:"Home to the viral coconut tree swing — a calm bay with a natural rock pool perfect for swimming.", best:"Dec–Mar", crowd:"Moderate", wiki:"Dalawella Beach", lat:6.0167, lng:80.2500 },
   ],
   hills:[
     { name:"Ella",           tag:"Nine Arch Bridge & tea",      desc:"Misty village at 1000m. Walk tea ridges to Little Adam's Peak, watch the steam train.",   best:"Jan–Mar", crowd:"High",     wiki:"Ella, Sri Lanka", lat:6.8667, lng:81.0466 },
@@ -59,6 +66,14 @@ const DESTINATIONS = {
     { name:"Horton Plains",  tag:"World's End cliff",           desc:"High-altitude plateau at 2100m with cloud forest and the dramatic 1000m cliff drop.",      best:"Jan–Mar", crowd:"Moderate", wiki:"Horton Plains National Park", lat:6.8021, lng:80.7958 },
     { name:"Knuckles Range", tag:"UNESCO wilderness trek",       desc:"UNESCO-listed range — 34 waterfalls, 13 peaks, villages unchanged for centuries.",          best:"Feb–Apr", crowd:"Low",     wiki:"Knuckles Mountain Range", lat:7.4500, lng:80.7833 },
     { name:"Bandarawela",    tag:"Quiet hill station",          desc:"Less touristy than Ella, with colonial architecture and easy access to tea factories.",   best:"Jan–Apr", crowd:"Low",      wiki:"Bandarawela", lat:6.8294, lng:80.9886 },
+    { name:"Hatton",         tag:"Gateway to Adam's Peak",       desc:"A working tea-estate town surrounded by misty mountains — base camp for the Adam's Peak pilgrimage.", best:"Dec–Apr", crowd:"Low", wiki:"Hatton, Sri Lanka", lat:6.8910, lng:80.5957 },
+    { name:"Idalgashinna",   tag:"Misty railway ridge walk",     desc:"A remote hill-country railway halt with a famous ridge walk between Haputale and Bandarawela.", best:"Jan–Apr", crowd:"Low", wiki:"Idalgashinna", lat:6.8000, lng:80.9333 },
+    { name:"Single Tree Hill", tag:"Nuwara Eliya panoramic viewpoint", desc:"A short, easy climb near Nuwara Eliya rewarded with sweeping views over tea estates and the town below.", best:"Jan–Apr", crowd:"Low", wiki:"Single Tree Hill", lat:6.9333, lng:80.8000 },
+    { name:"Pattipola",      tag:"Sri Lanka's highest railway station", desc:"A misty highland station at 1,890m — the start point for scenic walks toward Horton Plains.", best:"Jan–Apr", crowd:"Low", wiki:"Pattipola", lat:6.8167, lng:80.8000 },
+    { name:"Lipton's Seat",  tag:"Tea baron's panoramic view",   desc:"Where Sir Thomas Lipton once surveyed his tea empire — 360° views over Uva Province tea country.", best:"Jan–Apr", crowd:"Low", wiki:"Lipton's Seat", lat:6.7167, lng:80.9667 },
+    { name:"Ambewela",       tag:"Sri Lanka's 'Little New Zealand'", desc:"Rolling green dairy farms and pine forests at altitude — a strikingly different highland landscape.", best:"Jan–Apr", crowd:"Low", wiki:"Ambewela", lat:6.8833, lng:80.7667 },
+    { name:"Diyatalawa",     tag:"Sleepy colonial army town",    desc:"A peaceful valley town with old British military buildings and views over rolling green hills.", best:"Jan–Apr", crowd:"Low", wiki:"Diyatalawa", lat:6.8167, lng:80.9667 },
+    { name:"Madulkelle",     tag:"Tea estate treehouse stays",   desc:"A remote tea estate near Kandy known for boutique treehouse accommodation deep in the hills.", best:"Year-round", crowd:"Low", wiki:"Madulkelle", lat:7.3500, lng:80.6833 },
   ],
   cultural:[
     { name:"Sigiriya",       tag:"Lion Rock fortress",          desc:"5th-century rock citadel rising 200m from the jungle. Cloud maiden frescoes, mirror wall.", best:"Year-round", crowd:"High", wiki:"Sigiriya", lat:7.9570, lng:80.7603 },
@@ -68,6 +83,14 @@ const DESTINATIONS = {
     { name:"Galle Fort",     tag:"Dutch colonial ramparts",     desc:"UNESCO 17th-century Dutch fort with cobbled streets and the best café scene in the south.", best:"Nov–Apr", crowd:"High",     wiki:"Galle Fort", lat:6.0269, lng:80.2167 },
     { name:"Jaffna",         tag:"Tamil culture & cuisine",     desc:"Sri Lanka's north — Hindu temples with soaring gopurams, the island's spiciest cuisine.",  best:"May–Sep", crowd:"Low",      wiki:"Jaffna", lat:9.6615, lng:80.0255 },
     { name:"Kandy Temple of the Tooth", tag:"Sri Lanka's holiest relic", desc:"Houses the sacred tooth relic of the Buddha — evening puja ceremony is unmissable.", best:"Year-round", crowd:"High", wiki:"Temple of the Sacred Tooth Relic", lat:7.2936, lng:80.6413 },
+    { name:"Nallur Kandaswamy Temple", tag:"Jaffna's golden gopuram", desc:"Sri Lanka's most important Hindu temple — a 25-day annual festival draws pilgrims from across the island.", best:"Jul–Aug", crowd:"Moderate", wiki:"Nallur Kandaswamy Temple", lat:9.6708, lng:80.0247 },
+    { name:"Mihintale",      tag:"Birthplace of Buddhism in Sri Lanka", desc:"The sacred hill where Buddhism was first introduced to the island in 247 BC — 1,840 ancient steps to the summit stupa.", best:"Year-round", crowd:"Low", wiki:"Mihintale", lat:8.3583, lng:80.5083 },
+    { name:"Aluvihare Rock Temple", tag:"Where Buddhist scriptures were first written", desc:"A cave temple complex near Matale where the Tripitaka was first committed to writing in the 1st century BC.", best:"Year-round", crowd:"Low", wiki:"Aluvihare Rock Temple", lat:7.5167, lng:80.6167 },
+    { name:"Yapahuwa",       tag:"Forgotten rock fortress capital", desc:"A brief 13th-century royal capital on a rock outcrop — an ornate stone staircase and far fewer visitors than Sigiriya.", best:"Year-round", crowd:"Low", wiki:"Yapahuwa", lat:7.8333, lng:80.3000 },
+    { name:"Kataragama",     tag:"Sacred multi-faith pilgrimage town", desc:"A unique site sacred to Buddhists, Hindus and Muslims alike — fire-walking rituals during the annual festival.", best:"Jul–Aug", crowd:"Moderate", wiki:"Kataragama", lat:6.4167, lng:81.3333 },
+    { name:"Jaffna Fort",    tag:"Dutch colonial stronghold",    desc:"One of the largest Dutch-built forts in Asia, overlooking the lagoon — restored after decades of conflict.", best:"May–Sep", crowd:"Low", wiki:"Jaffna Fort", lat:9.6608, lng:80.0064 },
+    { name:"Embekke Devalaya", tag:"Masterpiece of wood carving",  desc:"A 14th-century temple near Kandy famous for its intricately carved wooden pillars depicting Sri Lankan folklore.", best:"Year-round", crowd:"Low", wiki:"Embekke Devalaya", lat:7.2333, lng:80.6167 },
+    { name:"Lankatilaka Temple", tag:"Gothic-Kandyan cave temple", desc:"A striking rock-built temple near Kandy blending Hindu and Buddhist architecture across multiple levels.", best:"Year-round", crowd:"Low", wiki:"Lankatilaka Vihara", lat:7.2500, lng:80.5667 },
   ],
   wildlife:[
     { name:"Yala National Park",    tag:"Highest leopard density",    desc:"World's highest leopard density per km². Sloth bears, crocs, 200+ bird species.",  best:"Feb–Jul", crowd:"High",     wiki:"Yala National Park", lat:6.3725, lng:81.5185 },
@@ -77,6 +100,14 @@ const DESTINATIONS = {
     { name:"Minneriya",             tag:"The Gathering",              desc:"300+ wild elephants gather at the Minneriya tank Jul–Oct — largest in Asia.",        best:"Jul–Oct", crowd:"Moderate", wiki:"Minneriya National Park", lat:8.0333, lng:80.8833 },
     { name:"Bundala",               tag:"Flamingo wetlands",          desc:"Thousands of migratory flamingos and painted storks. Far quieter than Yala.",        best:"Sep–Mar", crowd:"Low",      wiki:"Bundala National Park", lat:6.1972, lng:81.2206 },
     { name:"Kumana National Park",  tag:"Birdwatcher's paradise",     desc:"Remote eastern park with vast bird colonies — far fewer visitors than Yala.",        best:"May–Sep", crowd:"Low",      wiki:"Kumana National Park", lat:6.5667, lng:81.6667 },
+    { name:"Horagolla National Park", tag:"Urban wildlife sanctuary",  desc:"A small forest reserve near Colombo with monkeys, mongooses and over 100 bird species — easy day trip.", best:"Year-round", crowd:"Low", wiki:"Horagolla National Park", lat:7.0833, lng:80.0833 },
+    { name:"Kalametiya Bird Sanctuary", tag:"Lagoon birdwatching",    desc:"A coastal lagoon sanctuary near Tangalle — flamingos, herons and crocodiles in a peaceful wetland.", best:"Sep–Mar", crowd:"Low", wiki:"Kalametiya", lat:6.0500, lng:80.8167 },
+    { name:"Horowpathana", tag:"Elephant corridor sanctuary",       desc:"A lesser-known sanctuary connecting elephant migration routes between Wilpattu and Wasgamuwa.", best:"Year-round", crowd:"Low", wiki:"Horowpathana", lat:8.5833, lng:80.6167 },
+    { name:"Wasgamuwa National Park", tag:"Largest elephant herds in Sri Lanka", desc:"Home to the densest elephant population on the island, plus leopards and sloth bears — rarely crowded.", best:"May–Sep", crowd:"Low", wiki:"Wasgamuwa National Park", lat:7.6167, lng:80.8167 },
+    { name:"Pigeon Island", tag:"Coral reef marine park",            desc:"A protected marine sanctuary off Nilaveli — blacktip reef sharks, sea turtles and pristine coral.", best:"May–Sep", crowd:"Moderate", wiki:"Pigeon Island National Park", lat:8.7167, lng:81.2000 },
+    { name:"Maduru Oya National Park", tag:"Remote elephant & deer reserve", desc:"A vast, rarely-visited eastern park with elephants, sambar deer and ancient irrigation ruins.", best:"May–Sep", crowd:"Low", wiki:"Maduru Oya National Park", lat:7.4500, lng:81.2333 },
+    { name:"Galway's Land National Park", tag:"Nuwara Eliya's pocket forest", desc:"A small montane forest reserve in the heart of Nuwara Eliya — easy walking trails and rich birdlife.", best:"Year-round", crowd:"Low", wiki:"Galway's Land National Park", lat:6.9667, lng:80.7667 },
+    { name:"Lunugamvehera National Park", tag:"Elephant corridor between Yala & Udawalawe", desc:"A connecting park between two famous reserves — large elephant herds with far fewer safari jeeps.", best:"Feb–Jul", crowd:"Low", wiki:"Lunugamvehera National Park", lat:6.4500, lng:81.2167 },
   ],
   adventure:[
     { name:"Adam's Peak",           tag:"Sacred pilgrimage climb",    desc:"5,243-step night climb to Sri Lanka's holiest summit. Triangular shadow at sunrise.", best:"Dec–May", crowd:"High",  wiki:"Adam's Peak", lat:6.8094, lng:80.4994 },
@@ -86,6 +117,14 @@ const DESTINATIONS = {
     { name:"Kite Surfing, Kalpitiya",tag:"Best kite conditions in Asia",desc:"15–25 knot winds 9 months/year — one of Asia's top kite surfing destinations.", best:"May–Oct", crowd:"Low",    wiki:"Kalpitiya", lat:8.2333, lng:79.7667 },
     { name:"Knuckles Camping",      tag:"Multi-day trek & wild camp", desc:"UNESCO Knuckles Range — 2–4 day treks through waterfalls and endemic orchid habitats.", best:"Feb–Apr", crowd:"Low",  wiki:"Knuckles Mountain Range", lat:7.4500, lng:80.7833 },
     { name:"Bodu Bala Surf, Weligama", tag:"Learn to surf",          desc:"Gentle beginner-friendly waves — the best place in Sri Lanka to take your first surf lesson.", best:"Nov–Apr", crowd:"Moderate", wiki:"Weligama", lat:5.9740, lng:80.4297 },
+    { name:"Belilena Caves",  tag:"Prehistoric cave exploration",  desc:"A Stone Age cave system near Kitulgala where some of Sri Lanka's oldest human remains were discovered.", best:"Year-round", crowd:"Low", wiki:"Belilena Cave", lat:7.0167, lng:80.3833 },
+    { name:"Diyaluma Falls Hike", tag:"Cliff-top natural infinity pool", desc:"Hike to the top of Sri Lanka's 2nd-tallest waterfall for a swim in natural rock pools with no barriers.", best:"Year-round", crowd:"Low", wiki:"Diyaluma Falls", lat:6.7333, lng:81.0167 },
+    { name:"Mini World's End, Riverston", tag:"Off-grid cliff trek", desc:"A quieter alternative to Horton Plains — dramatic cliff views in the Knuckles range, almost no tourists.", best:"Jan–Apr", crowd:"Low", wiki:"Riverston, Sri Lanka", lat:7.4860, lng:80.7370 },
+    { name:"Bopath Ella Hike", tag:"Leaf-shaped waterfall trek",    desc:"A short jungle hike to a perfectly bodhi-leaf-shaped waterfall near Ratnapura — virtually unknown to tourists.", best:"Year-round", crowd:"Low", wiki:"Bopath Ella Falls", lat:6.6833, lng:80.3833 },
+    { name:"Knuckles Multi-Day Trek", tag:"Wilderness camping expedition", desc:"2-4 day treks through cloud forest, waterfalls and endemic orchid habitats in the UNESCO Knuckles range.", best:"Feb–Apr", crowd:"Low", wiki:"Knuckles Mountain Range", lat:7.4500, lng:80.7833 },
+    { name:"Rock Climbing, Ritigala", tag:"Jungle rock scrambling",  desc:"Scramble through forgotten monastery ruins on a misty rock outcrop — part hike, part archaeological adventure.", best:"Year-round", crowd:"Low", wiki:"Ritigala", lat:8.1167, lng:80.6500 },
+    { name:"Canyoning, Kitulgala", tag:"Waterfall abseiling",       desc:"Abseil down jungle waterfalls and swim through canyon pools near the Kelani River rafting hub.", best:"May–Dec", crowd:"Low", wiki:"Kitulgala", lat:6.9897, lng:80.4178 },
+    { name:"Horton Plains Trek", tag:"World's End cliff hike",      desc:"A 9.5km loop hike to a sudden 1,000m vertical cliff drop through cloud forest and open plateau.", best:"Jan–Mar", crowd:"Moderate", wiki:"Horton Plains National Park", lat:6.8021, lng:80.7958 },
   ],
   rural:[
     { name:"Knuckles Villages",     tag:"Untouched mountain hamlets", desc:"Ancient villages tucked into the UNESCO Knuckles Range — homestays with farming families who still follow centuries-old traditions.", best:"Feb–Apr", crowd:"Low", wiki:"Knuckles Mountain Range", lat:7.4500, lng:80.7833 },
@@ -95,6 +134,14 @@ const DESTINATIONS = {
     { name:"Belihuloya Valley",     tag:"Hidden river valley retreat",desc:"A little-known valley of paddy terraces, waterfalls and spice plantations near Ratnapura. Completely off the tourist trail.", best:"Year-round", crowd:"Low", wiki:"Belihuloya", lat:6.6333, lng:80.7167 },
     { name:"Tangalle Village Coast",tag:"Fishing village life",       desc:"Behind Tangalle's famous beach lies a maze of lagoon-side fishing villages — catamarans, crab baskets and roadside coconut sellers.", best:"Dec–Apr", crowd:"Low", wiki:"Tangalle", lat:6.0241, lng:80.7937 },
     { name:"Madu River Village",    tag:"Cinnamon island canoe trip", desc:"Paddle through mangroves to a cinnamon-peeling village deep in the Madu River wetlands.", best:"Year-round", crowd:"Low", wiki:"Madu River", lat:6.2667, lng:80.0500 },
+    { name:"Anamaduwa Village",     tag:"Traditional rice farming village", desc:"A North Western paddy-farming village where you can plant rice by hand alongside local farmers.", best:"Year-round", crowd:"Low", wiki:"Anamaduwa", lat:8.0667, lng:80.0000 },
+    { name:"Hambantota Salt Pans",  tag:"Traditional salt harvesting", desc:"Watch centuries-old salt harvesting techniques at the lewaya (salterns) on the southeastern coast.", best:"Year-round", crowd:"Low", wiki:"Hambantota", lat:6.1167, lng:81.1167 },
+    { name:"Walawe Village Life",   tag:"Riverside farming community", desc:"A quiet village along the Walawe river where families farm and fish much as they have for generations.", best:"Year-round", crowd:"Low", wiki:"Walawe River", lat:6.4000, lng:80.8833 },
+    { name:"Nilgala Forest Village", tag:"Vedda ancestral homeland",  desc:"Deep in Vedda indigenous territory — bow-hunting demonstrations and forest-honey gathering traditions.", best:"Year-round", crowd:"Low", wiki:"Nilgala", lat:7.1500, lng:81.1500 },
+    { name:"Sooriyawewa Village",   tag:"Ancient tank irrigation farming", desc:"A farming community built around a 2,000-year-old reservoir, still used for paddy irrigation today.", best:"Year-round", crowd:"Low", wiki:"Sooriyawewa", lat:6.2667, lng:81.0167 },
+    { name:"Kataragama Village Trail", tag:"Multi-faith pilgrim village", desc:"A rural community around the sacred town where Buddhist, Hindu and Muslim traditions blend daily.", best:"Year-round", crowd:"Low", wiki:"Kataragama", lat:6.4167, lng:81.3333 },
+    { name:"Ridiyagama Farms",      tag:"Organic spice & dairy farm visit", desc:"A working organic farm near Hambantota offering hands-on spice harvesting and dairy demonstrations.", best:"Year-round", crowd:"Low", wiki:"Ridiyagama", lat:6.1500, lng:80.9500 },
+    { name:"Ibbankatuwa Village",   tag:"Megalithic burial site village", desc:"A village near Dambulla built around one of Sri Lanka's oldest known burial grounds, dating back 2,700 years.", best:"Year-round", crowd:"Low", wiki:"Ibbankatuwa", lat:7.8500, lng:80.6000 },
   ],
   hidden:[
     { name:"Riverston",             tag:"Sri Lanka's Mini World's End", desc:"A lesser-known cliff viewpoint in the Knuckles range with the same dramatic drop as Horton Plains — but almost no tourists.", best:"Jan–Apr", crowd:"Low", wiki:"Riverston, Sri Lanka", lat:7.4860, lng:80.7370 },
@@ -104,6 +151,14 @@ const DESTINATIONS = {
     { name:"Hiriwadunna Village",   tag:"Bullock cart & catamaran tour", desc:"A tiny village near Sigiriya where you ride a bullock cart, paddle a catamaran, and eat a home-cooked rural lunch.", best:"Year-round", crowd:"Low", wiki:"Hiriwadunna", lat:7.9000, lng:80.7000 },
     { name:"Bopath Ella Falls",     tag:"Bodhi-leaf shaped waterfall", desc:"A perfectly leaf-shaped waterfall near Ratnapura that almost no foreign tourists know about.", best:"Year-round", crowd:"Low", wiki:"Bopath Ella Falls", lat:6.6833, lng:80.3833 },
     { name:"Madunagala Hot Springs",tag:"Natural volcanic hot springs", desc:"Rare natural hot water springs in the south, believed to have healing properties — completely undeveloped.", best:"Year-round", crowd:"Low", wiki:"Madunagala", lat:6.2167, lng:80.9167 },
+    { name:"Delft Island",          tag:"Wild ponies & baobab trees",   desc:"A remote coral island off Jaffna with feral horses descended from Dutch colonial stock and ancient baobabs.", best:"May–Sep", crowd:"Low", wiki:"Delft Island", lat:9.5167, lng:79.6833 },
+    { name:"Galway's Land",         tag:"Nuwara Eliya's secret forest", desc:"A pocket of montane forest in the heart of Nuwara Eliya that almost no visitors know exists.", best:"Year-round", crowd:"Low", wiki:"Galway's Land National Park", lat:6.9667, lng:80.7667 },
+    { name:"Yapahuwa Rock Fortress", tag:"The forgotten Sigiriya",     desc:"A 13th-century royal rock fortress with an ornate stone staircase — nearly identical drama to Sigiriya, near-zero crowds.", best:"Year-round", crowd:"Low", wiki:"Yapahuwa", lat:7.8333, lng:80.3000 },
+    { name:"Kurulu Kele Bird Sanctuary", tag:"Unmapped birding hotspot", desc:"A small, locally-known forest patch near Anuradhapura where birders quietly spot rare endemic species.", best:"Year-round", crowd:"Low", wiki:"Anuradhapura birds", lat:8.3000, lng:80.3500 },
+    { name:"Maragala Mountain",     tag:"Untouched eastern peak",       desc:"A rarely-climbed mountain near Monaragala with 360° views and a single-day hike almost no tourists attempt.", best:"Jan–Apr", crowd:"Low", wiki:"Maragala Mountain", lat:6.8667, lng:81.3500 },
+    { name:"Kurundu Oya Falls",     tag:"Secret jungle waterfall",      desc:"A waterfall near Kitulgala known only to locals — reached via an unmarked jungle trail.", best:"Year-round", crowd:"Low", wiki:"Kitulgala waterfalls", lat:6.9833, lng:80.4000 },
+    { name:"Nagadeepa Island",      tag:"Sacred island off Jaffna",     desc:"A tiny island temple accessible only by ferry — sacred to both Buddhists and Hindus, rarely visited by foreign tourists.", best:"May–Sep", crowd:"Low", wiki:"Nainativu", lat:9.5833, lng:79.7833 },
+    { name:"Kurulu Bedda",          tag:"Hidden waterfall pool",         desc:"A secluded swimming hole near Galle reachable only via a guided jungle path — almost entirely unknown to tourists.", best:"Year-round", crowd:"Low", wiki:"Galle waterfalls", lat:6.1167, lng:80.2667 },
   ],
 };
 
@@ -276,37 +331,120 @@ const UNSPLASH_KEYWORDS = {
   "Tangalle Village Coast": "tangalle-fishing-village-sri-lanka",
 };
 
-// Get a beautiful Unsplash image URL for a place
-function getUnsplashUrl(placeName, width=800, height=500) {
-  const keyword = UNSPLASH_KEYWORDS[placeName]
-    || placeName.toLowerCase().replace(/\s+/g,"-") + "-sri-lanka";
-  return `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(keyword)}`;
+// ─── PEXELS IMAGE SYSTEM (replaces dead source.unsplash.com) ────────────────
+// source.unsplash.com was permanently shut down — all destination/gallery
+// photos now come from the Pexels API via our backend proxy, with an
+// in-memory client cache so repeat lookups for the same place are instant.
+const PHOTOS_BASE = import.meta.env.PROD ? "/api/photos" : "http://localhost:3001/api/photos";
+const photoCache = {}; // query -> photos[]
+const photoFetchPromises = {}; // query -> in-flight promise (dedupe concurrent calls)
+
+async function fetchPexelsPhotos(query, count=6) {
+  if (photoCache[query]) return photoCache[query];
+  if (photoFetchPromises[query]) return photoFetchPromises[query];
+  const promise = (async () => {
+    try {
+      const res = await fetch(`${PHOTOS_BASE}/search?query=${encodeURIComponent(query)}&count=${count}`);
+      const data = await res.json();
+      const photos = data.photos || [];
+      photoCache[query] = photos;
+      return photos;
+    } catch {
+      photoCache[query] = [];
+      return [];
+    } finally {
+      delete photoFetchPromises[query];
+    }
+  })();
+  photoFetchPromises[query] = promise;
+  return promise;
 }
 
-// Get multiple Unsplash gallery images with slight variation
-function getUnsplashGallery(placeName, count=6) {
-  const keyword = UNSPLASH_KEYWORDS[placeName]
-    || placeName.toLowerCase().replace(/\s+/g,"-") + "-sri-lanka";
-  return Array.from({length:count}, (_,i) =>
-    `https://source.unsplash.com/800x500/?${encodeURIComponent(keyword)}&sig=${i}`
+// Get a single cover photo URL for a place (synchronous-style via hook below)
+function useDestPhoto(placeName) {
+  const [url, setUrl] = useState(null);
+  useEffect(()=>{
+    if (!placeName) return;
+    let active = true;
+    const keyword = UNSPLASH_KEYWORDS[placeName]
+      ? UNSPLASH_KEYWORDS[placeName].replace(/-/g," ")
+      : `${placeName} Sri Lanka`;
+    fetchPexelsPhotos(keyword, 3).then(photos=>{
+      if (active && photos.length) setUrl(photos[0].url);
+    });
+    return ()=>{ active=false; };
+  },[placeName]);
+  return url;
+}
+
+// Get a small gallery (array of photo objects) for a place
+function useDestGallery(placeName, count=6) {
+  const [photos, setPhotos] = useState([]);
+  useEffect(()=>{
+    if (!placeName) { setPhotos([]); return; }
+    let active = true;
+    const keyword = UNSPLASH_KEYWORDS[placeName]
+      ? UNSPLASH_KEYWORDS[placeName].replace(/-/g," ")
+      : `${placeName} Sri Lanka`;
+    fetchPexelsPhotos(keyword, count).then(p=>{ if (active) setPhotos(p); });
+    return ()=>{ active=false; };
+  },[placeName, count]);
+  return photos;
+}
+
+// Reusable cover-image component backed by Pexels — replaces broken <img src={getUnsplashUrl(...)}>
+function DestImage({ placeName, alt, style }) {
+  const url = useDestPhoto(placeName);
+  if (!url) return <div style={{ ...style, background:"rgba(255,255,255,.08)" }}/>;
+  return <img src={url} alt={alt||placeName} style={style} onError={e=>e.target.style.display="none"}/>;
+}
+
+// Reusable mini gallery strip (3 small thumbnails) backed by Pexels
+function DestGalleryStrip({ placeName, onOpenGallery }) {
+  const photos = useDestGallery(placeName, 3);
+  if (!photos.length) {
+    return (
+      <div style={{ display:"flex", gap:4, marginBottom:10 }}>
+        {[0,1,2].map(i=><div key={i} style={{ flex:1, height:44, borderRadius:6, background:C.surface }}/>)}
+      </div>
+    );
+  }
+  return (
+    <div style={{ display:"flex", gap:4, marginBottom:10 }} onClick={e=>e.stopPropagation()}>
+      {photos.slice(0,3).map((p,i)=>(
+        <div key={p.id||i} onClick={onOpenGallery} style={{ flex:1, height:44, borderRadius:6, overflow:"hidden", cursor:"pointer" }}>
+          <img src={p.url_small||p.url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0}/>
+        </div>
+      ))}
+    </div>
   );
 }
 
-// ─── WIKIPEDIA IMAGE HOOK (kept as fallback for activity rows) ───────────────
+// Legacy-compatible getUnsplashUrl — now returns null synchronously since
+// Pexels requires an async fetch. Components using this should migrate to
+// useDestPhoto(). Kept only so any remaining call sites don't crash.
+function getUnsplashUrl() { return null; }
+function getUnsplashGallery() { return []; }
+
+// ─── PLACE IMAGE HOOK (Pexels-backed, used by gallery/cards) ────────────────
 function useWikiImages(title, count=6) {
   const [imgs, setImgs] = useState([]);
   const [thumb, setThumb] = useState(null);
-  const cache = useRef({});
 
   useEffect(() => {
     if (!title) return;
-    // Use Unsplash first if we have a curated keyword
-    const unsplashThumb = getUnsplashUrl(title);
-    const unsplashImgs  = getUnsplashGallery(title, count);
-    setThumb(unsplashThumb);
-    setImgs(unsplashImgs);
-    cache.current[title] = { thumb:unsplashThumb, imgs:unsplashImgs };
-  }, [title]);
+    let active = true;
+    const keyword = UNSPLASH_KEYWORDS[title]
+      ? UNSPLASH_KEYWORDS[title].replace(/-/g," ")
+      : `${title} Sri Lanka`;
+    fetchPexelsPhotos(keyword, count).then(photos => {
+      if (!active) return;
+      const urls = photos.map(p => p.url);
+      setThumb(urls[0] || null);
+      setImgs(urls);
+    });
+    return () => { active = false; };
+  }, [title, count]);
 
   return { thumb, imgs };
 }
@@ -759,6 +897,87 @@ function HeroArt() {
 }
 
 // ─── HOME PAGE ───────────────────────────────────────────────────────────────
+// ─── SRI LANKA SLIDESHOW (home page) ─────────────────────────────────────────
+const SLIDESHOW_SLIDES = [
+  { name:"Sigiriya",       category:"Cultural",  title:"The Lion Rock Fortress", desc:"Climb a 5th-century citadel rising 200m above the jungle canopy — ancient frescoes, a mirror wall, and views that stretch for miles.", color:["#B87318","#7A4A0A"] },
+  { name:"Mirissa",        category:"Beaches",   title:"Where Whales Surface at Dawn", desc:"Golden sand fringed with palms, and some of the best blue-whale watching anywhere on Earth between November and April.", color:[C.tealMid,"#0A8060"] },
+  { name:"Ella",           category:"Hill Country", title:"Misty Tea Country in the Clouds", desc:"Walk emerald tea ridges to the Nine Arch Bridge, catch the iconic blue train winding through the highlands.", color:["#2A6040","#1A3A2A"] },
+  { name:"Yala National Park", category:"Wildlife", title:"The World's Densest Leopard Territory", desc:"Track leopards, elephants and sloth bears across golden grasslands in Sri Lanka's most thrilling national park.", color:["#145840","#0A2A20"] },
+  { name:"Galle Fort",     category:"Cultural",  title:"A Living Dutch Colonial Town", desc:"Cobbled ramparts, boutique cafés and centuries of history meet the Indian Ocean at this UNESCO World Heritage fort.", color:["#7A4A0A","#4A2A05"] },
+  { name:"Nine Arch Bridge", category:"Adventure", title:"Sri Lanka's Most Photographed Bridge", desc:"Watch the blue train thread through a colonial-era stone viaduct, framed by tea estates and morning mist.", color:["#C45230","#7A2010"] },
+  { name:"Nuwara Eliya",   category:"Hill Country", title:"Little England in the Clouds", desc:"Colonial bungalows, rose gardens, and manicured tea estates at 1,868m — Sri Lanka's coolest, quietest corner.", color:["#0B6B52","#063D2E"] },
+  { name:"Trincomalee",    category:"Beaches",   title:"Untouched Coral & Deep Harbours", desc:"Crystal waters, Pigeon Island's coral reef, and whale watching on Sri Lanka's least crowded coastline.", color:["#185FA5","#0D3A66"] },
+];
+
+function SriLankaSlideshow({ setPage }) {
+  const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const slide = SLIDESHOW_SLIDES[idx];
+  const photoUrl = useDestPhoto(slide.name);
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => setIdx(i => (i+1) % SLIDESHOW_SLIDES.length), 5000);
+    return () => clearInterval(t);
+  }, [paused]);
+
+  return (
+    <section
+      onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}
+      style={{ position:"relative", height:"min(640px, 80vh)", overflow:"hidden", background:`linear-gradient(160deg,${slide.color[0]},${slide.color[1]})` }}>
+      <style>{`
+        @keyframes slideKenBurns { from{ transform:scale(1.08) translateX(0); } to{ transform:scale(1.18) translateX(-1.5%); } }
+        @keyframes slideFadeIn { from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:translateY(0); } }
+        @keyframes slidePillPop { from{ opacity:0; transform:scale(.85); } to{ opacity:1; transform:scale(1); } }
+        .slideshow-img { animation: slideKenBurns 6s ease-out forwards; }
+        .slideshow-text > * { animation: slideFadeIn .6s ease both; }
+        .slideshow-text > *:nth-child(1) { animation-delay:.05s; }
+        .slideshow-text > *:nth-child(2) { animation-delay:.15s; }
+        .slideshow-text > *:nth-child(3) { animation-delay:.25s; }
+      `}</style>
+
+      {/* Background photo with Ken Burns zoom */}
+      {photoUrl && (
+        <img key={slide.name} src={photoUrl} alt={slide.name} className="slideshow-img"
+          style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}/>
+      )}
+      <div style={{ position:"absolute", inset:0, background:"linear-gradient(90deg, rgba(0,0,0,.65) 0%, rgba(0,0,0,.35) 45%, rgba(0,0,0,.15) 100%)" }}/>
+      <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,.55) 0%, transparent 40%)" }}/>
+
+      {/* Content */}
+      <div key={idx+"-text"} className="slideshow-text" style={{ position:"relative", zIndex:2, height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end", padding:"3rem 2rem 4.5rem", maxWidth:1100, margin:"0 auto" }}>
+        <span style={{ display:"inline-block", width:"fit-content", fontSize:11, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", color:"#fff", background:`linear-gradient(135deg,${C.amberMid},${C.amber})`, padding:"6px 16px", borderRadius:30, marginBottom:16, animation:"slidePillPop .5s ease both .3s" }}>
+          ✨ {slide.category}
+        </span>
+        <h2 style={{ fontFamily:serif, fontSize:"clamp(28px,5vw,48px)", fontWeight:700, color:"#fff", marginBottom:12, maxWidth:600, lineHeight:1.15 }}>{slide.title}</h2>
+        <p style={{ fontSize:15, color:"rgba(255,255,255,.85)", maxWidth:520, lineHeight:1.7, marginBottom:24 }}>{slide.desc}</p>
+        <div style={{ display:"flex", gap:12, alignItems:"center", flexWrap:"wrap" }}>
+          <button onClick={()=>setPage("destinations")} style={{ padding:"12px 26px", background:C.amberMid, color:"#2C1800", fontSize:14, fontWeight:700, border:"none", borderRadius:12, cursor:"pointer", fontFamily:sans, boxShadow:"0 4px 20px rgba(232,168,37,.35)" }}>
+            Explore {slide.name} →
+          </button>
+          <button onClick={()=>setPage("journey")} style={{ padding:"12px 22px", background:"rgba(255,255,255,.12)", color:"#fff", fontSize:13, fontWeight:600, border:"1px solid rgba(255,255,255,.3)", borderRadius:12, cursor:"pointer", fontFamily:sans, backdropFilter:"blur(6px)" }}>
+            ✨ Plan a trip here
+          </button>
+        </div>
+      </div>
+
+      {/* Slide dots / progress indicators */}
+      <div style={{ position:"absolute", bottom:20, left:"50%", transform:"translateX(-50%)", display:"flex", gap:8, zIndex:3 }}>
+        {SLIDESHOW_SLIDES.map((s,i)=>(
+          <button key={i} onClick={()=>setIdx(i)} aria-label={`Show ${s.name}`}
+            style={{ width: i===idx?28:8, height:8, borderRadius:8, border:"none", cursor:"pointer", background: i===idx?C.amberMid:"rgba(255,255,255,.4)", transition:"width .3s,background .3s", padding:0 }}/>
+        ))}
+      </div>
+
+      {/* Prev/Next arrows */}
+      <button onClick={()=>setIdx(i=>(i-1+SLIDESHOW_SLIDES.length)%SLIDESHOW_SLIDES.length)} aria-label="Previous"
+        style={{ position:"absolute", left:16, top:"50%", transform:"translateY(-50%)", width:42, height:42, borderRadius:"50%", border:"1px solid rgba(255,255,255,.3)", background:"rgba(0,0,0,.3)", color:"#fff", fontSize:18, cursor:"pointer", zIndex:3, backdropFilter:"blur(4px)" }}>‹</button>
+      <button onClick={()=>setIdx(i=>(i+1)%SLIDESHOW_SLIDES.length)} aria-label="Next"
+        style={{ position:"absolute", right:16, top:"50%", transform:"translateY(-50%)", width:42, height:42, borderRadius:"50%", border:"1px solid rgba(255,255,255,.3)", background:"rgba(0,0,0,.3)", color:"#fff", fontSize:18, cursor:"pointer", zIndex:3, backdropFilter:"blur(4px)" }}>›</button>
+    </section>
+  );
+}
+
 function HomePage({ setPage, onGuideOpen }) {
   return (
     <div>
@@ -817,34 +1036,8 @@ function HomePage({ setPage, onGuideOpen }) {
         </div>
       </section>
 
-      {/* WHERE TO GO TEASER */}
-      <section style={{ background:C.surface, padding:"5rem 2rem" }}>
-        <div style={{ maxWidth:1100, margin:"0 auto" }}>
-          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:28, flexWrap:"wrap", gap:12 }}>
-            <div>
-              <div style={{ fontSize:11, fontWeight:600, color:C.tealMid, textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>Where to go</div>
-              <h2 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,38px)", fontWeight:700, color:C.ink }}>Sri Lanka by experience</h2>
-            </div>
-            <button onClick={()=>setPage("destinations")} style={{ padding:"10px 22px", border:`1.5px solid ${C.border}`, borderRadius:12, background:C.white, color:C.teal, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Explore all destinations →</button>
-          </div>
-          <div className="dest-grid-5" style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"1rem" }}>
-            {DEST_CATS.map(cat=>(
-              <div key={cat.id} onClick={()=>setPage("destinations")} style={{ borderRadius:20, overflow:"hidden", position:"relative", cursor:"pointer", paddingBottom:"130%" }}
-                onMouseEnter={e=>e.currentTarget.querySelector(".di").style.transform="scale(1.05)"}
-                onMouseLeave={e=>e.currentTarget.querySelector(".di").style.transform="scale(1)"}>
-                <div className="di" style={{ position:"absolute", inset:0, background:`linear-gradient(160deg,${cat.color[0]},${cat.color[1]})`, display:"flex", alignItems:"center", justifyContent:"center", transition:"transform .3s" }}>
-                  <span style={{ fontSize:38, opacity:.35 }}>{cat.label.split(" ")[0]}</span>
-                </div>
-                <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 50%)" }}/>
-                <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"1rem" }}>
-                  <div style={{ fontFamily:serif, fontSize:14, fontWeight:700, color:"#fff" }}>{cat.label.slice(cat.label.indexOf(" ")+1)}</div>
-                  <div style={{ fontSize:11, color:"rgba(255,255,255,.65)", marginTop:2 }}>{DESTINATIONS[cat.id].length} spots</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* SRI LANKA SLIDESHOW — replaces the old broken category-card grid */}
+      <SriLankaSlideshow setPage={setPage}/>
 
       {/* WHY */}
       <section style={{ padding:"5rem 2rem", background:C.white }}>
@@ -1002,6 +1195,33 @@ const PROVINCE_MAP = {
   "Riverston":"Central Province", "Meemure Village":"Central Province", "Diyaluma Falls":"Uva Province",
   "Ritigala":"North Central Province", "Hiriwadunna Village":"North Central Province",
   "Bopath Ella Falls":"Sabaragamuwa Province", "Madunagala Hot Springs":"Southern Province",
+  // Newly expanded places (15-per-category pass)
+  "Uppuveli":"Eastern Province", "Talalla":"Southern Province", "Polhena":"Southern Province",
+  "Marble Beach":"Eastern Province", "Kalkudah":"Eastern Province", "Goyambokka":"Southern Province",
+  "Dalawella":"Southern Province",
+  "Hatton":"Central Province", "Idalgashinna":"Uva Province", "Single Tree Hill":"Central Province",
+  "Pattipola":"Central Province", "Lipton's Seat":"Uva Province", "Ambewela":"Central Province",
+  "Diyatalawa":"Uva Province", "Madulkelle":"Central Province",
+  "Nallur Kandaswamy Temple":"Northern Province", "Mihintale":"North Central Province",
+  "Aluvihare Rock Temple":"Central Province", "Yapahuwa":"North Western Province",
+  "Kataragama":"Uva Province", "Jaffna Fort":"Northern Province", "Embekke Devalaya":"Central Province",
+  "Lankatilaka Temple":"Central Province",
+  "Horagolla National Park":"Western Province", "Kalametiya Bird Sanctuary":"Southern Province",
+  "Horowpathana":"North Central Province", "Wasgamuwa National Park":"Central Province",
+  "Pigeon Island":"Eastern Province", "Maduru Oya National Park":"Eastern Province",
+  "Galway's Land National Park":"Central Province", "Lunugamvehera National Park":"Southern Province",
+  "Belilena Caves":"Sabaragamuwa Province", "Diyaluma Falls Hike":"Uva Province",
+  "Mini World's End, Riverston":"Central Province", "Bopath Ella Hike":"Sabaragamuwa Province",
+  "Knuckles Multi-Day Trek":"Central Province", "Rock Climbing, Ritigala":"North Central Province",
+  "Canyoning, Kitulgala":"Sabaragamuwa Province", "Horton Plains Trek":"Central Province",
+  "Anamaduwa Village":"North Western Province", "Hambantota Salt Pans":"Southern Province",
+  "Walawe Village Life":"Sabaragamuwa Province", "Nilgala Forest Village":"Uva Province",
+  "Sooriyawewa Village":"Southern Province", "Kataragama Village Trail":"Uva Province",
+  "Ridiyagama Farms":"Southern Province", "Ibbankatuwa Village":"Central Province",
+  "Delft Island":"Northern Province", "Galway's Land":"Central Province",
+  "Yapahuwa Rock Fortress":"North Western Province", "Kurulu Kele Bird Sanctuary":"North Central Province",
+  "Maragala Mountain":"Uva Province", "Kurundu Oya Falls":"Sabaragamuwa Province",
+  "Nagadeepa Island":"Northern Province", "Kurulu Bedda":"Southern Province",
 };
 
 // Regions grouped under "Places to Visit"
@@ -1043,11 +1263,25 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
   const loadPlaces = async (catId) => {
     setLoading(true); setError(""); setPlaces([]);
     try {
-      const query = GPLACES_CAT_QUERIES[catId];
-      const data  = await placesSearch(query);
-      if (data.error==="no_key") { setError("no_key"); setLoading(false); return; }
-      if (data.status==="REQUEST_DENIED") { setError("denied"); setLoading(false); return; }
-      setPlaces(data.results||[]);
+      if (catId === "hotels") {
+        // Query multiple regions so we get a good spread of hotels across the
+        // whole island and enough results per star tier, rather than one
+        // generic "hotels in Sri Lanka" search that just returns Colombo results.
+        const regions = ["Colombo","Kandy","Galle","Ella","Nuwara Eliya","Mirissa","Sigiriya","Negombo","Trincomalee","Bentota"];
+        const queries = regions.map(r => placesSearch(`hotels in ${r}, Sri Lanka`));
+        const results = await Promise.all(queries);
+        if (results[0]?.error==="no_key") { setError("no_key"); setLoading(false); return; }
+        // Merge + de-duplicate by place_id
+        const merged = {};
+        results.forEach(r => (r.results||[]).forEach(p => { merged[p.place_id] = p; }));
+        setPlaces(Object.values(merged));
+      } else {
+        const query = GPLACES_CAT_QUERIES[catId];
+        const data  = await placesSearch(query);
+        if (data.error==="no_key") { setError("no_key"); setLoading(false); return; }
+        if (data.status==="REQUEST_DENIED") { setError("denied"); setLoading(false); return; }
+        setPlaces(data.results||[]);
+      }
     } catch(e) { setError(e.message); }
     setLoading(false);
   };
@@ -1180,9 +1414,9 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
                 <div key={p.name} onClick={()=>setGallery(p)} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, cursor:"pointer", transition:"transform .2s,box-shadow .2s" }}
                   onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,.1)"; }}
                   onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
-                  {/* Cover image via Unsplash */}
+                  {/* Cover image via Pexels */}
                   <div style={{ height:160, background:`linear-gradient(135deg,${regionCat?.color[0]||C.teal},${regionCat?.color[1]||"#147856"})`, position:"relative", overflow:"hidden" }}>
-                    <img src={getUnsplashUrl(p.name, 400, 240)} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>
+                    <DestImage placeName={p.name} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
                     <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 55%)" }}/>
                     <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 14px" }}>
                       <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff" }}>{p.name}</div>
@@ -1204,13 +1438,7 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
                     </div>
                     <p style={{ fontSize:12, color:C.inkSoft, lineHeight:1.6, marginBottom:10 }}>{p.desc}</p>
                     {/* Mini gallery preview strip — click any thumbnail to open full gallery */}
-                    <div style={{ display:"flex", gap:4, marginBottom:10 }} onClick={e=>e.stopPropagation()}>
-                      {(PLACE_GALLERY_KEYWORDS[p.name]||[]).slice(0,3).map((kw,i)=>(
-                        <div key={i} onClick={()=>setGallery(p)} style={{ flex:1, height:44, borderRadius:6, overflow:"hidden", cursor:"pointer" }}>
-                          <img src={`https://source.unsplash.com/200x150/?${encodeURIComponent(kw)}&sig=${i}`} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0}/>
-                        </div>
-                      ))}
-                    </div>
+                    <DestGalleryStrip placeName={p.name} onOpenGallery={()=>setGallery(p)}/>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:8, borderTop:`1px solid ${C.border}` }}>
                       <span style={{ fontSize:11, color:C.inkSoft }}>📅 Best: <strong style={{ color:C.ink }}>{p.best}</strong></span>
                       <div style={{ display:"flex", gap:8 }}>
@@ -1242,6 +1470,25 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
 
 // Extracted Places tab content (Hotels/Restaurants)
 function PlacesTabContent({ catId, places, loading, error, tab, wishlist, selected, setSelected, addToItin, onRetry }) {
+  const [starFilter, setStarFilter] = useState("all");
+
+  // Star tier bucket: Google ratings (1-5) used as a proxy for hotel quality tier
+  const tierOf = (rating) => {
+    if (!rating) return null;
+    if (rating >= 4.5) return 5;
+    if (rating >= 4.0) return 4;
+    if (rating >= 3.0) return 3;
+    return 2;
+  };
+
+  const filteredPlaces = catId==="hotels" && starFilter!=="all"
+    ? places.filter(p => tierOf(p.rating) === Number(starFilter))
+    : places;
+
+  // Count per tier for the filter badges
+  const tierCounts = { 5:0, 4:0, 3:0, 2:0 };
+  if (catId==="hotels") places.forEach(p => { const t = tierOf(p.rating); if (t) tierCounts[t]++; });
+
   return (
     <>
       {error==="no_key" && (
@@ -1261,12 +1508,27 @@ function PlacesTabContent({ catId, places, loading, error, tab, wishlist, select
       {loading && (
         <div style={{ textAlign:"center", padding:"4rem" }}>
           <div style={{ width:44, height:44, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto 14px" }}/>
-          <p style={{ fontSize:14, color:C.inkSoft }}>Finding the best places in Sri Lanka…</p>
+          <p style={{ fontSize:14, color:C.inkSoft }}>{catId==="hotels"?"Searching hotels across Sri Lanka…":"Finding the best places in Sri Lanka…"}</p>
         </div>
       )}
-      {!loading && !error && places.length>0 && (
+
+      {/* Star tier filter — hotels only */}
+      {!loading && !error && catId==="hotels" && places.length>0 && (
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:20 }}>
+          <button onClick={()=>setStarFilter("all")} style={{ padding:"8px 16px", borderRadius:20, border:`1.5px solid ${starFilter==="all"?C.teal:C.border}`, background:starFilter==="all"?C.teal:"#fff", color:starFilter==="all"?"#fff":C.ink, cursor:"pointer", fontFamily:sans, fontSize:13, fontWeight:600 }}>
+            All hotels ({places.length})
+          </button>
+          {[5,4,3,2].map(t=>(
+            <button key={t} onClick={()=>setStarFilter(String(t))} style={{ padding:"8px 16px", borderRadius:20, border:`1.5px solid ${starFilter===String(t)?C.amber:C.border}`, background:starFilter===String(t)?C.amber:"#fff", color:starFilter===String(t)?"#fff":C.ink, cursor:"pointer", fontFamily:sans, fontSize:13, fontWeight:600 }}>
+              {"★".repeat(t)} ({tierCounts[t]})
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!loading && !error && filteredPlaces.length>0 && (
         <div className="dest-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.2rem" }}>
-          {places.map(p=>(
+          {filteredPlaces.map(p=>(
             <div key={p.place_id} onClick={()=>setSelected(p)} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, cursor:"pointer", transition:"transform .2s,box-shadow .2s" }}
               onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,.1)"; }}
               onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
@@ -1291,7 +1553,7 @@ function PlacesTabContent({ catId, places, loading, error, tab, wishlist, select
           ))}
         </div>
       )}
-      {!loading && !error && places.length===0 && <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}><div style={{ fontSize:40, marginBottom:10 }}>🔍</div><p>No results found.</p></div>}
+      {!loading && !error && filteredPlaces.length===0 && <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}><div style={{ fontSize:40, marginBottom:10 }}>🔍</div><p>No results found{catId==="hotels"&&starFilter!=="all"?` for ${starFilter}★ hotels — try a different tier`:""}.</p></div>}
       {selected && <PlaceDetailPanel place={selected} wishlist={wishlist} onAddToItin={()=>{ addToItin(selected); setSelected(null); }} onClose={()=>setSelected(null)} category={catId}/>}
     </>
   );
@@ -1359,22 +1621,22 @@ function ActivityRow({ act, isLast, hideBorder }) {
   const [photo, setPhoto] = useState(null);
   const meta = ACT_TYPE_META[act.type] || fallbackMeta;
 
+  // Thumbnail for collapsed row — fetched once via Pexels, cached by query
+  const thumbQuery = act.unsplashQuery
+    || (UNSPLASH_KEYWORDS[act.place]||"").replace(/-/g," ")
+    || `${act.place||"Sri Lanka"} Sri Lanka`;
+  const thumbUrl = useDestPhoto(thumbQuery);
+
   const handleExpand = async () => {
     const next = !open; setOpen(next);
     if (next && photo===null) {
-      // Use unsplashQuery from AI if available, else build from place name
       const query = act.unsplashQuery
-        || UNSPLASH_KEYWORDS[act.place]
-        || (act.mapQuery || act.place || "").toLowerCase().replace(/[,]/g,"").replace(/\s+/g,"-");
-      setPhoto(`https://source.unsplash.com/800x400/?${encodeURIComponent(query)}`);
+        || (UNSPLASH_KEYWORDS[act.place]||"").replace(/-/g," ")
+        || `${act.place||"Sri Lanka"} Sri Lanka`;
+      const photos = await fetchPexelsPhotos(query, 1);
+      setPhoto(photos[0]?.url || "");
     }
   };
-
-  // Thumbnail for collapsed row — uses unsplashQuery too
-  const thumbQuery = act.unsplashQuery
-    || UNSPLASH_KEYWORDS[act.place]
-    || (act.place||"sri lanka").toLowerCase().replace(/\s+/g,"-");
-  const thumbUrl = `https://source.unsplash.com/80x80/?${encodeURIComponent(thumbQuery)}`;
 
   return (
     <div style={{ borderBottom:hideBorder||isLast?"none":`1px solid ${C.border}` }}>
@@ -1383,7 +1645,7 @@ function ActivityRow({ act, isLast, hideBorder }) {
         onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
         {/* Thumbnail always visible */}
         <div style={{ width:44, height:44, borderRadius:8, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#147856)`, position:"relative" }}>
-          <img src={thumbUrl} alt={act.place||""} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>
+          {thumbUrl && <img src={thumbUrl} alt={act.place||""} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
           <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,.1)" }}/>
         </div>
         <span style={{ fontSize:11, color:C.inkSoft, minWidth:44, fontWeight:600, flexShrink:0 }}>{act.time}</span>
@@ -1418,6 +1680,14 @@ function ActivityRow({ act, isLast, hideBorder }) {
 
 // ─── ANIMATED JOURNEY MAP ────────────────────────────────────────────────────
 const DAY_COLORS = ["#2563EB","#16A34A","#EA580C","#7C3AED","#DC2626","#0891B2","#D97706","#BE185D","#065F46","#1D4ED8"];
+
+// Pexels-backed image for the journey map stop detail overlay
+function StopDetailImage({ query, alt, onLoaded }) {
+  const url = useDestPhoto(query);
+  useEffect(()=>{ if (url) onLoaded?.(); }, [url]);
+  if (!url) return null;
+  return <img src={url} alt={alt} style={{ width:"100%", height:"100%", objectFit:"cover", opacity:.85 }}/>;
+}
 
 function AnimatedJourneyMap({ days, transport, startLabel }) {
   const [progress,    setProgress]   = useState(0);   // 0..1 along path
@@ -1544,12 +1814,7 @@ function AnimatedJourneyMap({ days, transport, startLabel }) {
           <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:480, overflow:"hidden", boxShadow:"0 24px 80px rgba(0,0,0,.3)", animation:"pinDrop .3s ease" }}>
             {/* Photo header */}
             <div style={{ height:220, position:"relative", background:`linear-gradient(135deg,${selectedStop.color},${selectedStop.color}cc)`, overflow:"hidden" }}>
-              <img
-                src={`https://source.unsplash.com/800x500/?${encodeURIComponent(selectedStop.query)}`}
-                alt={selectedStop.place}
-                style={{ width:"100%", height:"100%", objectFit:"cover", opacity:.85 }}
-                onLoad={()=>setPhotoLoaded(p=>({...p,[selectedStop.place]:true}))}
-              />
+              <StopDetailImage query={selectedStop.query} alt={selectedStop.place} onLoaded={()=>setPhotoLoaded(p=>({...p,[selectedStop.place]:true}))}/>
               <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 50%)" }}/>
               {/* Back button */}
               <button onClick={()=>setSelected(null)} style={{ position:"absolute", top:14, left:14, width:36, height:36, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.4)", color:"#fff", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>←</button>
@@ -3565,6 +3830,25 @@ const MAP_PINS = [
   { id:"dambulla",    lat:7.87,  lng:80.65, emoji:"🕌", name:"Dambulla Cave Temple",    fact:"Five cave temples painted floor-to-ceiling with Buddhist murals and 153 golden statues.",             color:"#B87318" },
   { id:"wilpattu",    lat:8.45,  lng:80.03, emoji:"🦁", name:"Wilpattu National Park",  fact:"Sri Lanka's largest park — secretive leopards, sloth bears and natural lakes (villus).",             color:"#C45230" },
   { id:"kalpitiya",   lat:8.23,  lng:79.76, emoji:"🪁", name:"Kalpitiya",               fact:"Best kite surfing in Asia — 15–25 knot winds for 9 months, plus spinner dolphin watching.",          color:"#185FA5" },
+  // Jaffna & the North — previously missing entirely
+  { id:"jaffna",      lat:9.66,  lng:80.03, emoji:"🛕", name:"Jaffna",                  fact:"Sri Lanka's Tamil heartland — soaring Hindu temple gopurams, fiery cuisine, and a unique island culture.", color:"#B87318" },
+  { id:"nallur",      lat:9.67,  lng:80.02, emoji:"🕉️", name:"Nallur Kandaswamy Temple",fact:"Jaffna's most sacred Hindu temple — golden gopuram tower and a spectacular 25-day annual festival.",  color:"#B87318" },
+  { id:"deltft",      lat:9.50,  lng:79.70, emoji:"🐴", name:"Delft Island",            fact:"A remote coral island off Jaffna with wild ponies, ancient baobab trees, and a ruined Dutch fort.",   color:"#185FA5" },
+  { id:"jaffnafort",  lat:9.66,  lng:80.01, emoji:"🏯", name:"Jaffna Fort",             fact:"One of the largest Dutch-built forts in Asia, overlooking the lagoon — restored after the civil war.", color:"#7A4A0A" },
+  { id:"casuarina",   lat:9.81,  lng:79.97, emoji:"🏖️", name:"Casuarina Beach",         fact:"Shallow, calm turquoise water on Karainagar Island — one of the safest swimming beaches in Sri Lanka.", color:"#185FA5" },
+  // More major tourism spots filled in across the country
+  { id:"adamspeak",   lat:6.81,  lng:80.50, emoji:"⛰️", name:"Adam's Peak",             fact:"5,243-step night pilgrimage to a sacred summit — watch the triangular shadow fall across the clouds at sunrise.", color:"#7A4A0A" },
+  { id:"polonnaruwa", lat:7.94,  lng:81.02, emoji:"🗿", name:"Polonnaruwa",             fact:"Medieval royal capital — cycle between ruins and the world-famous Gal Vihara rock-carved Buddhas.", color:"#B87318" },
+  { id:"hikkaduwa",   lat:6.14,  lng:80.11, emoji:"🐢", name:"Hikkaduwa",               fact:"Sri Lanka's original surf town — coral reef snorkelling and nightly sea turtle nesting watches.",   color:"#185FA5" },
+  { id:"sinharaja",   lat:6.41,  lng:80.49, emoji:"🌳", name:"Sinharaja Rainforest",    fact:"UNESCO biosphere reserve — Sri Lanka's last major lowland rainforest, home to 26 endemic bird species.", color:"#145840" },
+  { id:"horton",      lat:6.80,  lng:80.80, emoji:"🌫️", name:"Horton Plains",           fact:"High-altitude cloud forest plateau ending at World's End — a sudden 1,000m vertical cliff drop.",   color:"#2A6040" },
+  { id:"minneriya",   lat:8.03,  lng:80.88, emoji:"🐘", name:"Minneriya",               fact:"\"The Gathering\" — up to 300 wild elephants converge on the ancient tank reservoir from July to October.", color:"#7A4A0A" },
+  { id:"weligama",    lat:5.97,  lng:80.43, emoji:"🏄‍♂️", name:"Weligama",               fact:"Sri Lanka's best beginner surf beach, plus the famous stilt fishermen perched just offshore.",     color:"#185FA5" },
+  { id:"haputale",    lat:6.77,  lng:80.96, emoji:"🍵", name:"Haputale",                fact:"A ridge-top tea town where you can see both the Indian Ocean and the central highlands at once.",   color:"#0B6B52" },
+  { id:"negombo",     lat:7.21,  lng:79.84, emoji:"🎣", name:"Negombo",                 fact:"Closest beach town to the airport — Dutch canal network, fish market, and easy first-night base.",   color:"#185FA5" },
+  { id:"batticaloa",  lat:7.72,  lng:81.70, emoji:"🦀", name:"Batticaloa",              fact:"East coast lagoon town famous for its 'singing fish' legend and untouched mangrove waterways.",     color:"#185FA5" },
+  { id:"ritigala",    lat:8.12,  lng:80.65, emoji:"💎", name:"Ritigala",                fact:"Jungle-swallowed 1st-century monastery ruins on a misty mountain — one of Sri Lanka's least visited ancient sites.", color:"#5B3A8E" },
+  { id:"knuckles",    lat:7.45,  lng:80.78, emoji:"🥾", name:"Knuckles Mountain Range", fact:"UNESCO wilderness of 34 waterfalls and 13 peaks — multi-day trekking through cloud forest.",        color:"#2A6040" },
 ];
 
 
