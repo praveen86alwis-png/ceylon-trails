@@ -403,7 +403,16 @@ function useLang() { return React.useContext(LangContext); }
 function LangProvider({ children }) {
   const [lang, setLang] = useState(()=>localStorage.getItem("ct_lang") || "en");
   const changeLang = (code) => { setLang(code); localStorage.setItem("ct_lang", code); };
-  const t = (key) => TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
+  const t = (key) => {
+    if (TRANSLATIONS[lang]?.[key] !== undefined) return TRANSLATIONS[lang][key];
+    if (TRANSLATIONS.en[key] !== undefined) return TRANSLATIONS.en[key];
+    // Fall back to OPT_T — many wizard subtitle/label strings live there as
+    // flat string values (not {l,s} objects), since they're shared with the
+    // option-translation lookup table rather than duplicated in TRANSLATIONS.
+    const optVal = OPT_T[lang]?.[key] ?? OPT_T.en?.[key];
+    if (typeof optVal === "string") return optVal;
+    return key;
+  };
   const ot = (value) => optT(lang, value); // option translation: returns {l, s}
   return <LangContext.Provider value={{ lang, setLang:changeLang, t, ot }}>{children}</LangContext.Provider>;
 }
@@ -3848,7 +3857,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
       // Store the FULL itinerary (not truncated) so the guide can see every day's
       // activities before deciding whether to bid. Previously this was sliced to
       // 2000 chars which cut off mid-JSON and left guides unable to see the trip.
-      const fullItin = itin ? { ...itin, days: itinDays || itin.days } : null;
+      const fullItin = itin ? { ...itin, days: itin.days } : null;
       await saveTripRequest({
         guideId:      selected.uid || String(selected.id),
         guideName:    selected.fullName || selected.name,
