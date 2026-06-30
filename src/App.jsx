@@ -45,6 +45,7 @@ const TRANSLATIONS = {
     why4_t:"Responsible tourism", why4_s:"We partner only with eco-conscious guides and sustainable operators.",
     wiz_title:"Build your perfect trip", wiz_sub:"A few quick questions. Real AI builds your day-by-day Sri Lanka itinerary.",
     wiz_back:"← Back", wiz_next:"Next →", wiz_generate:"✨ Generate my itinerary",
+    q_start:"Where and when does your trip start?", q_travel:"What kind of travel excites you?", q_activities:"What activities do you enjoy?", q_food:"What food do you enjoy?", q_groupbudget:"Who's going & what's your budget?", q_transport:"How do you want to get around?", q_pace:"What pace do you prefer?", q_hotelstyle:"How do you want to handle hotels?", q_places:"Any specific places you want to visit?",
     btn_planmytripshere:"✨ Plan a trip here",
   },
   si: {
@@ -65,6 +66,7 @@ const TRANSLATIONS = {
     why4_t:"වගකිවයුතු සංචාරක ව්‍යාපාරය", why4_s:"අපි පරිසර හිතකාමී මාර්ගෝපදේශකයින් සමඟ පමණක් සහයෝගයෙන් කටයුතු කරමු.",
     wiz_title:"ඔබේ පරිපූර්ණ ගමන සාදන්න", wiz_sub:"ඉක්මන් ප්‍රශ්න කිහිපයක්. සැබෑ AI ඔබේ දිනපතා ශ්‍රී ලංකා සංචාර සැලැස්ම සාදයි.",
     wiz_back:"← ආපසු", wiz_next:"ඊළඟ →", wiz_generate:"✨ මගේ සැලැස්ම සාදන්න",
+    q_start:"ඔබේ ගමන ආරම්භ වන්නේ කොතැනින් සහ කවදාද?", q_travel:"ඔබව සිත්ගන්නා සංචාර වර්ගය කුමක්ද?", q_activities:"ඔබ රසවිඳින ක්‍රියාකාරකම් මොනවාද?", q_food:"ඔබ රසවිඳින ආහාර මොනවාද?", q_groupbudget:"යන්නේ කවුද සහ ඔබේ අයවැය කීයද?", q_transport:"ඔබ සැරිසැරීමට කැමති ආකාරය කුමක්ද?", q_pace:"ඔබ කැමති වේගය කුමක්ද?", q_hotelstyle:"හෝටල් කළමනාකරණය කරන්නේ කෙසේද?", q_places:"ඔබ බැලීමට කැමති විශේෂිත ස්ථාන තිබේද?",
     btn_planmytripshere:"✨ මෙහි ගමනක් සැලසුම් කරන්න",
   },
   ta: {
@@ -85,6 +87,7 @@ const TRANSLATIONS = {
     why4_t:"பொறுப்பான சுற்றுலா", why4_s:"சுற்றுச்சூழல் உணர்வுள்ள வழிகாட்டிகளுடன் மட்டுமே நாங்கள் கூட்டாண்மை செய்கிறோம்.",
     wiz_title:"உங்கள் சரியான பயணத்தை உருவாக்குங்கள்", wiz_sub:"சில விரைவான கேள்விகள். உண்மையான AI உங்கள் தினசரி இலங்கை பயணத் திட்டத்தை உருவாக்குகிறது.",
     wiz_back:"← பின்", wiz_next:"அடுத்து →", wiz_generate:"✨ எனது திட்டத்தை உருவாக்கு",
+    q_start:"உங்கள் பயணம் எங்கே, எப்போது தொடங்குகிறது?", q_travel:"எந்த வகை பயணம் உங்களை கவர்கிறது?", q_activities:"நீங்கள் எந்த செயல்பாடுகளை விரும்புகிறீர்கள்?", q_food:"நீங்கள் எந்த உணவை விரும்புகிறீர்கள்?", q_groupbudget:"யார் வருகிறார்கள் & உங்கள் பட்ஜெட் என்ன?", q_transport:"நீங்கள் எவ்வாறு சுற்றி வர விரும்புகிறீர்கள்?", q_pace:"நீங்கள் விரும்பும் வேகம் என்ன?", q_hotelstyle:"ஹோட்டல்களை எவ்வாறு கையாள விரும்புகிறீர்கள்?", q_places:"நீங்கள் பார்க்க விரும்பும் குறிப்பிட்ட இடங்கள் உள்ளனவா?",
     btn_planmytripshere:"✨ இங்கே ஒரு பயணத்தைத் திட்டமிடுங்கள்",
   },
   de: {
@@ -105,6 +108,7 @@ const TRANSLATIONS = {
     why4_t:"Verantwortungsvoller Tourismus", why4_s:"Wir arbeiten nur mit umweltbewussten Führern und nachhaltigen Anbietern zusammen.",
     wiz_title:"Erstelle deine perfekte Reise", wiz_sub:"Ein paar kurze Fragen. Echte KI erstellt deinen tagesgenauen Sri-Lanka-Reiseplan.",
     wiz_back:"← Zurück", wiz_next:"Weiter →", wiz_generate:"✨ Meinen Reiseplan erstellen",
+    q_start:"Wo und wann beginnt deine Reise?", q_travel:"Welche Art von Reise begeistert dich?", q_activities:"Welche Aktivitäten magst du?", q_food:"Welches Essen magst du?", q_groupbudget:"Wer reist mit & wie ist dein Budget?", q_transport:"Wie möchtest du dich fortbewegen?", q_pace:"Welches Tempo bevorzugst du?", q_hotelstyle:"Wie möchtest du mit Hotels umgehen?", q_places:"Gibt es bestimmte Orte, die du besuchen möchtest?",
     btn_planmytripshere:"✨ Hier eine Reise planen",
   },
   fr: {
@@ -125,6 +129,7 @@ const TRANSLATIONS = {
     why4_t:"Tourisme responsable", why4_s:"Nous collaborons uniquement avec des guides éco-responsables et des opérateurs durables.",
     wiz_title:"Créez votre voyage parfait", wiz_sub:"Quelques questions rapides. Une vraie IA crée votre itinéraire jour par jour au Sri Lanka.",
     wiz_back:"← Retour", wiz_next:"Suivant →", wiz_generate:"✨ Générer mon itinéraire",
+    q_start:"Où et quand commence votre voyage ?", q_travel:"Quel type de voyage vous passionne ?", q_activities:"Quelles activités aimez-vous ?", q_food:"Quelle cuisine aimez-vous ?", q_groupbudget:"Qui voyage & quel est votre budget ?", q_transport:"Comment souhaitez-vous vous déplacer ?", q_pace:"Quel rythme préférez-vous ?", q_hotelstyle:"Comment souhaitez-vous gérer les hôtels ?", q_places:"Des lieux spécifiques que vous souhaitez visiter ?",
     btn_planmytripshere:"✨ Planifier un voyage ici",
   },
   zh: {
@@ -145,6 +150,7 @@ const TRANSLATIONS = {
     why4_t:"负责任的旅游", why4_s:"我们只与具有环保意识的导游和可持续运营商合作。",
     wiz_title:"打造您的完美行程", wiz_sub:"几个简短的问题。真正的 AI 为您打造逐日斯里兰卡行程。",
     wiz_back:"← 返回", wiz_next:"下一步 →", wiz_generate:"✨ 生成我的行程",
+    q_start:"您的行程从哪里、何时开始？", q_travel:"什么样的旅行让您兴奋？", q_activities:"您喜欢什么活动？", q_food:"您喜欢什么美食？", q_groupbudget:"谁同行，您的预算是多少？", q_transport:"您想如何出行？", q_pace:"您喜欢什么节奏？", q_hotelstyle:"您想如何安排酒店？", q_places:"有什么特定地点想去吗？",
     btn_planmytripshere:"✨ 在此规划行程",
   },
 };
@@ -422,12 +428,14 @@ function Btn({ onClick, children, variant="teal", full, style:xtra={} }) {
   const bg  = variant==="amber"?C.amber:variant==="outline"?"transparent":C.teal;
   const clr = variant==="outline"?C.inkSoft:"#fff";
   const brd = variant==="outline"?`1.5px solid ${C.border}`:"none";
+  const shadow = variant==="outline"?"none":variant==="amber"?"0 2px 10px rgba(194,122,14,.22)":"0 2px 10px rgba(11,107,82,.2)";
   return (
     <button onClick={onClick} style={{ padding:"11px 26px", background:bg, color:clr, border:brd,
-      borderRadius:12, fontSize:14, fontWeight:600, cursor:"pointer", width:full?"100%":undefined,
-      fontFamily:sans, transition:"opacity .15s", ...xtra }}
-      onMouseEnter={e=>e.currentTarget.style.opacity="0.82"}
-      onMouseLeave={e=>e.currentTarget.style.opacity="1"}>{children}</button>
+      borderRadius:11, fontSize:14, fontWeight:600, cursor:"pointer", width:full?"100%":undefined,
+      fontFamily:sans, letterSpacing:"0.1px", boxShadow:shadow,
+      transition:"transform .15s ease, box-shadow .15s ease, opacity .15s ease", ...xtra }}
+      onMouseEnter={e=>{ e.currentTarget.style.opacity="0.92"; e.currentTarget.style.transform="translateY(-1px)"; if(variant!=="outline") e.currentTarget.style.boxShadow=variant==="amber"?"0 4px 16px rgba(194,122,14,.3)":"0 4px 16px rgba(11,107,82,.28)"; }}
+      onMouseLeave={e=>{ e.currentTarget.style.opacity="1"; e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow=shadow; }}>{children}</button>
   );
 }
 
@@ -755,6 +763,12 @@ const MOBILE_CSS = `
 
     /* Activity row — thumbnail smaller */
     .act-thumb { width: 36px !important; height: 36px !important; }
+    .activity-row-collapsed { gap: 8px !important; }
+
+    /* Draggable itinerary row — shrink handle/swap button so text has room */
+    .drag-handle { font-size: 12px !important; margin-top: 10px !important; }
+    .swap-btn { padding: 4px 6px !important; font-size: 11px !important; margin-top: 6px !important; }
+    .drag-act-row { padding: 6px 2px !important; gap: 2px !important; }
 
     /* Journey map scroll hint */
     .journey-map { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
@@ -904,19 +918,27 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
       </nav>
 
       {menuOpen && (
-        <div style={{ position:"fixed", top:64, left:0, right:0, zIndex:399, background:"#fff", borderBottom:`1px solid ${C.border}`, boxShadow:"0 8px 24px rgba(0,0,0,.1)", padding:"1rem 1.5rem 1.5rem", maxHeight:"80vh", overflowY:"auto" }}>
-          {[["home","🏠 Home"],["destinations","🗺️ Destinations"],["srilankamap","🗾 Sri Lanka Map"],["journey","✨ Plan a trip"],["guides","🧭 Find a Guide"],["guideportal","🧭 Guide Portal"]].map(([p,l])=>(
-            <div key={p} onClick={()=>{ if(p==="guides") onGuideOpen(); else setPage(p); setMenuOpen(false); }} style={{ padding:"14px 0", fontSize:16, fontWeight:page===p?600:400, color:page===p?C.teal:C.ink, cursor:"pointer", borderBottom:`1px solid ${C.border}` }}>{l}</div>
+        <div style={{ position:"fixed", top:64, left:0, right:0, zIndex:399, background:"#fff", borderBottom:`1px solid ${C.border}`, boxShadow:"0 8px 24px rgba(0,0,0,.1)", padding:"0.5rem 1.25rem 1.25rem", maxHeight:"85vh", overflowY:"auto" }}>
+          {[["home",t("nav_home"),"🏠"],["destinations",t("nav_destinations"),"🗺️"],["srilankamap",t("nav_map"),"🗾"],["journey",t("nav_plan"),"✨"],["guides",t("nav_findguide"),"🧭"],["guideportal",t("nav_guideportal"),"🧭"]].map(([p,l,icon])=>(
+            <div key={p} onClick={()=>{ if(p==="guides") onGuideOpen(); else setPage(p); setMenuOpen(false); }} style={{ padding:"11px 2px", fontSize:14.5, fontWeight:page===p?600:400, color:page===p?C.teal:C.ink, cursor:"pointer", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:10 }}>
+              <span style={{ fontSize:16, width:20, textAlign:"center" }}>{icon}</span>{l}
+            </div>
           ))}
+          {/* Compact language row inside mobile menu */}
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap", padding:"12px 0 4px" }}>
+            {LANGUAGES.map(lg=>(
+              <button key={lg.code} onClick={()=>setLang(lg.code)} style={{ padding:"6px 10px", borderRadius:20, border:`1.5px solid ${lang===lg.code?C.teal:C.border}`, background:lang===lg.code?C.tealPale:"#fff", color:lang===lg.code?C.teal:C.inkSoft, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{lg.flag} {lg.code.toUpperCase()}</button>
+            ))}
+          </div>
           {user ? (
-            <div style={{ marginTop:14, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <span style={{ fontSize:14, color:C.ink }}>👤 {displayName}</span>
-              <button onClick={()=>{ signOut(); setMenuOpen(false); }} style={{ fontSize:13, color:C.coral, background:"none", border:`1px solid ${C.coral}`, borderRadius:8, padding:"6px 14px", cursor:"pointer", fontFamily:sans }}>Sign out</button>
+            <div style={{ marginTop:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ fontSize:13, color:C.ink }}>👤 {displayName}</span>
+              <button onClick={()=>{ signOut(); setMenuOpen(false); }} style={{ fontSize:12, color:C.coral, background:"none", border:`1px solid ${C.coral}`, borderRadius:8, padding:"5px 12px", cursor:"pointer", fontFamily:sans }}>{t("nav_signout")}</button>
             </div>
           ) : (
-            <button onClick={()=>{ onLoginClick(); setMenuOpen(false); }} style={{ marginTop:14, width:"100%", padding:"13px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Sign in / Create account</button>
+            <button onClick={()=>{ onLoginClick(); setMenuOpen(false); }} style={{ marginTop:10, width:"100%", padding:"11px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{t("nav_signin")}</button>
           )}
-          <button onClick={()=>{ setPage("journey"); setMenuOpen(false); }} style={{ marginTop:10, width:"100%", padding:"13px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:sans }}>✨ Create my journey</button>
+          <button onClick={()=>{ setPage("journey"); setMenuOpen(false); }} style={{ marginTop:8, width:"100%", padding:"11px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{t("hero_cta1")}</button>
         </div>
       )}
     </>
@@ -1813,25 +1835,28 @@ function ActivityRow({ act, isLast, hideBorder }) {
 
   return (
     <div style={{ borderBottom:hideBorder||isLast?"none":`1px solid ${C.border}` }}>
-      <div onClick={handleExpand} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 0", cursor:"pointer" }}
+      <div className="activity-row-collapsed" onClick={handleExpand} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"10px 0", cursor:"pointer" }}
         onMouseEnter={e=>e.currentTarget.style.background="#FAFAF8"}
         onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
         {/* Thumbnail always visible */}
-        <div style={{ width:44, height:44, borderRadius:8, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#147856)`, position:"relative" }}>
+        <div className="act-thumb" style={{ width:44, height:44, borderRadius:8, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#147856)`, position:"relative", marginTop:2 }}>
           {thumbUrl && <img src={thumbUrl} alt={act.place||""} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
           <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,.1)" }}/>
         </div>
-        <span style={{ fontSize:11, color:C.inkSoft, minWidth:44, fontWeight:600, flexShrink:0 }}>{act.time}</span>
-        <span style={{ fontSize:10, fontWeight:700, padding:"2px 7px", borderRadius:20, flexShrink:0, background:meta.color, color:meta.text, border:`1px solid ${meta.border}`, whiteSpace:"nowrap" }}>{meta.emoji} {meta.label}</span>
+        {/* Text column — time/badge on their own line, then place/text below, wraps cleanly */}
         <div style={{ flex:1, minWidth:0 }}>
-          {act.place&&<div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{act.place}</div>}
+          <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", marginBottom:2 }}>
+            <span style={{ fontSize:11, color:C.inkSoft, fontWeight:600, flexShrink:0 }}>{act.time}</span>
+            <span style={{ fontSize:10, fontWeight:700, padding:"2px 7px", borderRadius:20, flexShrink:0, background:meta.color, color:meta.text, border:`1px solid ${meta.border}`, whiteSpace:"nowrap" }}>{meta.emoji} {meta.label}</span>
+            {act.travelFromPrev && <span style={{ fontSize:10, color:C.teal, fontWeight:500 }}>↳ {act.travelFromPrev}</span>}
+          </div>
+          {act.place && <div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{act.place}</div>}
           <div style={{ fontSize:11, color:C.inkSoft, lineHeight:1.5, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{act.text}</div>
-          {act.travelFromPrev&&<div style={{ fontSize:10, color:C.teal, marginTop:1, fontWeight:500 }}>↳ {act.travelFromPrev}</div>}
         </div>
-        <span style={{ fontSize:12, color:C.inkSoft, flexShrink:0, transform:open?"rotate(180deg)":"none", transition:"transform .2s" }}>▾</span>
+        <span style={{ fontSize:12, color:C.inkSoft, flexShrink:0, transform:open?"rotate(180deg)":"none", transition:"transform .2s", marginTop:6 }}>▾</span>
       </div>
       {open&&(
-        <div style={{ marginLeft:64, marginBottom:14, borderRadius:14, border:`1.5px solid ${meta.border}`, background:meta.color, overflow:"hidden" }}>
+        <div style={{ marginLeft:0, marginBottom:14, borderRadius:14, border:`1.5px solid ${meta.border}`, background:meta.color, overflow:"hidden" }}>
           <div style={{ height:180, background:`linear-gradient(135deg,${C.teal},#147856)`, position:"relative", overflow:"hidden" }}>
             {photo && <img src={photo} alt={act.place} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
             {act.place&&<div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 14px", background:"linear-gradient(to top,rgba(0,0,0,.6),transparent)" }}><div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff" }}>{act.place}</div>{act.area&&<div style={{ fontSize:11, color:"rgba(255,255,255,.75)", marginTop:2 }}>📍 {act.area}</div>}</div>}
@@ -2351,12 +2376,12 @@ function DraggableItinerary({ days, onUpdate, itinId, premium }) {
                       onDrop={e=>handleDrop(e, dayIdx, actIdx)}
                       onDragEnd={()=>{ setDragging(null); setDragOver(null); }}
                       style={{ opacity:isDraggingThis?.4:1, background:isOver?C.tealPale:"transparent", border:isOver?`2px dashed ${C.tealMid}`:"2px solid transparent", borderRadius:10, marginBottom:2 }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 6px", borderBottom:actIdx<d.activities.length-1?`1px solid ${C.border}`:"none" }}>
-                        {!isLocked && <span style={{ cursor:"grab", fontSize:14, color:C.inkSoft, flexShrink:0, userSelect:"none" }}>⠿</span>}
+                      <div className="drag-act-row" style={{ display:"flex", alignItems:"flex-start", gap:4, padding:"8px 4px", borderBottom:actIdx<d.activities.length-1?`1px solid ${C.border}`:"none" }}>
+                        {!isLocked && <span className="drag-handle" style={{ cursor:"grab", fontSize:14, color:C.inkSoft, flexShrink:0, userSelect:"none", marginTop:12 }}>⠿</span>}
                         <div style={{ flex:1, minWidth:0 }}>
                           <ActivityRow act={a} isLast={actIdx===d.activities.length-1} hideBorder/>
                         </div>
-                        {!isLocked && <button onClick={()=>setSwap({dayIdx, actIdx, act:a})} title="Swap this place" style={{ background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"4px 8px", cursor:"pointer", fontSize:12, color:C.inkSoft, flexShrink:0 }}>🔄</button>}
+                        {!isLocked && <button className="swap-btn" onClick={()=>setSwap({dayIdx, actIdx, act:a})} title="Swap this place" style={{ background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"4px 8px", cursor:"pointer", fontSize:12, color:C.inkSoft, flexShrink:0, marginTop:8 }}>🔄</button>}
                       </div>
                     </div>
                   );
@@ -2487,6 +2512,74 @@ function MismatchWarning({ travel, activities }) {
 }
 
 // ─── JOURNEY PAGE ────────────────────────────────────────────────────────────
+// ─── ITINERARY LOADING ANIMATION ─────────────────────────────────────────────
+// Cycles through Sri Lankan tourism motifs (temple, beach, tea, elephant, train,
+// surf) with a gentle bounce/fade — replaces the plain spinner so the wait
+// feels purposeful and on-brand rather than a generic loading state.
+const LOADING_SCENES = [
+  { icon:"🛕", label:"Exploring ancient temples…", color:"#B87318" },
+  { icon:"🏖️", label:"Scouting golden beaches…",    color:"#185FA5" },
+  { icon:"🍃", label:"Wandering tea plantations…",  color:"#0B6B52" },
+  { icon:"🐘", label:"Tracking wildlife trails…",   color:"#7A4A0A" },
+  { icon:"🚂", label:"Riding the highland railway…",color:"#C45230" },
+  { icon:"🍛", label:"Tasting local flavours…",     color:"#E8A825" },
+];
+
+function ItineraryLoadingAnimation() {
+  const [sceneIdx, setSceneIdx] = useState(0);
+  const [dots, setDots] = useState("");
+
+  useEffect(()=>{
+    const t = setInterval(()=>setSceneIdx(i=>(i+1)%LOADING_SCENES.length), 1800);
+    return ()=>clearInterval(t);
+  },[]);
+  useEffect(()=>{
+    const t = setInterval(()=>setDots(d=>d.length>=3?"":d+"."), 450);
+    return ()=>clearInterval(t);
+  },[]);
+
+  const scene = LOADING_SCENES[sceneIdx];
+
+  return (
+    <div style={{ minHeight:"80vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:24, padding:"2rem", background:`linear-gradient(160deg,${scene.color}08,transparent)`, transition:"background 1.2s" }}>
+      <style>{`
+        @keyframes loadIconBounce { 0%,100%{ transform:translateY(0) scale(1); } 50%{ transform:translateY(-14px) scale(1.08); } }
+        @keyframes loadIconFadeIn { from{ opacity:0; transform:scale(.7) rotate(-8deg); } to{ opacity:1; transform:scale(1) rotate(0deg); } }
+        @keyframes loadRingPulse { 0%{ transform:scale(.92); opacity:.5; } 50%{ transform:scale(1.06); opacity:.15; } 100%{ transform:scale(.92); opacity:.5; } }
+        @keyframes loadProgressSlide { 0%{ transform:translateX(-100%); } 100%{ transform:translateX(250%); } }
+      `}</style>
+
+      {/* Icon stage with pulsing ring backdrop */}
+      <div style={{ position:"relative", width:140, height:140, display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <div style={{ position:"absolute", inset:0, borderRadius:"50%", background:scene.color, animation:"loadRingPulse 2s ease-in-out infinite" }}/>
+        <div style={{ position:"absolute", inset:14, borderRadius:"50%", background:"#fff", boxShadow:"0 8px 32px rgba(0,0,0,.1)" }}/>
+        <div key={sceneIdx} style={{ position:"relative", fontSize:56, animation:"loadIconFadeIn .4s ease, loadIconBounce 1.8s ease-in-out infinite .4s" }}>
+          {scene.icon}
+        </div>
+      </div>
+
+      <div style={{ textAlign:"center" }}>
+        <p key={sceneIdx+"-label"} style={{ fontSize:16, fontWeight:600, color:C.ink, fontFamily:sans, marginBottom:6, animation:"loadIconFadeIn .4s ease" }}>
+          {scene.label}{dots}
+        </p>
+        <p style={{ fontSize:13, color:"#999", fontFamily:sans }}>Crafting your personalised Sri Lanka itinerary</p>
+      </div>
+
+      {/* Progress bar with sliding shimmer (indeterminate — we don't know exact completion %) */}
+      <div style={{ width:200, height:5, background:C.border, borderRadius:6, overflow:"hidden", position:"relative" }}>
+        <div style={{ position:"absolute", top:0, left:0, width:"40%", height:"100%", background:`linear-gradient(90deg,transparent,${scene.color},transparent)`, animation:"loadProgressSlide 1.6s ease-in-out infinite", borderRadius:6 }}/>
+      </div>
+
+      {/* Scene dots indicator */}
+      <div style={{ display:"flex", gap:6 }}>
+        {LOADING_SCENES.map((s,i)=>(
+          <div key={i} style={{ width:i===sceneIdx?20:6, height:6, borderRadius:6, background:i===sceneIdx?scene.color:C.border, transition:"all .3s" }}/>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLoginNeeded, premium }) {
   const { t } = useLang();
   const [step, setStep]    = useState(()=>{
@@ -2800,14 +2893,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 
   // Result page
   if (step===10) {
-    if (loading) return (
-      <div style={{ minHeight:"80vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:20, padding:"2rem" }}>
-        <div style={{ width:56, height:56, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite" }}/>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        <p style={{ fontSize:16, color:C.inkSoft, textAlign:"center", fontFamily:sans }}>Crafting your personalised Sri Lanka itinerary…</p>
-        <p style={{ fontSize:13, color:"#aaa", textAlign:"center", fontFamily:sans }}>Finding real restaurants, trails & hidden gems — usually 15–25 seconds</p>
-      </div>
-    );
+    if (loading) return <ItineraryLoadingAnimation/>;
     if (!itin) return null;
     return (
       <div style={{ minHeight:"100vh", background:C.surface }}>
@@ -2950,7 +3036,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // 0: Starting point + calendar date range
     <>
       <StepDots cur={0} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>Where and when does your trip start?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_start")}</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick your dates and we'll count the days automatically</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10, marginBottom:18 }}>
         {START_OPTS.map(o=><OptBtn key={o.v} sel={ans.startCity===o.v} onClick={()=>upd("startCity",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
@@ -3014,7 +3100,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // 1: Travel style
     <>
       <StepDots cur={1} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:24 }}>What kind of travel excites you?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:24 }}>{t("q_travel")}</h2>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
         {TRAVEL_OPTS.map(o=><OptBtn key={o.v} sel={ans.travel===o.v} onClick={()=>upd("travel",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
       </div>
@@ -3023,7 +3109,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // 2: Activities
     <>
       <StepDots cur={2} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>What activities do you enjoy?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_activities")}</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick any that apply</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
         {ACT_OPTS.map(o=><OptBtn key={o.v} sel={ans.activities.includes(o.v)} onClick={()=>tog("activities",o.v)} icon={o.i} label={o.l}/>)}
@@ -3034,7 +3120,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // 3: Food
     <>
       <StepDots cur={3} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>What food do you enjoy?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_food")}</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick any that apply</p>
       <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
         {FOOD_OPTS.map(f=>{ const s=ans.food.includes(f); return <button key={f} onClick={()=>tog("food",f)} style={{ padding:"8px 16px", borderRadius:30, fontSize:13, fontWeight:500, cursor:"pointer", border:`1.5px solid ${s?C.amberMid:C.border}`, background:s?C.amberLight:C.surface, color:s?C.amber:C.inkSoft, fontFamily:sans }}>{f}</button>; })}
@@ -3044,7 +3130,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // 4: Group & budget
     <>
       <StepDots cur={4} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:18 }}>Who's going & what's your budget?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:18 }}>{t("q_groupbudget")}</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:10 }}>Group type</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
         {GROUP_OPTS.map(o=><OptBtn key={o.v} sel={ans.group===o.v} onClick={()=>upd("group",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
@@ -3058,7 +3144,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // 5: Transport
     <>
       <StepDots cur={5} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>How do you want to get around?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_transport")}</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Your AI itinerary will be built around your transport choice</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
         {TRANSPORT_OPTS.map(o=><OptBtn key={o.v} sel={ans.transport===o.v} onClick={()=>upd("transport",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
@@ -3068,7 +3154,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // 6: Pace
     <>
       <StepDots cur={6} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>What pace do you prefer?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_pace")}</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>This shapes how many activities per day we plan</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10 }}>
         {PACE_OPTS.map(o=><OptBtn key={o.v} sel={ans.pace===o.v} onClick={()=>upd("pace",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
@@ -3078,7 +3164,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // 7: Hotel base style
     <>
       <StepDots cur={7} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>How do you want to handle hotels?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_hotelstyle")}</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Some travellers prefer settling into one place, others love moving around</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10 }}>
         <OptBtn sel={ans.hotelStyle==="base"} onClick={()=>upd("hotelStyle","base")} icon="🏨" label="Stay in one hotel" sub="Pick one base and take day trips out — less packing, more relaxing"/>
@@ -3089,7 +3175,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // 8: Custom places
     <>
       <StepDots cur={8} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:6 }}>Any specific places you want to visit?</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:6 }}>{t("q_places")}</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20, lineHeight:1.6 }}>
         If you already know a place in Sri Lanka you want to include — a temple, a waterfall, a town, a restaurant — add it here and we'll fit it into your itinerary.
       </p>
@@ -3248,7 +3334,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 }
 
 // ─── GUIDE DRAWER ────────────────────────────────────────────────────────────
-function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
+function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }) {
   const [screen,    setScreen]   = useState("terms");
   const [termsOk,   setTermsOk]  = useState(false);
   const [selected,  setSelected] = useState(null);
@@ -3444,8 +3530,15 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
                       </div>
                     )}
                     {req.status==="accepted" && req.payment && (
-                      <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:10, padding:"10px 14px", fontSize:12, color:C.teal }}>
-                        ✅ Booking confirmed · Paid ${req.payment.total} · Guide receives ${req.payment.guideAmount}
+                      <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:10, padding:"10px 14px" }}>
+                        <div style={{ fontSize:12, color:C.teal, marginBottom: (req.tripEndDate && new Date(req.tripEndDate) < new Date()) ? 10 : 0 }}>
+                          ✅ Booking confirmed · Paid ${req.payment.total} · Guide receives ${req.payment.guideAmount}
+                        </div>
+                        {req.tripEndDate && new Date(req.tripEndDate) < new Date() && (
+                          <button onClick={()=>onReviewGuide?.({ guideName:req.guideName, tripRef:req.id })} style={{ width:"100%", padding:"9px", background:C.teal, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:sans }}>
+                            ⭐ Leave a review for {req.guideName}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -5469,8 +5562,8 @@ async function updateReviewStatus(reviewId, status) {
   // If approved, also append to guide's profile reviews array
 }
 
-function GuideReviewModal({ onClose, user }) {
-  const [form, setForm]     = useState({ guideName:"", tripRef:"", rating:5, title:"", body:"", touristName:"" });
+function GuideReviewModal({ onClose, user, prefill }) {
+  const [form, setForm]     = useState({ guideName:prefill?.guideName||"", tripRef:prefill?.tripRef||"", rating:5, title:"", body:"", touristName:"" });
   const [submitting, setSub]= useState(false);
   const [done, setDone]     = useState(false);
   const [errors, setErrors] = useState({});
@@ -6278,6 +6371,7 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
   const premium = usePremium();
   const [showAdmin,  setShowAdmin]  = useState(()=>window.location.search.includes("admin"));
   const [showReview, setShowReview] = useState(false);
+  const [reviewPrefill, setReviewPrefill] = useState(null);
   const [shareId] = useState(()=>new URLSearchParams(window.location.search).get("share"));
 
   useEffect(()=>{
@@ -6302,18 +6396,13 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
       {page==="srilankamap" && <SriLankaMapPage  setPage={setPage} savedItin={savedItin} setSavedItin={setSaved}/>}
       {page==="guideportal"  && <GuidePortalPage  setPage={setPage}/>}
 
-      <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin} user={user} onLoginNeeded={()=>setLogin(true)}/>
+      <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin} user={user} onLoginNeeded={()=>setLogin(true)} onReviewGuide={(prefill)=>{ setReviewPrefill(prefill); setShowReview(true); }}/>
       <WishlistPanel wishlist={wishlist} savedItin={savedItin} setSavedItin={setSaved}/>
       <EmergencyButton/>
 
-      {/* Floating "Review a guide" button */}
-      <button onClick={()=>setShowReview(true)} style={{ position:"fixed", bottom:90, right:24, zIndex:490, background:C.teal, color:"#fff", border:"none", borderRadius:20, padding:"8px 14px", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:sans, boxShadow:"0 2px 12px rgba(0,0,0,.2)", display:"flex", alignItems:"center", gap:6 }}>
-        ⭐ Review a guide
-      </button>
-
       {showLogin  && <LoginModal onClose={()=>setLogin(false)} onSuccess={handleLoginSuccess}/>}
       {showWelcome && <WelcomeToast user={welcomeUser} onDone={()=>setWelcome(false)}/>}
-      {showReview && <GuideReviewModal onClose={()=>setShowReview(false)} user={user}/>}
+      {showReview && <GuideReviewModal onClose={()=>setShowReview(false)} user={user} prefill={reviewPrefill}/>}
       {showAdmin  && <AdminPanel onClose={()=>{ setShowAdmin(false); window.history.replaceState({},"",window.location.pathname); }}/>}
     </div>
   );
