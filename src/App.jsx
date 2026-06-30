@@ -2532,9 +2532,11 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded }) {
       await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
     }
     const fromFirestore = await loadApprovedGuides();
+    console.log("Approved guides from Firestore:", fromFirestore.length, fromFirestore);
     if(fromFirestore.length > 0){
       setGuides(fromFirestore);
     } else {
+      console.warn("No approved guides found in Firestore — showing demo guides instead. Check browser console for Firestore errors above, and confirm a guide has status:'approved' in the Firebase console.");
       // Fallback to static guides if Firestore empty
       setGuides(GUIDES.map(g=>({
         uid:String(g.id), fullName:g.name, specialty:g.specialty,
@@ -3690,10 +3692,17 @@ const GUIDE_AREAS       = ["Colombo & Western","Kandy & Central","Galle & Southe
 async function loadApprovedGuides() {
   if (!window.firebase?.firestore) return [];
   try {
+    // No orderBy here — combining where+orderBy on different fields requires
+    // a Firestore composite index. Sort client-side instead to avoid that.
     const snap = await window.firebase.firestore().collection("guides")
-      .where("status","==","approved").orderBy("registeredAt","desc").limit(20).get();
-    return snap.docs.map(d=>({id:d.id,...d.data()}));
-  } catch(e) { console.warn("loadApprovedGuides:", e.message); return []; }
+      .where("status","==","approved").limit(50).get();
+    const guides = snap.docs.map(d=>({id:d.id,...d.data()}));
+    guides.sort((a,b)=> new Date(b.registeredAt||0) - new Date(a.registeredAt||0));
+    return guides;
+  } catch(e) {
+    console.error("loadApprovedGuides FAILED:", e.message, e);
+    return [];
+  }
 }
 
 async function saveTripRequest(request) {
@@ -3708,9 +3717,11 @@ async function loadTouristRequests(touristUid) {
   if (!window.firebase?.firestore) return [];
   try {
     const snap = await window.firebase.firestore().collection("tripRequests")
-      .where("touristUid","==",touristUid).orderBy("createdAt","desc").limit(20).get();
-    return snap.docs.map(d=>({id:d.id,...d.data()}));
-  } catch(e) { console.warn("loadTouristRequests:", e.message); return []; }
+      .where("touristUid","==",touristUid).limit(50).get();
+    const reqs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    reqs.sort((a,b)=> new Date(b.createdAt||0) - new Date(a.createdAt||0));
+    return reqs;
+  } catch(e) { console.error("loadTouristRequests FAILED:", e.message); return []; }
 }
 
 async function acceptBidAndPay(requestId, bidAmount) {
@@ -3757,8 +3768,12 @@ async function getGuideProfile(uid) {
 }
 async function loadTripRequests(guideId) {
   if (!window.firebase) return [];
-  const snap = await window.firebase.firestore().collection("tripRequests").where("guideId","==",guideId).orderBy("createdAt","desc").limit(20).get();
-  return snap.docs.map(d=>({id:d.id,...d.data()}));
+  try {
+    const snap = await window.firebase.firestore().collection("tripRequests").where("guideId","==",guideId).limit(50).get();
+    const reqs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    reqs.sort((a,b)=> new Date(b.createdAt||0) - new Date(a.createdAt||0));
+    return reqs;
+  } catch(e) { console.error("loadTripRequests FAILED:", e.message); return []; }
 }
 async function submitBid(requestId, bid) {
   if (!window.firebase) return;
@@ -3785,6 +3800,31 @@ function validateField(key, value) {
 }
 
 // ─── IMAGE UPLOAD HELPER ──────────────────────────────────────────────────────
+// Compresses an image file down to a small base64 JPEG so it fits Firestore's 1MB doc limit.
+// maxDim = longest side in pixels, quality = JPEG quality (0-1).
+function compressImage(file, maxDim=600, quality=0.7) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => {
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDim) { height = Math.round(height * (maxDim/width)); width = maxDim; }
+        else if (height > maxDim) { width = Math.round(width * (maxDim/height)); height = maxDim; }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => reject(new Error("Could not read image"));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error("Could not read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     if (file.size > 2 * 1024 * 1024) { reject(new Error("File must be under 2MB")); return; }
@@ -3864,8 +3904,11 @@ function GuideRegister({ user, onComplete }) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) { setErrors(er=>({...er,photo:"Please select an image file (JPG, PNG)"})); return; }
-    try { const b64 = await fileToBase64(file); upd("photo", b64); }
-    catch(e) { setErrors(er=>({...er,photo:e.message})); }
+    try {
+      // Compress to keep the whole profile document well under Firestore's 1MB limit
+      const compressed = await compressImage(file, 500, 0.7);
+      upd("photo", compressed);
+    } catch(e) { setErrors(er=>({...er,photo:"Could not process that image — try a different photo"})); }
   };
 
   const handleLicence = async (e) => {
@@ -3875,10 +3918,19 @@ function GuideRegister({ user, onComplete }) {
       setErrors(er=>({...er,licenceDoc:"Please select an image or PDF file"})); return;
     }
     try {
-      const b64 = await fileToBase64(file);
-      upd("licenceDoc", b64);
-      upd("licenceDocName", file.name);
-    } catch(e) { setErrors(er=>({...er,licenceDoc:e.message})); }
+      if (file.type==="application/pdf") {
+        // PDFs can't be recompressed client-side — cap size strictly
+        if (file.size > 500*1024) { setErrors(er=>({...er,licenceDoc:"PDF must be under 500KB. Try compressing it or use a photo of the document instead."})); return; }
+        const b64 = await fileToBase64(file);
+        upd("licenceDoc", b64);
+        upd("licenceDocName", file.name);
+      } else {
+        // Compress image licence photos too
+        const compressed = await compressImage(file, 700, 0.7);
+        upd("licenceDoc", compressed);
+        upd("licenceDocName", file.name.replace(/\.\w+$/, ".jpg"));
+      }
+    } catch(e) { setErrors(er=>({...er,licenceDoc:"Could not process that file — try a clearer photo or smaller PDF"})); }
   };
 
   // Validate current step before advancing
@@ -3907,12 +3959,20 @@ function GuideRegister({ user, onComplete }) {
     if (!validateStep(1)) return;
     setSaving(true);
     try {
-      await saveGuideProfile(user.uid, {
+      const payload = {
         ...form, email:user.email, uid:user.uid,
         status:"pending", role:"guide",
         registeredAt: new Date().toISOString(),
         availability:"available", tripsCompleted:0, rating:0, reviews:[],
-      });
+      };
+      // Pre-flight size check — Firestore documents max out at 1MB (1,048,576 bytes)
+      const approxSize = new Blob([JSON.stringify(payload)]).size;
+      if (approxSize > 950*1024) {
+        alert(`Your profile data is too large (${Math.round(approxSize/1024)}KB). Please use a smaller profile photo and/or licence document, then try again.`);
+        setSaving(false);
+        return;
+      }
+      await saveGuideProfile(user.uid, payload);
       await sendAdminNotification(form.fullName, user.email, form.sltdaNo);
       onComplete();
     } catch(e) { alert("Error saving profile: "+e.message); }
@@ -3939,7 +3999,7 @@ function GuideRegister({ user, onComplete }) {
           </div>
           <div>
             <div style={{ fontSize:13, fontWeight:600, color:C.teal }}>{form.photo?"Change photo":"Upload profile photo"}</div>
-            <div style={{ fontSize:11, color:C.inkSoft, marginTop:3 }}>JPG or PNG · Max 2MB · Clear face photo</div>
+            <div style={{ fontSize:11, color:C.inkSoft, marginTop:3 }}>JPG or PNG · Auto-compressed · Clear face photo</div>
             {errors.photo && <div style={{ fontSize:11, color:C.coral, marginTop:3 }}>⚠️ {errors.photo}</div>}
           </div>
         </div>
@@ -3968,7 +4028,7 @@ function GuideRegister({ user, onComplete }) {
             <div>
               <div style={{ fontSize:28, opacity:.4, marginBottom:4 }}>📎</div>
               <div style={{ fontSize:13, fontWeight:600, color:C.inkSoft }}>Upload SLTDA licence</div>
-              <div style={{ fontSize:11, color:C.inkSoft, marginTop:3 }}>Image (JPG/PNG) or PDF · Max 2MB</div>
+              <div style={{ fontSize:11, color:C.inkSoft, marginTop:3 }}>Image (auto-compressed) or PDF · Max 500KB for PDF</div>
             </div>
           )}
         </div>
@@ -4412,9 +4472,13 @@ async function submitGuideReview(review) {
 }
 async function loadGuideReviews(status="pending") {
   if (!window.firebase?.firestore) return [];
-  const snap = await window.firebase.firestore().collection("guideReviews")
-    .where("status","==",status).orderBy("createdAt","desc").limit(50).get();
-  return snap.docs.map(d=>({id:d.id,...d.data()}));
+  try {
+    const snap = await window.firebase.firestore().collection("guideReviews")
+      .where("status","==",status).limit(50).get();
+    const reviews = snap.docs.map(d=>({id:d.id,...d.data()}));
+    reviews.sort((a,b)=> new Date(b.createdAt||0) - new Date(a.createdAt||0));
+    return reviews;
+  } catch(e) { console.error("loadGuideReviews FAILED:", e.message); return []; }
 }
 async function updateReviewStatus(reviewId, status) {
   await window.firebase.firestore().collection("guideReviews").doc(reviewId).update({ status });
