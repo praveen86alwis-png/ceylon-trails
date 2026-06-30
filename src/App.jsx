@@ -155,13 +155,257 @@ const TRANSLATIONS = {
   },
 };
 
+// Translations for wizard OPTION labels/subtitles, keyed by the stable option
+// value (v) so the option arrays above never need to change per language.
+// Structure: OPT_T[lang][value] = { l: label, s: subtitle (optional) }
+const OPT_T = {
+  en: {
+    beach:{l:"Beach & Coast",s:"Sun, sand, surf & sea"}, hills:{l:"Hill Country",s:"Tea trails, mist & waterfalls"},
+    cultural:{l:"Cultural & Historic",s:"Temples, ruins & stories"}, wildlife:{l:"Wildlife & Nature",s:"Safari, jungle & birds"},
+    adventure:{l:"Adventure",s:"Hiking, rafting & climbing"}, rural:{l:"Rural Sri Lanka",s:"Villages, farms & local life"},
+    mixed:{l:"All of Sri Lanka",s:"A bit of everything"},
+    solo:{l:"Solo",s:"Just me"}, couple:{l:"Couple",s:"Two travellers"}, family:{l:"Family",s:"With kids"}, friends:{l:"Friends group",s:"3 or more"},
+    budget:{l:"Budget",s:"< $50/day"}, mid:{l:"Mid-range",s:"$50–$150/day"}, luxury:{l:"Luxury",s:"$150+/day"},
+    srilankan:"Sri Lankan", seafood:"Seafood", vegetarian:"Vegetarian", vegan:"Vegan", western:"Western", southindian:"South Indian", streetfood:"Street food", finedining:"Fine dining",
+    relaxation:{l:"Relaxation"}, sightseeing:{l:"Sightseeing"}, "food-tours":{l:"Food tours"}, wellness:{l:"Wellness & Spa"},
+    "water-sports":{l:"Water sports"}, "wildlife-safari":{l:"Wildlife safari"}, hiking:{l:"Hiking & Trekking"}, "adventure-act":{l:"Adventure sports"},
+    "tuk-tuk":{l:"Tuk-tuk",s:"Authentic & fun, best for short hops"}, "private-car":{l:"Private car",s:"Comfortable & flexible"},
+    train:{l:"Scenic train",s:"Iconic hill country routes"}, bus:{l:"Public bus",s:"Budget-friendly, local experience"},
+    relaxed:{l:"Relaxed",s:"Max 2 activities/day, long lunches"}, balanced:{l:"Balanced",s:"3–4 activities, some downtime"}, packed:{l:"Action-packed",s:"See as much as possible"},
+    airport:{l:"Bandaranaike International Airport",s:"Katunayake — most international flights"}, colombo:{l:"Colombo City Centre",s:"Already in the city"}, custom:{l:"Another city / hotel",s:"I'm starting somewhere else"},
+    daysq:"Pick your dates and we'll count the days automatically", roundtripq:"At the end of the trip, do you want to return to your starting point?",
+    roundtrip_yes:{l:"Yes, round trip",s:"End back where I started"}, roundtrip_no:{l:"No, one-way",s:"I'll end up somewhere else"},
+    activities_sub:"Pick any that apply", food_sub:"Pick any that apply", group_sub:"Group type", budget_sub:"Daily budget per person",
+    transport_sub:"Your AI itinerary will be built around your transport choice", pace_sub:"This shapes how many activities per day we plan",
+    hotelstyle_sub:"Some travellers prefer settling into one place, others love moving around",
+    hotel_base:{l:"Stay in one hotel",s:"Pick one base and take day trips out — less packing, more relaxing"},
+    hotel_multi:{l:"Move around the country",s:"A new hotel every 1-3 nights — see more places, more variety"},
+    places_sub:"If you already know a place in Sri Lanka you want to include — a temple, a waterfall, a town, a restaurant — add it here and we'll fit it into your itinerary.",
+    places_placeholder:"e.g. Ravana Falls, Ella · Nine Arch Bridge · Galle Fort", places_add:"Add +", places_empty:"No specific places added — your itinerary will be fully AI-generated based on your style choices.",
+    places_optional:"This step is completely optional.", places_tip:"We'll fit your places into the route logically — if a place doesn't match your travel style region, we'll suggest the nearest travel day to include it.",
+    villagehomestay:{l:"Village homestay",s:"Sleep in a local family home"}, paddyfarming:{l:"Paddy farming",s:"Plant & harvest with farmers"},
+    cookingclass:{l:"Village cooking class",s:"Learn real Sri Lankan recipes"}, spicegarden:{l:"Spice garden tour",s:"Cinnamon, pepper, cardamom"},
+    fishingvillage:{l:"Fishing village",s:"Join fishermen at dawn"}, veddacommunity:{l:"Vedda community",s:"Indigenous culture & history"},
+    elephantvillage:{l:"Working elephant camp",s:"Ethical elephant interaction"}, potteryweaving:{l:"Pottery & weaving",s:"Traditional crafts with artisans"},
+    q_rural_title:"What rural experiences interest you?", q_final_title:"Almost done — any final touches?",
+    rural_sub:"Pick the rural experiences you'd love — we'll build your itinerary around them.",
+    final_sub:"Almost done! Two final details:", starttime_label:"🕐 What time does your trip start?",
+    starttime_sub:"This affects what we plan for Day 1 — an evening start means check-in only, morning start means a full day.",
+    tripsummary_label:"📋 Trip summary",
+    sum_dates:"Dates", sum_duration:"Duration", sum_starttime:"Start time", sum_startfrom:"Starting from", sum_triptype:"Trip type",
+    sum_style:"Style", sum_group:"Group", sum_budget:"Budget", sum_transport:"Transport", sum_pace:"Pace", sum_hotelstyle:"Hotel style", sum_places:"Your places",
+    sum_notset:"Not set", sum_notselected:"Not selected", sum_roundtrip_full:"Round trip — returning to start", sum_oneway:"One-way",
+    sum_onebase:"One base hotel", sum_moving:"Moving around",
+    cal_from:"From", cal_to:"To",
+  },
+  si: {
+    beach:{l:"වෙරළ සහ වෙරළබඩ",s:"හිරු, වැලි, රළ සහ මුහුද"}, hills:{l:"කඳුකර රට",s:"තේ මං පෙත්, මීදුම සහ දිය ඇලි"},
+    cultural:{l:"සංස්කෘතික සහ ඓතිහාසික",s:"විහාර, නටබුන් සහ කථා"}, wildlife:{l:"වනජීවී සහ ස්වභාවික",s:"සෆාරි, වනාන්තර සහ පක්ෂීන්"},
+    adventure:{l:"සාහසික",s:"කඳු නැගීම, රාෆ්ටින් සහ නැගීම"}, rural:{l:"ග්‍රාමීය ශ්‍රී ලංකාව",s:"ගම්මාන, ගොවිපල සහ දේශීය ජීවිතය"},
+    mixed:{l:"සම්පූර්ණ ශ්‍රී ලංකාව",s:"සියල්ලෙන්ම ටිකක්"},
+    solo:{l:"තනියම",s:"මම පමණයි"}, couple:{l:"යුවළ",s:"සංචාරකයින් දෙදෙනෙක්"}, family:{l:"පවුල",s:"දරුවන් සමඟ"}, friends:{l:"මිතුරු කණ්ඩායම",s:"3 හෝ වැඩි"},
+    budget:{l:"අයවැය",s:"< $50/දිනකට"}, mid:{l:"මධ්‍ය පරාසය",s:"$50–$150/දිනකට"}, luxury:{l:"සුඛෝපභෝගී",s:"$150+/දිනකට"},
+    srilankan:"ශ්‍රී ලාංකික", seafood:"මුහුදු ආහාර", vegetarian:"නිර්මාංශ", vegan:"වීගන්", western:"බටහිර", southindian:"දකුණු ඉන්දියානු", streetfood:"වීදි ආහාර", finedining:"උසස් ආහාරපාන",
+    relaxation:{l:"විවේකය"}, sightseeing:{l:"සංචාරක ස්ථාන"}, "food-tours":{l:"ආහාර සංචාර"}, wellness:{l:"සුවතා සහ ස්පා"},
+    "water-sports":{l:"ජල ක්‍රීඩා"}, "wildlife-safari":{l:"වනජීවී සෆාරි"}, hiking:{l:"කඳු නැගීම සහ ට්‍රෙකින්"}, "adventure-act":{l:"සාහසික ක්‍රීඩා"},
+    "tuk-tuk":{l:"ටුක්-ටුක්",s:"සැබෑ සහ විනෝදජනක, කෙටි ගමන් සඳහා හොඳම"}, "private-car":{l:"පෞද්ගලික කාර්",s:"සුවපහසු සහ නම්‍යශීලී"},
+    train:{l:"දර්ශනීය දුම්රිය",s:"සුප්‍රසිද්ධ කඳුකර මාර්ග"}, bus:{l:"පොදු බස්",s:"අයවැයට හිතකර, දේශීය අත්දැකීම"},
+    relaxed:{l:"සැහැල්ලු",s:"උපරිම ක්‍රියාකාරකම් 2ක්/දිනකට, දිගු දිවා ආහාර"}, balanced:{l:"සමතුලිත",s:"ක්‍රියාකාරකම් 3-4, සුළු විවේකය"}, packed:{l:"ක්‍රියාශීලී",s:"හැකි තරම් බලන්න"},
+    airport:{l:"බණ්ඩාරනායක ජාත්‍යන්තර ගුවන් තොටුපල",s:"කටුනායක — බොහෝ ජාත්‍යන්තර ගුවන් ගමන්"}, colombo:{l:"කොළඹ නගර මධ්‍යය",s:"දැනටමත් නගරයේ"}, custom:{l:"වෙනත් නගරයක් / හෝටලයක්",s:"මම ආරම්භ කරන්නේ වෙනත් තැනකින්"},
+    daysq:"ඔබේ දින තෝරාගන්න, අපි ස්වයංක්‍රීයව දින ගණන් කරන්නෙමු", roundtripq:"ගමන අවසානයේ, ඔබ ඔබේ ආරම්භක ස්ථානයට ආපසු යාමට කැමතිද?",
+    roundtrip_yes:{l:"ඔව්, වටරවුම් ගමන",s:"මා ආරම්භ කළ තැනටම ආපසු"}, roundtrip_no:{l:"නැත, එක් මාර්ගයක්",s:"මම වෙනත් තැනකින් අවසන් කරමි"},
+    activities_sub:"අදාළ ඕනෑම දෙයක් තෝරන්න", food_sub:"අදාළ ඕනෑම දෙයක් තෝරන්න", group_sub:"කණ්ඩායම් වර්ගය", budget_sub:"පුද්ගලයෙකුට දෛනික අයවැය",
+    transport_sub:"ඔබේ AI සංචාර සැලැස්ම ඔබේ ප්‍රවාහන තේරීම වටා සාදනු ලැබේ", pace_sub:"මෙය දිනකට ක්‍රියාකාරකම් කීයක් සැලසුම් කරනවාද යන්න හැඩගස්වයි",
+    hotelstyle_sub:"සමහර සංචාරකයින් එක් ස්ථානයක පදිංචි වීමට කැමති අතර අනෙක් අය වටා ගමන් කිරීමට කැමතියි",
+    hotel_base:{l:"එක් හෝටලයක නවාතැන් ගන්න",s:"එක් පදනමක් තෝරාගෙන දින චාරිකා කරන්න — අඩු පැකින්, වැඩි විවේකය"},
+    hotel_multi:{l:"රට පුරා ගමන් කරන්න",s:"සෑම රාත්‍රී 1-3කටම නව හෝටලයක් — වැඩි ස්ථාන, වැඩි විවිධත්වය"},
+    places_sub:"ඔබ දැනටමත් ඇතුළත් කිරීමට අවශ්‍ය ශ්‍රී ලංකාවේ ස්ථානයක් දන්නේ නම් — විහාරයක්, දිය ඇල්ලක්, නගරයක්, අවන්හලක් — එය මෙහි එක් කරන්න.",
+    places_placeholder:"උදා: රාවණා ඇල්ල, ඇල්ල · නයින් ආච් පාලම · ගාල්ල කොටුව", places_add:"එක් කරන්න +", places_empty:"විශේෂිත ස්ථාන එකතු කර නැත — ඔබේ සැලැස්ම ඔබේ විලාසය තේරීම් මත පදනම්ව සම්පූර්ණයෙන්ම AI-ජනිත වනු ඇත.",
+    places_optional:"මෙම පියවර සම්පූර්ණයෙන්ම විකල්පමයි.", places_tip:"අපි ඔබේ ස්ථාන තාර්කිකව මාර්ගයට ගලපන්නෙමු.",
+    villagehomestay:{l:"ගම් නිවාසය",s:"දේශීය පවුලක නිවසක නිදාගන්න"}, paddyfarming:{l:"කුඹුරු ගොවිතැන",s:"ගොවීන් සමඟ සිටුවා අස්වැන්න නෙළන්න"},
+    cookingclass:{l:"ගම් පිසීම් පන්තිය",s:"සැබෑ ශ්‍රී ලාංකික වට්ටෝරු ඉගෙන ගන්න"}, spicegarden:{l:"කුළුබඩු උද්‍යාන චාරිකාව",s:"කුරුඳු, ගම්මිරිස්, කරදමුංගු"},
+    fishingvillage:{l:"ධීවර ගම්මානය",s:"උදෑසන ධීවරයන් සමඟ එක්වන්න"}, veddacommunity:{l:"වැද්දා ප්‍රජාව",s:"ආදිවාසී සංස්කෘතිය සහ ඉතිහාසය"},
+    elephantvillage:{l:"වැඩ කරන අලි කඳවුර",s:"සදාචාරාත්මක අලි අන්තර්ක්‍රියා"}, potteryweaving:{l:"මැටි බඳුන් සහ වියමන්",s:"ශිල්පීන් සමඟ සාම්ප්‍රදායික ශිල්ප"},
+    q_rural_title:"ඔබට උනන්දුවක් දක්වන ග්‍රාමීය අත්දැකීම් මොනවාද?", q_final_title:"බොහෝදුරට අවසන් — අවසන් ස්පර්ශ ඕනෑද?",
+    rural_sub:"ඔබ කැමති ග්‍රාමීය අත්දැකීම් තෝරන්න — අපි ඒවා වටා ඔබේ සැලැස්ම සාදන්නෙමු.",
+    final_sub:"බොහෝදුරට අවසන්! අවසාන විස්තර දෙකක්:", starttime_label:"🕐 ඔබේ ගමන ආරම්භ වන්නේ කුමන වේලාවටද?",
+    starttime_sub:"මෙය 1 වන දිනය සඳහා අප සැලසුම් කරන දේට බලපායි.",
+    tripsummary_label:"📋 ගමන් සාරාංශය",
+    sum_dates:"දින", sum_duration:"කාලසීමාව", sum_starttime:"ආරම්භක වේලාව", sum_startfrom:"ආරම්භය", sum_triptype:"ගමන් වර්ගය",
+    sum_style:"විලාසය", sum_group:"කණ්ඩායම", sum_budget:"අයවැය", sum_transport:"ප්‍රවාහනය", sum_pace:"වේගය", sum_hotelstyle:"හෝටල් විලාසය", sum_places:"ඔබේ ස්ථාන",
+    sum_notset:"සකසා නැත", sum_notselected:"තෝරාගෙන නැත", sum_roundtrip_full:"වටරවුම් ගමන — ආරම්භයට ආපසු", sum_oneway:"එක් මාර්ගයක්",
+    sum_onebase:"එක් මූලික හෝටලයක්", sum_moving:"ගමන් කරමින්",
+    cal_from:"සිට", cal_to:"දක්වා",
+  },
+  ta: {
+    beach:{l:"கடற்கரை & கடற்கரை",s:"சூரியன், மணல், அலை & கடல்"}, hills:{l:"மலை நாடு",s:"தேயிலைப் பாதைகள், மூடுபனி & நீர்வீழ்ச்சிகள்"},
+    cultural:{l:"கலாச்சார & வரலாற்று",s:"கோவில்கள், இடிபாடுகள் & கதைகள்"}, wildlife:{l:"வனவிலங்கு & இயற்கை",s:"சஃபாரி, காடு & பறவைகள்"},
+    adventure:{l:"சாகசம்",s:"மலையேற்றம், ராஃப்டிங் & ஏறுதல்"}, rural:{l:"கிராமப்புற இலங்கை",s:"கிராமங்கள், பண்ணைகள் & உள்ளூர் வாழ்க்கை"},
+    mixed:{l:"முழு இலங்கை",s:"எல்லாவற்றிலும் கொஞ்சம்"},
+    solo:{l:"தனியாக",s:"நான் மட்டும்"}, couple:{l:"ஜோடி",s:"இரண்டு பயணிகள்"}, family:{l:"குடும்பம்",s:"குழந்தைகளுடன்"}, friends:{l:"நண்பர்கள் குழு",s:"3 அல்லது அதற்கு மேல்"},
+    budget:{l:"பட்ஜெட்",s:"< $50/நாள்"}, mid:{l:"நடுத்தர",s:"$50–$150/நாள்"}, luxury:{l:"ஆடம்பர",s:"$150+/நாள்"},
+    srilankan:"இலங்கை", seafood:"கடல் உணவு", vegetarian:"சைவம்", vegan:"வீகன்", western:"மேற்கத்திய", southindian:"தென்னிந்திய", streetfood:"தெரு உணவு", finedining:"உயர்தர உணவு",
+    relaxation:{l:"ஓய்வு"}, sightseeing:{l:"சுற்றுலா இடங்கள்"}, "food-tours":{l:"உணவு சுற்றுலா"}, wellness:{l:"நல்வாழ்வு & ஸ்பா"},
+    "water-sports":{l:"நீர் விளையாட்டு"}, "wildlife-safari":{l:"வனவிலங்கு சஃபாரி"}, hiking:{l:"மலையேற்றம் & ட்ரெக்கிங்"}, "adventure-act":{l:"சாகச விளையாட்டு"},
+    "tuk-tuk":{l:"டுக்-டுக்",s:"உண்மையான & வேடிக்கையான, குறுகிய தூரத்திற்கு சிறந்தது"}, "private-car":{l:"தனியார் கார்",s:"வசதியான & நெகிழ்வான"},
+    train:{l:"இயற்கை காட்சி ரயில்",s:"புகழ்பெற்ற மலை நாட்டு பாதைகள்"}, bus:{l:"பொது பேருந்து",s:"பட்ஜெட்-நட்பு, உள்ளூர் அனுபவம்"},
+    relaxed:{l:"நிதானமான",s:"அதிகபட்சம் 2 செயல்பாடுகள்/நாள், நீண்ட மதிய உணவு"}, balanced:{l:"சமநிலையான",s:"3–4 செயல்பாடுகள், சில ஓய்வு நேரம்"}, packed:{l:"செயல் நிறைந்த",s:"முடிந்தவரை பார்க்கவும்"},
+    airport:{l:"பண்டாரநாயக்க சர்வதேச விமான நிலையம்",s:"கட்டுநாயக்க — பெரும்பாலான சர்வதேச விமானங்கள்"}, colombo:{l:"கொழும்பு நகர மையம்",s:"ஏற்கனவே நகரத்தில்"}, custom:{l:"வேறு நகரம் / ஹோட்டல்",s:"நான் வேறு இடத்தில் தொடங்குகிறேன்"},
+    daysq:"உங்கள் தேதிகளைத் தேர்ந்தெடுக்கவும், நாங்கள் தானாகவே நாட்களை எண்ணுவோம்", roundtripq:"பயணத்தின் முடிவில், நீங்கள் தொடக்க இடத்திற்குத் திரும்ப விரும்புகிறீர்களா?",
+    roundtrip_yes:{l:"ஆம், சுற்றுப் பயணம்",s:"நான் தொடங்கிய இடத்திற்கே திரும்புதல்"}, roundtrip_no:{l:"இல்லை, ஒரு வழி",s:"நான் வேறு இடத்தில் முடிப்பேன்"},
+    activities_sub:"பொருந்தும் எதையும் தேர்ந்தெடுக்கவும்", food_sub:"பொருந்தும் எதையும் தேர்ந்தெடுக்கவும்", group_sub:"குழு வகை", budget_sub:"ஒரு நபருக்கான தினசரி பட்ஜெட்",
+    transport_sub:"உங்கள் AI பயணத் திட்டம் உங்கள் போக்குவரத்து தேர்வைச் சுற்றி உருவாக்கப்படும்", pace_sub:"இது ஒரு நாளைக்கு எத்தனை செயல்பாடுகளை திட்டமிடுகிறோம் என்பதை வடிவமைக்கிறது",
+    hotelstyle_sub:"சில பயணிகள் ஒரே இடத்தில் தங்குவதை விரும்புகிறார்கள், மற்றவர்கள் நகர்வதை விரும்புகிறார்கள்",
+    hotel_base:{l:"ஒரே ஹோட்டலில் தங்குங்கள்",s:"ஒரு தளத்தைத் தேர்ந்தெடுத்து நாள் பயணங்களை மேற்கொள்ளுங்கள்"},
+    hotel_multi:{l:"நாடு முழுவதும் சுற்றுங்கள்",s:"ஒவ்வொரு 1-3 இரவுகளுக்கும் புதிய ஹோட்டல் — அதிக இடங்கள், அதிக வகைகள்"},
+    places_sub:"நீங்கள் ஏற்கனவே சேர்க்க விரும்பும் இலங்கையில் ஒரு இடத்தைத் தெரிந்திருந்தால் — ஒரு கோவில், ஒரு நீர்வீழ்ச்சி, ஒரு நகரம், ஒரு உணவகம் — இங்கே சேர்க்கவும்.",
+    places_placeholder:"எ.கா. ரவணா எல்லா, எல்லா · நைன் ஆர்ச் பாலம் · காலி கோட்டை", places_add:"சேர் +", places_empty:"குறிப்பிட்ட இடங்கள் சேர்க்கப்படவில்லை — உங்கள் திட்டம் முழுமையாக AI-உருவாக்கப்படும்.",
+    places_optional:"இந்த படி முற்றிலும் விருப்பத்தேர்வு.", places_tip:"உங்கள் இடங்களை பாதையில் தர்க்கரீதியாக பொருத்துவோம்.",
+    villagehomestay:{l:"கிராம தங்குமிடம்",s:"உள்ளூர் குடும்ப வீட்டில் தங்குங்கள்"}, paddyfarming:{l:"நெல் சாகுபடி",s:"விவசாயிகளுடன் நடவு & அறுவடை"},
+    cookingclass:{l:"கிராம சமையல் வகுப்பு",s:"உண்மையான இலங்கை சமையல் கற்றுக்கொள்ளுங்கள்"}, spicegarden:{l:"மசாலா தோட்ட சுற்றுலா",s:"இலவங்கப்பட்டை, மிளகு, ஏலக்காய்"},
+    fishingvillage:{l:"மீன்பிடி கிராமம்",s:"விடியற்காலையில் மீனவர்களுடன் சேருங்கள்"}, veddacommunity:{l:"வேடர் சமூகம்",s:"பழங்குடி கலாச்சாரம் & வரலாறு"},
+    elephantvillage:{l:"வேலை செய்யும் யானை முகாம்",s:"நெறிமுறை யானை தொடர்பு"}, potteryweaving:{l:"மட்பாண்டம் & நெசவு",s:"கைவினைஞர்களுடன் பாரம்பரிய கைவினை"},
+    q_rural_title:"எந்த கிராமப்புற அனுபவங்கள் உங்களுக்கு ஆர்வமாக உள்ளன?", q_final_title:"கிட்டத்தட்ட முடிந்தது — இறுதி தொடுதல்கள் ஏதேனும்?",
+    rural_sub:"நீங்கள் விரும்பும் கிராமப்புற அனுபவங்களைத் தேர்ந்தெடுக்கவும்.",
+    final_sub:"கிட்டத்தட்ட முடிந்தது! இரண்டு இறுதி விவரங்கள்:", starttime_label:"🕐 உங்கள் பயணம் எந்த நேரத்தில் தொடங்குகிறது?",
+    starttime_sub:"இது 1வது நாளுக்கு நாங்கள் திட்டமிடுவதை பாதிக்கிறது.",
+    tripsummary_label:"📋 பயண சுருக்கம்",
+    sum_dates:"தேதிகள்", sum_duration:"கால அளவு", sum_starttime:"தொடக்க நேரம்", sum_startfrom:"தொடங்கும் இடம்", sum_triptype:"பயண வகை",
+    sum_style:"பாணி", sum_group:"குழு", sum_budget:"பட்ஜெட்", sum_transport:"போக்குவரத்து", sum_pace:"வேகம்", sum_hotelstyle:"ஹோட்டல் பாணி", sum_places:"உங்கள் இடங்கள்",
+    sum_notset:"அமைக்கப்படவில்லை", sum_notselected:"தேர்ந்தெடுக்கப்படவில்லை", sum_roundtrip_full:"சுற்றுப் பயணம் — தொடக்கத்திற்குத் திரும்புதல்", sum_oneway:"ஒரு வழி",
+    sum_onebase:"ஒரு அடிப்படை ஹோட்டல்", sum_moving:"நகர்கிறது",
+    cal_from:"இலிருந்து", cal_to:"வரை",
+  },
+  de: {
+    beach:{l:"Strand & Küste",s:"Sonne, Sand, Surfen & Meer"}, hills:{l:"Hügelland",s:"Teewege, Nebel & Wasserfälle"},
+    cultural:{l:"Kulturell & Historisch",s:"Tempel, Ruinen & Geschichten"}, wildlife:{l:"Tierwelt & Natur",s:"Safari, Dschungel & Vögel"},
+    adventure:{l:"Abenteuer",s:"Wandern, Rafting & Klettern"}, rural:{l:"Ländliches Sri Lanka",s:"Dörfer, Bauernhöfe & lokales Leben"},
+    mixed:{l:"Ganz Sri Lanka",s:"Ein bisschen von allem"},
+    solo:{l:"Allein",s:"Nur ich"}, couple:{l:"Paar",s:"Zwei Reisende"}, family:{l:"Familie",s:"Mit Kindern"}, friends:{l:"Freundesgruppe",s:"3 oder mehr"},
+    budget:{l:"Budget",s:"< $50/Tag"}, mid:{l:"Mittelklasse",s:"$50–$150/Tag"}, luxury:{l:"Luxus",s:"$150+/Tag"},
+    srilankan:"Sri-lankisch", seafood:"Meeresfrüchte", vegetarian:"Vegetarisch", vegan:"Vegan", western:"Westlich", southindian:"Südindisch", streetfood:"Streetfood", finedining:"Gehobene Küche",
+    relaxation:{l:"Entspannung"}, sightseeing:{l:"Sightseeing"}, "food-tours":{l:"Food-Touren"}, wellness:{l:"Wellness & Spa"},
+    "water-sports":{l:"Wassersport"}, "wildlife-safari":{l:"Tierbeobachtung"}, hiking:{l:"Wandern & Trekking"}, "adventure-act":{l:"Abenteuersport"},
+    "tuk-tuk":{l:"Tuk-Tuk",s:"Authentisch & lustig, am besten für kurze Strecken"}, "private-car":{l:"Privatwagen",s:"Komfortabel & flexibel"},
+    train:{l:"Panoramazug",s:"Berühmte Bergstrecken"}, bus:{l:"Öffentlicher Bus",s:"Günstig, lokale Erfahrung"},
+    relaxed:{l:"Entspannt",s:"Max. 2 Aktivitäten/Tag, lange Mittagessen"}, balanced:{l:"Ausgewogen",s:"3–4 Aktivitäten, etwas Freizeit"}, packed:{l:"Vollgepackt",s:"So viel wie möglich sehen"},
+    airport:{l:"Bandaranaike International Airport",s:"Katunayake — die meisten internationalen Flüge"}, colombo:{l:"Colombo Stadtzentrum",s:"Bereits in der Stadt"}, custom:{l:"Andere Stadt / Hotel",s:"Ich starte woanders"},
+    daysq:"Wähle deine Daten und wir zählen automatisch die Tage", roundtripq:"Möchtest du am Ende der Reise zu deinem Startpunkt zurückkehren?",
+    roundtrip_yes:{l:"Ja, Rundreise",s:"Zurück zum Startpunkt"}, roundtrip_no:{l:"Nein, einfache Fahrt",s:"Ich ende woanders"},
+    activities_sub:"Wähle alles Zutreffende", food_sub:"Wähle alles Zutreffende", group_sub:"Gruppentyp", budget_sub:"Tagesbudget pro Person",
+    transport_sub:"Dein KI-Reiseplan wird um deine Transportwahl herum erstellt", pace_sub:"Dies bestimmt, wie viele Aktivitäten wir pro Tag planen",
+    hotelstyle_sub:"Manche Reisende bevorzugen einen festen Ort, andere reisen gerne herum",
+    hotel_base:{l:"In einem Hotel bleiben",s:"Eine Basis wählen und Tagesausflüge machen"},
+    hotel_multi:{l:"Im Land herumreisen",s:"Alle 1-3 Nächte ein neues Hotel — mehr Orte, mehr Abwechslung"},
+    places_sub:"Falls du bereits einen Ort in Sri Lanka kennst, den du einbeziehen möchtest — füge ihn hier hinzu.",
+    places_placeholder:"z.B. Ravana Falls, Ella · Nine Arch Bridge · Galle Fort", places_add:"Hinzufügen +", places_empty:"Keine bestimmten Orte hinzugefügt — dein Plan wird vollständig KI-generiert.",
+    places_optional:"Dieser Schritt ist völlig optional.", places_tip:"Wir fügen deine Orte logisch in die Route ein.",
+    villagehomestay:{l:"Dorf-Homestay",s:"Übernachte bei einer lokalen Familie"}, paddyfarming:{l:"Reisanbau",s:"Pflanzen & Ernten mit Bauern"},
+    cookingclass:{l:"Dorf-Kochkurs",s:"Echte sri-lankische Rezepte lernen"}, spicegarden:{l:"Gewürzgarten-Tour",s:"Zimt, Pfeffer, Kardamom"},
+    fishingvillage:{l:"Fischerdorf",s:"Bei Sonnenaufgang mit Fischern"}, veddacommunity:{l:"Vedda-Gemeinschaft",s:"Indigene Kultur & Geschichte"},
+    elephantvillage:{l:"Arbeitselefanten-Camp",s:"Ethische Elefanten-Begegnung"}, potteryweaving:{l:"Töpferei & Weberei",s:"Traditionelles Handwerk mit Künstlern"},
+    q_rural_title:"Welche ländlichen Erlebnisse interessieren dich?", q_final_title:"Fast fertig — letzte Details?",
+    rural_sub:"Wähle die ländlichen Erlebnisse, die dir gefallen würden.",
+    final_sub:"Fast fertig! Zwei letzte Details:", starttime_label:"🕐 Wann beginnt deine Reise?",
+    starttime_sub:"Dies beeinflusst, was wir für Tag 1 planen.",
+    tripsummary_label:"📋 Reisezusammenfassung",
+    sum_dates:"Daten", sum_duration:"Dauer", sum_starttime:"Startzeit", sum_startfrom:"Start von", sum_triptype:"Reiseart",
+    sum_style:"Stil", sum_group:"Gruppe", sum_budget:"Budget", sum_transport:"Transport", sum_pace:"Tempo", sum_hotelstyle:"Hotelstil", sum_places:"Deine Orte",
+    sum_notset:"Nicht festgelegt", sum_notselected:"Nicht ausgewählt", sum_roundtrip_full:"Rundreise — zurück zum Start", sum_oneway:"Einfache Fahrt",
+    sum_onebase:"Eine Basis-Hotel", sum_moving:"Unterwegs",
+    cal_from:"Von", cal_to:"Bis",
+  },
+  fr: {
+    beach:{l:"Plage & Côte",s:"Soleil, sable, surf & mer"}, hills:{l:"Pays des collines",s:"Sentiers de thé, brume & cascades"},
+    cultural:{l:"Culturel & Historique",s:"Temples, ruines & histoires"}, wildlife:{l:"Faune & Nature",s:"Safari, jungle & oiseaux"},
+    adventure:{l:"Aventure",s:"Randonnée, rafting & escalade"}, rural:{l:"Sri Lanka rural",s:"Villages, fermes & vie locale"},
+    mixed:{l:"Tout le Sri Lanka",s:"Un peu de tout"},
+    solo:{l:"Solo",s:"Juste moi"}, couple:{l:"Couple",s:"Deux voyageurs"}, family:{l:"Famille",s:"Avec enfants"}, friends:{l:"Groupe d'amis",s:"3 ou plus"},
+    budget:{l:"Économique",s:"< 50$/jour"}, mid:{l:"Moyenne gamme",s:"50–150$/jour"}, luxury:{l:"Luxe",s:"150$+/jour"},
+    srilankan:"Sri-lankais", seafood:"Fruits de mer", vegetarian:"Végétarien", vegan:"Végétalien", western:"Occidental", southindian:"Sud-indien", streetfood:"Street food", finedining:"Gastronomie",
+    relaxation:{l:"Détente"}, sightseeing:{l:"Visites touristiques"}, "food-tours":{l:"Circuits gastronomiques"}, wellness:{l:"Bien-être & Spa"},
+    "water-sports":{l:"Sports nautiques"}, "wildlife-safari":{l:"Safari faune"}, hiking:{l:"Randonnée"}, "adventure-act":{l:"Sports d'aventure"},
+    "tuk-tuk":{l:"Tuk-tuk",s:"Authentique & amusant, idéal pour les courts trajets"}, "private-car":{l:"Voiture privée",s:"Confortable & flexible"},
+    train:{l:"Train panoramique",s:"Routes emblématiques des collines"}, bus:{l:"Bus public",s:"Économique, expérience locale"},
+    relaxed:{l:"Détendu",s:"Max 2 activités/jour, longs déjeuners"}, balanced:{l:"Équilibré",s:"3–4 activités, un peu de repos"}, packed:{l:"Intense",s:"Voir un maximum"},
+    airport:{l:"Aéroport international de Bandaranaike",s:"Katunayake — la plupart des vols internationaux"}, colombo:{l:"Centre-ville de Colombo",s:"Déjà en ville"}, custom:{l:"Autre ville / hôtel",s:"Je commence ailleurs"},
+    daysq:"Choisissez vos dates, nous compterons les jours automatiquement", roundtripq:"À la fin du voyage, souhaitez-vous revenir à votre point de départ ?",
+    roundtrip_yes:{l:"Oui, aller-retour",s:"Retour au point de départ"}, roundtrip_no:{l:"Non, aller simple",s:"Je finirai ailleurs"},
+    activities_sub:"Choisissez tout ce qui s'applique", food_sub:"Choisissez tout ce qui s'applique", group_sub:"Type de groupe", budget_sub:"Budget quotidien par personne",
+    transport_sub:"Votre itinéraire IA sera construit autour de votre choix de transport", pace_sub:"Cela détermine combien d'activités nous planifions par jour",
+    hotelstyle_sub:"Certains voyageurs préfèrent s'installer à un endroit, d'autres aiment se déplacer",
+    hotel_base:{l:"Rester dans un hôtel",s:"Choisissez une base et faites des excursions"},
+    hotel_multi:{l:"Voyager à travers le pays",s:"Un nouvel hôtel tous les 1-3 nuits — plus d'endroits, plus de variété"},
+    places_sub:"Si vous connaissez déjà un endroit au Sri Lanka que vous souhaitez inclure, ajoutez-le ici.",
+    places_placeholder:"ex. Ravana Falls, Ella · Nine Arch Bridge · Galle Fort", places_add:"Ajouter +", places_empty:"Aucun lieu spécifique ajouté — votre itinéraire sera entièrement généré par l'IA.",
+    places_optional:"Cette étape est entièrement facultative.", places_tip:"Nous intégrerons vos lieux logiquement dans l'itinéraire.",
+    villagehomestay:{l:"Séjour en village",s:"Dormez dans une famille locale"}, paddyfarming:{l:"Riziculture",s:"Plantez & récoltez avec les agriculteurs"},
+    cookingclass:{l:"Cours de cuisine villageoise",s:"Apprenez de vraies recettes sri-lankaises"}, spicegarden:{l:"Visite du jardin d'épices",s:"Cannelle, poivre, cardamome"},
+    fishingvillage:{l:"Village de pêcheurs",s:"Rejoignez les pêcheurs à l'aube"}, veddacommunity:{l:"Communauté Vedda",s:"Culture & histoire indigènes"},
+    elephantvillage:{l:"Camp d'éléphants de travail",s:"Interaction éthique avec les éléphants"}, potteryweaving:{l:"Poterie & tissage",s:"Artisanat traditionnel avec des artisans"},
+    q_rural_title:"Quelles expériences rurales vous intéressent ?", q_final_title:"Presque terminé — des derniers détails ?",
+    rural_sub:"Choisissez les expériences rurales que vous aimeriez.",
+    final_sub:"Presque terminé ! Deux derniers détails :", starttime_label:"🕐 À quelle heure commence votre voyage ?",
+    starttime_sub:"Cela affecte ce que nous planifions pour le jour 1.",
+    tripsummary_label:"📋 Résumé du voyage",
+    sum_dates:"Dates", sum_duration:"Durée", sum_starttime:"Heure de début", sum_startfrom:"Départ de", sum_triptype:"Type de voyage",
+    sum_style:"Style", sum_group:"Groupe", sum_budget:"Budget", sum_transport:"Transport", sum_pace:"Rythme", sum_hotelstyle:"Style d'hôtel", sum_places:"Vos lieux",
+    sum_notset:"Non défini", sum_notselected:"Non sélectionné", sum_roundtrip_full:"Aller-retour — retour au départ", sum_oneway:"Aller simple",
+    sum_onebase:"Un hôtel de base", sum_moving:"En déplacement",
+    cal_from:"Du", cal_to:"Au",
+  },
+  zh: {
+    beach:{l:"海滩与海岸",s:"阳光、沙滩、冲浪与大海"}, hills:{l:"山区",s:"茶园小径、薄雾与瀑布"},
+    cultural:{l:"文化与历史",s:"寺庙、遗迹与故事"}, wildlife:{l:"野生动物与自然",s:"野生动物园、丛林与鸟类"},
+    adventure:{l:"冒险",s:"徒步、漂流与攀登"}, rural:{l:"斯里兰卡乡村",s:"村庄、农场与当地生活"},
+    mixed:{l:"全斯里兰卡",s:"一点点全部体验"},
+    solo:{l:"独自旅行",s:"只有我"}, couple:{l:"情侣",s:"两位旅行者"}, family:{l:"家庭",s:"带孩子"}, friends:{l:"朋友团体",s:"3人或以上"},
+    budget:{l:"经济型",s:"< $50/天"}, mid:{l:"中档",s:"$50–$150/天"}, luxury:{l:"豪华型",s:"$150+/天"},
+    srilankan:"斯里兰卡菜", seafood:"海鲜", vegetarian:"素食", vegan:"纯素", western:"西餐", southindian:"南印度菜", streetfood:"街头小吃", finedining:"高级餐饮",
+    relaxation:{l:"放松"}, sightseeing:{l:"观光"}, "food-tours":{l:"美食之旅"}, wellness:{l:"健康与水疗"},
+    "water-sports":{l:"水上运动"}, "wildlife-safari":{l:"野生动物园"}, hiking:{l:"徒步与远足"}, "adventure-act":{l:"冒险运动"},
+    "tuk-tuk":{l:"嘟嘟车",s:"地道有趣，适合短途出行"}, "private-car":{l:"私人轿车",s:"舒适灵活"},
+    train:{l:"观光火车",s:"标志性的山区路线"}, bus:{l:"公共巴士",s:"经济实惠，体验当地生活"},
+    relaxed:{l:"轻松",s:"每天最多2个活动，悠长午餐"}, balanced:{l:"均衡",s:"3-4个活动，留有休息时间"}, packed:{l:"紧凑充实",s:"尽可能多游览"},
+    airport:{l:"班达拉奈克国际机场",s:"卡图纳亚克 — 大多数国际航班"}, colombo:{l:"科伦坡市中心",s:"已在市内"}, custom:{l:"其他城市/酒店",s:"我从别处出发"},
+    daysq:"选择您的日期，我们将自动计算天数", roundtripq:"行程结束时，您想返回出发地点吗？",
+    roundtrip_yes:{l:"是，往返行程",s:"返回出发地点"}, roundtrip_no:{l:"否，单程",s:"我会在其他地方结束行程"},
+    activities_sub:"选择所有适用项", food_sub:"选择所有适用项", group_sub:"团体类型", budget_sub:"每人每日预算",
+    transport_sub:"您的 AI 行程将围绕您的交通选择构建", pace_sub:"这决定了我们每天规划多少活动",
+    hotelstyle_sub:"有些旅行者喜欢固定一处住宿，有些则喜欢四处游览",
+    hotel_base:{l:"入住一家酒店",s:"选择一个基地并安排一日游"},
+    hotel_multi:{l:"环岛旅行",s:"每1-3晚换一家新酒店 — 探索更多地方"},
+    places_sub:"如果您已经知道想要加入的斯里兰卡地点 — 寺庙、瀑布、城镇、餐厅 — 请在此添加。",
+    places_placeholder:"例如：拉瓦纳瀑布, 埃拉 · 九拱桥 · 加勒堡", places_add:"添加 +", places_empty:"未添加特定地点 — 您的行程将完全由 AI 根据您的风格选择生成。",
+    places_optional:"此步骤完全可选。", places_tip:"我们会合理地将您的地点融入路线中。",
+    villagehomestay:{l:"乡村民宿",s:"入住当地家庭"}, paddyfarming:{l:"稻田耕作",s:"与农民一起种植和收割"},
+    cookingclass:{l:"乡村烹饪课",s:"学习正宗斯里兰卡食谱"}, spicegarden:{l:"香料园之旅",s:"肉桂、胡椒、豆蔻"},
+    fishingvillage:{l:"渔村",s:"黎明时分加入渔民"}, veddacommunity:{l:"维达社区",s:"原住民文化与历史"},
+    elephantvillage:{l:"工作象营",s:"符合伦理的大象互动"}, potteryweaving:{l:"陶艺与编织",s:"与工匠一起体验传统工艺"},
+    q_rural_title:"您对哪些乡村体验感兴趣？", q_final_title:"快完成了 — 还有最后的细节吗？",
+    rural_sub:"选择您喜欢的乡村体验。",
+    final_sub:"快完成了！最后两个细节：", starttime_label:"🕐 您的行程几点开始？",
+    starttime_sub:"这会影响我们为第1天规划的内容。",
+    tripsummary_label:"📋 行程摘要",
+    sum_dates:"日期", sum_duration:"行程长度", sum_starttime:"出发时间", sum_startfrom:"出发地", sum_triptype:"行程类型",
+    sum_style:"风格", sum_group:"团体", sum_budget:"预算", sum_transport:"交通方式", sum_pace:"节奏", sum_hotelstyle:"酒店风格", sum_places:"您的地点",
+    sum_notset:"未设置", sum_notselected:"未选择", sum_roundtrip_full:"往返行程 — 返回出发地", sum_oneway:"单程",
+    sum_onebase:"一个基地酒店", sum_moving:"四处游览",
+    cal_from:"从", cal_to:"到",
+  },
+};
+function optT(lang, value) {
+  return OPT_T[lang]?.[value] || OPT_T.en[value] || { l:value, s:"" };
+}
+
 const LangContext = React.createContext({ lang:"en", setLang:()=>{}, t:(k)=>k });
 function useLang() { return React.useContext(LangContext); }
 function LangProvider({ children }) {
   const [lang, setLang] = useState(()=>localStorage.getItem("ct_lang") || "en");
   const changeLang = (code) => { setLang(code); localStorage.setItem("ct_lang", code); };
   const t = (key) => TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
-  return <LangContext.Provider value={{ lang, setLang:changeLang, t }}>{children}</LangContext.Provider>;
+  const ot = (value) => optT(lang, value); // option translation: returns {l, s}
+  return <LangContext.Provider value={{ lang, setLang:changeLang, t, ot }}>{children}</LangContext.Provider>;
 }
 
 // ─── ACTIVITY ↔ REGION COMPATIBILITY ────────────────────────────────────────
@@ -781,6 +1025,14 @@ const MOBILE_CSS = `
 
     /* Hero section padding */
     .hero-section { padding: 3rem 1rem 2rem !important; }
+
+    /* Premium/payment modals — ensure they never overflow narrow screens */
+    .premium-modal { max-width: calc(100vw - 28px) !important; }
+
+    /* Admin panel — collapse the sidebar to icon-only so guide list + detail fit */
+    .admin-nav-sidebar { width: 60px !important; }
+    .admin-nav-label { display: none !important; }
+    .admin-nav-section-title { display: none !important; }
   }
 
   @media (max-width: 480px) {
@@ -899,10 +1151,12 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
           {/* Auth button */}
           {user ? (
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <div style={{ width:32, height:32, borderRadius:"50%", background:C.teal, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700 }}>
-                {displayName?.[0]?.toUpperCase()||"U"}
+              <div onClick={()=>setPage("myitineraries")} style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer" }} title="My Itineraries">
+                <div style={{ width:32, height:32, borderRadius:"50%", background:C.teal, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700 }}>
+                  {displayName?.[0]?.toUpperCase()||"U"}
+                </div>
+                <span style={{ fontSize:13, fontWeight:600, color:page==="myitineraries"?C.teal:C.ink }}>{displayName}</span>
               </div>
-              <span style={{ fontSize:13, fontWeight:600, color:C.ink }}>{displayName}</span>
               <button onClick={signOut} style={{ fontSize:12, color:C.inkSoft, background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"4px 10px", cursor:"pointer", fontFamily:sans }}>{t("nav_signout")}</button>
             </div>
           ) : (
@@ -931,10 +1185,15 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
             ))}
           </div>
           {user ? (
-            <div style={{ marginTop:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <span style={{ fontSize:13, color:C.ink }}>👤 {displayName}</span>
-              <button onClick={()=>{ signOut(); setMenuOpen(false); }} style={{ fontSize:12, color:C.coral, background:"none", border:`1px solid ${C.coral}`, borderRadius:8, padding:"5px 12px", cursor:"pointer", fontFamily:sans }}>{t("nav_signout")}</button>
-            </div>
+            <>
+              <div onClick={()=>{ setPage("myitineraries"); setMenuOpen(false); }} style={{ padding:"11px 2px", fontSize:14.5, fontWeight:page==="myitineraries"?600:400, color:page==="myitineraries"?C.teal:C.ink, cursor:"pointer", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:10 }}>
+                <span style={{ fontSize:16, width:20, textAlign:"center" }}>💾</span>My Itineraries
+              </div>
+              <div style={{ marginTop:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <span style={{ fontSize:13, color:C.ink }}>👤 {displayName}</span>
+                <button onClick={()=>{ signOut(); setMenuOpen(false); }} style={{ fontSize:12, color:C.coral, background:"none", border:`1px solid ${C.coral}`, borderRadius:8, padding:"5px 12px", cursor:"pointer", fontFamily:sans }}>{t("nav_signout")}</button>
+              </div>
+            </>
           ) : (
             <button onClick={()=>{ onLoginClick(); setMenuOpen(false); }} style={{ marginTop:10, width:"100%", padding:"11px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{t("nav_signin")}</button>
           )}
@@ -1173,7 +1432,7 @@ function SriLankaSlideshow({ setPage }) {
 }
 
 function HomePage({ setPage, onGuideOpen }) {
-  const { t } = useLang();
+  const { t, ot } = useLang();
   return (
     <div>
       <section style={{ position:"relative", minHeight:"92vh", background:"linear-gradient(160deg,#04322A 0%,#0B6B52 38%,#147856 60%,#9C6A10 100%)", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", padding:"6rem 2rem 5rem" }}>
@@ -2397,52 +2656,52 @@ function DraggableItinerary({ days, onUpdate, itinId, premium }) {
 }
 
 const TRAVEL_OPTS = [
-  {v:"beach",    i:"🏖️", l:"Beach & Coast",      s:"Sun, sand, surf & sea"},
-  {v:"hills",    i:"⛰️", l:"Hill Country",        s:"Tea trails, mist & waterfalls"},
-  {v:"cultural", i:"🏛️", l:"Cultural & Historic", s:"Temples, ruins & stories"},
-  {v:"wildlife", i:"🐘", l:"Wildlife & Nature",   s:"Safari, jungle & birds"},
-  {v:"adventure",i:"🧗", l:"Adventure",           s:"Hiking, rafting & climbing"},
-  {v:"rural",    i:"🌾", l:"Rural Sri Lanka",     s:"Villages, farms & local life"},
-  {v:"mixed",    i:"🗺️", l:"All of Sri Lanka",    s:"A bit of everything"},
+  {v:"beach",    i:"🏖️"},
+  {v:"hills",    i:"⛰️"},
+  {v:"cultural", i:"🏛️"},
+  {v:"wildlife", i:"🐘"},
+  {v:"adventure",i:"🧗"},
+  {v:"rural",    i:"🌾"},
+  {v:"mixed",    i:"🗺️"},
 ];
 const GROUP_OPTS = [
-  {v:"solo",i:"🧳",l:"Solo",s:"Just me"},
-  {v:"couple",i:"💑",l:"Couple",s:"Two travellers"},
-  {v:"family",i:"👨‍👩‍👧",l:"Family",s:"With kids"},
-  {v:"friends",i:"🎉",l:"Friends group",s:"3 or more"},
+  {v:"solo",i:"🧳"},
+  {v:"couple",i:"💑"},
+  {v:"family",i:"👨‍👩‍👧"},
+  {v:"friends",i:"🎉"},
 ];
 const BUDGET_OPTS = [
-  {v:"budget",l:"Budget",s:"< $50/day"},
-  {v:"mid",l:"Mid-range",s:"$50–$150/day"},
-  {v:"luxury",l:"Luxury",s:"$150+/day"},
+  {v:"budget"},
+  {v:"mid"},
+  {v:"luxury"},
 ];
-const FOOD_OPTS = ["Sri Lankan","Seafood","Vegetarian","Vegan","Western","South Indian","Street food","Fine dining"];
+const FOOD_OPT_KEYS = ["srilankan","seafood","vegetarian","vegan","western","southindian","streetfood","finedining"];
 const ACT_OPTS = [
-  {v:"adventure",i:"🧗",l:"Adventure sports"},
-  {v:"relaxation",i:"🌅",l:"Relaxation"},
-  {v:"sightseeing",i:"📸",l:"Sightseeing"},
-  {v:"food-tours",i:"🍛",l:"Food tours"},
-  {v:"wellness",i:"🧘",l:"Wellness & Spa"},
-  {v:"water-sports",i:"🤿",l:"Water sports"},
-  {v:"wildlife-safari",i:"🦁",l:"Wildlife safari"},
-  {v:"hiking",i:"🥾",l:"Hiking & Trekking"},
+  {v:"adventure",i:"🧗"},
+  {v:"relaxation",i:"🌅"},
+  {v:"sightseeing",i:"📸"},
+  {v:"food-tours",i:"🍛"},
+  {v:"wellness",i:"🧘"},
+  {v:"water-sports",i:"🤿"},
+  {v:"wildlife-safari",i:"🦁"},
+  {v:"hiking",i:"🥾"},
 ];
 const TRANSPORT_OPTS = [
-  {v:"tuk-tuk",i:"🛺",l:"Tuk-tuk",s:"Authentic & fun, best for short hops"},
-  {v:"private-car",i:"🚗",l:"Private car",s:"Comfortable & flexible"},
-  {v:"train",i:"🚂",l:"Scenic train",s:"Iconic hill country routes"},
-  {v:"bus",i:"🚌",l:"Public bus",s:"Budget-friendly, local experience"},
+  {v:"tuk-tuk",i:"🛺"},
+  {v:"private-car",i:"🚗"},
+  {v:"train",i:"🚂"},
+  {v:"bus",i:"🚌"},
 ];
 const PACE_OPTS = [
-  {v:"relaxed",i:"🌿",l:"Relaxed",s:"Max 2 activities/day, long lunches"},
-  {v:"balanced",i:"⚖️",l:"Balanced",s:"3–4 activities, some downtime"},
-  {v:"packed",i:"⚡",l:"Action-packed",s:"See as much as possible"},
+  {v:"relaxed",i:"🌿"},
+  {v:"balanced",i:"⚖️"},
+  {v:"packed",i:"⚡"},
 ];
 
 const START_OPTS = [
-  {v:"airport", i:"✈️", l:"Bandaranaike International Airport", s:"Katunayake — most international flights"},
-  {v:"colombo", i:"🏙️", l:"Colombo City Centre",               s:"Already in the city"},
-  {v:"custom",  i:"📍", l:"Another city / hotel",               s:"I'm starting somewhere else"},
+  {v:"airport", i:"✈️"},
+  {v:"colombo", i:"🏙️"},
+  {v:"custom",  i:"📍"},
 ];
 
 // ─── LOCAL CHEAT SHEET DATA ──────────────────────────────────────────────────
@@ -2581,17 +2840,16 @@ function ItineraryLoadingAnimation() {
 }
 
 function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLoginNeeded, premium }) {
-  const { t } = useLang();
+  const { t, ot } = useLang();
   const [step, setStep]    = useState(()=>{
-    // Restore step if user just logged in mid-wizard
-    const saved = sessionStorage.getItem("ct_wizard_step");
-    if (saved) { sessionStorage.removeItem("ct_wizard_step"); return parseInt(saved)||0; }
-    return 0;
+    // Restore step from any previous session (refresh, login redirect, accidental close)
+    const saved = localStorage.getItem("ct_wizard_step");
+    return saved ? (parseInt(saved)||0) : 0;
   });
   const [ans, setAns]      = useState(()=>{
-    // Restore wizard answers if user just logged in mid-wizard
-    const saved = sessionStorage.getItem("ct_wizard_ans");
-    if (saved) { sessionStorage.removeItem("ct_wizard_ans"); try { return JSON.parse(saved); } catch {} }
+    // Restore wizard answers from any previous session
+    const saved = localStorage.getItem("ct_wizard_ans");
+    if (saved) { try { return JSON.parse(saved); } catch {} }
     return { days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true };
   });
   const [loading, setLoad] = useState(false);
@@ -2600,6 +2858,20 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   const [placeInput, setPlaceInput] = useState("");
   const [startLabel, setStartLabel] = useState("Sri Lanka");
   const [shareModal, setShareModal] = useState(null); // {url, loading} or null
+  const [saveStatus, setSaveStatus] = useState(null); // null | "saving" | "saved" | "error"
+
+  // Continuously persist wizard progress so a refresh never loses answers —
+  // only while still in the wizard (step < 10); once an itinerary is generated
+  // and saved, we clear this draft since savedItin now holds the real data.
+  useEffect(()=>{
+    if (step < 10) {
+      localStorage.setItem("ct_wizard_step", String(step));
+      localStorage.setItem("ct_wizard_ans", JSON.stringify(ans));
+    } else {
+      localStorage.removeItem("ct_wizard_step");
+      localStorage.removeItem("ct_wizard_ans");
+    }
+  }, [step, ans]);
 
   // Auto-generate ref — used after generate() is defined below
   const didAutoGenerate = useRef(false);
@@ -2766,7 +3038,7 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
 
 TRIP:
 - ${N} days, ${ans.nights} nights | ${ans.group||"solo"} | Budget: ${ans.budget||"mid-range"} (${hotelTier})
-- Style: ${styleKey} | Food: ${ans.food.join(", ")||"open"} | Activities: ${ans.activities.join(", ")||"sightseeing"}
+- Style: ${styleKey} | Food: ${ans.food.map(fk=>optT("en",fk)).join(", ")||"open"} | Activities: ${ans.activities.join(", ")||"sightseeing"}
 - Transport: ${ans.transport||"private-car"} | Pace: ${ans.pace||"balanced"} (${actsPerDay} activities/day)
 - Starting from: ${customStart} at ${ans.startTime||"09:00"}
 ${customNote ? `- ${customNote}` : ""}
@@ -2927,6 +3199,18 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                   setShareModal({ url, loading:false });
                 } catch(e) { setShareModal({ url:null, loading:false, error:e.message }); }
               }} style={{ padding:"10px 20px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>🔗 Share itinerary</button>
+              <button onClick={async()=>{
+                if (!user) { onLoginNeeded(); return; }
+                setSaveStatus("saving");
+                try {
+                  if (!window.firebase?.firestore) await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+                  await saveUserItinerary(user.uid, { ...itin, days: itinDays||itin.days });
+                  setSaveStatus("saved");
+                  setTimeout(()=>setSaveStatus(null), 2500);
+                } catch(e) { setSaveStatus("error"); setTimeout(()=>setSaveStatus(null), 3000); }
+              }} disabled={saveStatus==="saving"} style={{ padding:"10px 20px", background: saveStatus==="saved"?"#16A34A":"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:saveStatus==="saving"?"wait":"pointer", fontFamily:sans }}>
+                {saveStatus==="saving"?"Saving…":saveStatus==="saved"?"✅ Saved!":saveStatus==="error"?"⚠️ Try again":"💾 Save for later"}
+              </button>
               {/* Google Maps multi-waypoint route */}
               <button onClick={()=>{
                 // Build Google Maps directions URL with all unique day locations as waypoints
@@ -3037,9 +3321,9 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     <>
       <StepDots cur={0} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_start")}</h2>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick your dates and we'll count the days automatically</p>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>{t("daysq")}</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10, marginBottom:18 }}>
-        {START_OPTS.map(o=><OptBtn key={o.v} sel={ans.startCity===o.v} onClick={()=>upd("startCity",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
+        {START_OPTS.map(o=><OptBtn key={o.v} sel={ans.startCity===o.v} onClick={()=>upd("startCity",o.v)} icon={o.i} label={ot(o.v).l} sub={ot(o.v).s}/>)}
       </div>
       {ans.startCity==="custom" && (
         <input value={ans.customStart||""} onChange={e=>upd("customStart",e.target.value)} placeholder="e.g. Galle, Negombo, Kandy…"
@@ -3049,7 +3333,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       {/* Calendar date range */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
         <div>
-          <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>📅 From</label>
+          <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>📅 {t("cal_from")}</label>
           <input type="date" value={ans.startDate||""} min={new Date().toISOString().split("T")[0]}
             onChange={e=>{
               const newStart = e.target.value;
@@ -3066,7 +3350,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             style={{ width:"100%", padding:"11px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
         </div>
         <div>
-          <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>📅 To</label>
+          <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>📅 {t("cal_to")}</label>
           <input type="date" value={ans.endDate||""} min={ans.startDate||new Date().toISOString().split("T")[0]}
             onChange={e=>{
               const newEnd = e.target.value;
@@ -3090,10 +3374,10 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       )}
 
       {/* Round trip choice */}
-      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:8 }}>At the end of the trip, do you want to return to your starting point?</label>
+      <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:8 }}>{t("roundtripq")}</label>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-        <OptBtn sel={ans.roundTrip===true} onClick={()=>upd("roundTrip",true)} icon="🔁" label="Yes, round trip" sub="End back where I started"/>
-        <OptBtn sel={ans.roundTrip===false} onClick={()=>upd("roundTrip",false)} icon="➡️" label="No, one-way" sub="I'll end up somewhere else"/>
+        <OptBtn sel={ans.roundTrip===true} onClick={()=>upd("roundTrip",true)} icon="🔁" label={ot("roundtrip_yes").l} sub={ot("roundtrip_yes").s}/>
+        <OptBtn sel={ans.roundTrip===false} onClick={()=>upd("roundTrip",false)} icon="➡️" label={ot("roundtrip_no").l} sub={ot("roundtrip_no").s}/>
       </div>
     </>,
 
@@ -3102,7 +3386,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       <StepDots cur={1} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:24 }}>{t("q_travel")}</h2>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-        {TRAVEL_OPTS.map(o=><OptBtn key={o.v} sel={ans.travel===o.v} onClick={()=>upd("travel",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
+        {TRAVEL_OPTS.map(o=><OptBtn key={o.v} sel={ans.travel===o.v} onClick={()=>upd("travel",o.v)} icon={o.i} label={ot(o.v).l} sub={ot(o.v).s}/>)}
       </div>
     </>,
 
@@ -3110,9 +3394,9 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     <>
       <StepDots cur={2} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_activities")}</h2>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick any that apply</p>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>{t("activities_sub")}</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-        {ACT_OPTS.map(o=><OptBtn key={o.v} sel={ans.activities.includes(o.v)} onClick={()=>tog("activities",o.v)} icon={o.i} label={o.l}/>)}
+        {ACT_OPTS.map(o=><OptBtn key={o.v} sel={ans.activities.includes(o.v)} onClick={()=>tog("activities",o.v)} icon={o.i} label={ot(o.v==="adventure"?"adventure-act":o.v).l}/>)}
       </div>
       <MismatchWarning travel={ans.travel} activities={ans.activities}/>
     </>,
@@ -3121,9 +3405,9 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     <>
       <StepDots cur={3} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_food")}</h2>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick any that apply</p>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>{t("food_sub")}</p>
       <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
-        {FOOD_OPTS.map(f=>{ const s=ans.food.includes(f); return <button key={f} onClick={()=>tog("food",f)} style={{ padding:"8px 16px", borderRadius:30, fontSize:13, fontWeight:500, cursor:"pointer", border:`1.5px solid ${s?C.amberMid:C.border}`, background:s?C.amberLight:C.surface, color:s?C.amber:C.inkSoft, fontFamily:sans }}>{f}</button>; })}
+        {FOOD_OPT_KEYS.map(fk=>{ const s=ans.food.includes(fk); return <button key={fk} onClick={()=>tog("food",fk)} style={{ padding:"8px 16px", borderRadius:30, fontSize:13, fontWeight:500, cursor:"pointer", border:`1.5px solid ${s?C.amberMid:C.border}`, background:s?C.amberLight:C.surface, color:s?C.amber:C.inkSoft, fontFamily:sans }}>{ot(fk)}</button>; })}
       </div>
     </>,
 
@@ -3131,13 +3415,13 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     <>
       <StepDots cur={4} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:18 }}>{t("q_groupbudget")}</h2>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:10 }}>Group type</p>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:10 }}>{t("group_sub")}</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
-        {GROUP_OPTS.map(o=><OptBtn key={o.v} sel={ans.group===o.v} onClick={()=>upd("group",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
+        {GROUP_OPTS.map(o=><OptBtn key={o.v} sel={ans.group===o.v} onClick={()=>upd("group",o.v)} icon={o.i} label={ot(o.v).l} sub={ot(o.v).s}/>)}
       </div>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:10 }}>Daily budget per person</p>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:10 }}>{t("budget_sub")}</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
-        {BUDGET_OPTS.map(o=><OptBtn key={o.v} sel={ans.budget===o.v} onClick={()=>upd("budget",o.v)} label={o.l} sub={o.s}/>)}
+        {BUDGET_OPTS.map(o=><OptBtn key={o.v} sel={ans.budget===o.v} onClick={()=>upd("budget",o.v)} label={ot(o.v).l} sub={ot(o.v).s}/>)}
       </div>
     </>,
 
@@ -3145,9 +3429,9 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     <>
       <StepDots cur={5} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_transport")}</h2>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Your AI itinerary will be built around your transport choice</p>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>{t("transport_sub")}</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-        {TRANSPORT_OPTS.map(o=><OptBtn key={o.v} sel={ans.transport===o.v} onClick={()=>upd("transport",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
+        {TRANSPORT_OPTS.map(o=><OptBtn key={o.v} sel={ans.transport===o.v} onClick={()=>upd("transport",o.v)} icon={o.i} label={ot(o.v).l} sub={ot(o.v).s}/>)}
       </div>
     </>,
 
@@ -3155,9 +3439,9 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     <>
       <StepDots cur={6} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_pace")}</h2>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>This shapes how many activities per day we plan</p>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>{t("pace_sub")}</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10 }}>
-        {PACE_OPTS.map(o=><OptBtn key={o.v} sel={ans.pace===o.v} onClick={()=>upd("pace",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
+        {PACE_OPTS.map(o=><OptBtn key={o.v} sel={ans.pace===o.v} onClick={()=>upd("pace",o.v)} icon={o.i} label={ot(o.v).l} sub={ot(o.v).s}/>)}
       </div>
     </>,
 
@@ -3165,10 +3449,10 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     <>
       <StepDots cur={7} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_hotelstyle")}</h2>
-      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Some travellers prefer settling into one place, others love moving around</p>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>{t("hotelstyle_sub")}</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10 }}>
-        <OptBtn sel={ans.hotelStyle==="base"} onClick={()=>upd("hotelStyle","base")} icon="🏨" label="Stay in one hotel" sub="Pick one base and take day trips out — less packing, more relaxing"/>
-        <OptBtn sel={ans.hotelStyle==="multi"} onClick={()=>upd("hotelStyle","multi")} icon="🧳" label="Move around the country" sub="A new hotel every 1-3 nights — see more places, more variety"/>
+        <OptBtn sel={ans.hotelStyle==="base"} onClick={()=>upd("hotelStyle","base")} icon="🏨" label={ot("hotel_base").l} sub={ot("hotel_base").s}/>
+        <OptBtn sel={ans.hotelStyle==="multi"} onClick={()=>upd("hotelStyle","multi")} icon="🧳" label={ot("hotel_multi").l} sub={ot("hotel_multi").s}/>
       </div>
     </>,
 
@@ -3177,7 +3461,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       <StepDots cur={8} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:6 }}>{t("q_places")}</h2>
       <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20, lineHeight:1.6 }}>
-        If you already know a place in Sri Lanka you want to include — a temple, a waterfall, a town, a restaurant — add it here and we'll fit it into your itinerary.
+        {t("places_sub")}
       </p>
       {/* Input row */}
       <div className="place-input-row" style={{ display:"flex", gap:8, marginBottom:16 }}>
@@ -3185,13 +3469,13 @@ Return ONLY valid raw JSON — no markdown, no backticks:
           value={placeInput}
           onChange={e=>setPlaceInput(e.target.value)}
           onKeyDown={e=>{ if(e.key==="Enter"&&placeInput.trim()){ setAns(a=>({...a,customPlaces:[...a.customPlaces,placeInput.trim()]})); setPlaceInput(""); } }}
-          placeholder="e.g. Ravana Falls, Ella · Nine Arch Bridge · Galle Fort"
+          placeholder={t("places_placeholder")}
           style={{ flex:1, padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:13, fontFamily:sans, color:C.ink, outline:"none", minWidth:0 }}
         />
         <button
           onClick={()=>{ if(placeInput.trim()){ setAns(a=>({...a,customPlaces:[...a.customPlaces,placeInput.trim()]})); setPlaceInput(""); } }}
           style={{ padding:"12px 18px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap", flexShrink:0 }}>
-          Add +
+          {t("places_add")}
         </button>
       </div>
       {/* Added places list */}
@@ -3209,12 +3493,12 @@ Return ONLY valid raw JSON — no markdown, no backticks:
         </div>
       ) : (
         <div style={{ padding:"16px", background:C.surface, border:`1px solid ${C.border}`, borderRadius:12, fontSize:13, color:C.inkSoft, textAlign:"center", lineHeight:1.6 }}>
-          No specific places added — your itinerary will be fully AI-generated based on your style choices.<br/>
-          <span style={{ fontSize:12, opacity:.7 }}>This step is completely optional.</span>
+          {t("places_empty")}<br/>
+          <span style={{ fontSize:12, opacity:.7 }}>{t("places_optional")}</span>
         </div>
       )}
       <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:12, padding:"10px 14px", fontSize:12, color:C.amber, marginTop:16, lineHeight:1.6 }}>
-        💡 We'll fit your places into the route logically — if a place doesn't match your travel style region, we'll suggest the nearest travel day to include it.
+        💡 {t("places_tip")}
       </div>
     </>,
 
@@ -3222,32 +3506,32 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     <>
       <StepDots cur={9} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>
-        {ans.travel==="rural" ? "What rural experiences interest you?" : "Almost done — any final touches?"}
+        {ans.travel==="rural" ? t("q_rural_title") : t("q_final_title")}
       </h2>
       {ans.travel==="rural" ? (
         <>
-          <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick the rural experiences you'd love — we'll build your itinerary around them.</p>
+          <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>{t("rural_sub")}</p>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
             {[
-              {v:"village-homestay",  i:"🏡", l:"Village homestay",     s:"Sleep in a local family home"},
-              {v:"paddy-farming",     i:"🌾", l:"Paddy farming",        s:"Plant & harvest with farmers"},
-              {v:"cooking-class",     i:"🍳", l:"Village cooking class", s:"Learn real Sri Lankan recipes"},
-              {v:"spice-garden",      i:"🌿", l:"Spice garden tour",    s:"Cinnamon, pepper, cardamom"},
-              {v:"fishing-village",   i:"🎣", l:"Fishing village",      s:"Join fishermen at dawn"},
-              {v:"vedda-community",   i:"🏹", l:"Vedda community",      s:"Indigenous culture & history"},
-              {v:"elephant-village",  i:"🐘", l:"Working elephant camp",s:"Ethical elephant interaction"},
-              {v:"pottery-weaving",   i:"🏺", l:"Pottery & weaving",    s:"Traditional crafts with artisans"},
-            ].map(o=><OptBtn key={o.v} sel={ans.activities.includes(o.v)} onClick={()=>tog("activities",o.v)} icon={o.i} label={o.l} sub={o.s}/>)}
+              {v:"village-homestay",  i:"🏡", ok:"villagehomestay"},
+              {v:"paddy-farming",     i:"🌾", ok:"paddyfarming"},
+              {v:"cooking-class",     i:"🍳", ok:"cookingclass"},
+              {v:"spice-garden",      i:"🌿", ok:"spicegarden"},
+              {v:"fishing-village",   i:"🎣", ok:"fishingvillage"},
+              {v:"vedda-community",   i:"🏹", ok:"veddacommunity"},
+              {v:"elephant-village",  i:"🐘", ok:"elephantvillage"},
+              {v:"pottery-weaving",   i:"🏺", ok:"potteryweaving"},
+            ].map(o=><OptBtn key={o.v} sel={ans.activities.includes(o.v)} onClick={()=>tog("activities",o.v)} icon={o.i} label={ot(o.ok).l} sub={ot(o.ok).s}/>)}
           </div>
         </>
       ) : (
         <>
           {/* Start time picker */}
-          <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16, lineHeight:1.6 }}>Almost done! Two final details:</p>
+          <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16, lineHeight:1.6 }}>{t("final_sub")}</p>
 
           <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"16px 18px", marginBottom:16 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:10 }}>🕐 What time does your trip start?</div>
-            <p style={{ fontSize:12, color:C.inkSoft, marginBottom:12 }}>This affects what we plan for Day 1 — an evening start means check-in only, morning start means a full day.</p>
+            <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:10 }}>{t("starttime_label")}</div>
+            <p style={{ fontSize:12, color:C.inkSoft, marginBottom:12 }}>{t("starttime_sub")}</p>
             <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
               <input type="time" value={ans.startTime||"09:00"} onChange={e=>upd("startTime",e.target.value)}
                 style={{ padding:"10px 14px", border:`1.5px solid ${C.teal}`, borderRadius:10, fontSize:16, fontFamily:sans, fontWeight:600, color:C.ink, outline:"none", cursor:"pointer" }}/>
@@ -3265,25 +3549,25 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 
           {/* Trip summary */}
           <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"16px 18px" }}>
-            <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:10 }}>📋 Trip summary</div>
+            <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:10 }}>{t("tripsummary_label")}</div>
             {[
-              ["📅","Dates",ans.startDate&&ans.endDate?`${new Date(ans.startDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} → ${new Date(ans.endDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}`:"Not set"],
-              ["📅","Duration",`${ans.days} days, ${ans.nights} nights`],
-              ["🕐","Start time",ans.startTime||"09:00"],
-              ["📍","Starting from",ans.startCity==="airport"?"BIA Airport":ans.startCity==="colombo"?"Colombo":ans.customStart||"Colombo"],
-              ["🔁","Trip type",ans.roundTrip?"Round trip — returning to start":"One-way"],
-              ["🗺️","Style",ans.travel||"Not selected"],
-              ["👥","Group",ans.group||"Not selected"],
-              ["💰","Budget",ans.budget||"Not selected"],
-              ["🚗","Transport",ans.transport||"Not selected"],
-              ["⚡","Pace",ans.pace||"balanced"],
-              ["🏨","Hotel style",ans.hotelStyle==="base"?"One base hotel":"Moving around"],
-              ...(ans.customPlaces.length?[["📍","Your places",ans.customPlaces.join(", ")]]:[]),
+              ["📅",t("sum_dates"),ans.startDate&&ans.endDate?`${new Date(ans.startDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} → ${new Date(ans.endDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}`:t("sum_notset")],
+              ["📅",t("sum_duration"),`${ans.days} ${ans.days===1?"day":"days"}, ${ans.nights} ${ans.nights===1?"night":"nights"}`],
+              ["🕐",t("sum_starttime"),ans.startTime||"09:00"],
+              ["📍",t("sum_startfrom"),ans.startCity==="airport"?ot("airport").l:ans.startCity==="colombo"?ot("colombo").l:ans.customStart||ot("colombo").l],
+              ["🔁",t("sum_triptype"),ans.roundTrip?t("sum_roundtrip_full"):t("sum_oneway")],
+              ["🗺️",t("sum_style"),ans.travel?ot(ans.travel).l:t("sum_notselected")],
+              ["👥",t("sum_group"),ans.group?ot(ans.group).l:t("sum_notselected")],
+              ["💰",t("sum_budget"),ans.budget?ot(ans.budget).l:t("sum_notselected")],
+              ["🚗",t("sum_transport"),ans.transport?ot(ans.transport).l:t("sum_notselected")],
+              ["⚡",t("sum_pace"),ot(ans.pace||"balanced").l],
+              ["🏨",t("sum_hotelstyle"),ans.hotelStyle==="base"?t("sum_onebase"):t("sum_moving")],
+              ...(ans.customPlaces.length?[["📍",t("sum_places"),ans.customPlaces.join(", ")]]:[]),
             ].map(([icon,label,val])=>(
               <div key={label} style={{ display:"flex", gap:12, padding:"6px 0", borderBottom:`1px solid ${C.border}`, fontSize:12 }}>
                 <span style={{ fontSize:14 }}>{icon}</span>
                 <span style={{ color:C.inkSoft, minWidth:90 }}>{label}</span>
-                <span style={{ fontWeight:600, color:C.ink, textTransform:"capitalize", flex:1 }}>{val}</span>
+                <span style={{ fontWeight:600, color:C.ink, flex:1 }}>{val}</span>
               </div>
             ))}
           </div>
@@ -3317,9 +3601,8 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                 }}>{t("wiz_next")}</Btn>
               : <Btn variant="amber" onClick={()=>{
                   if(!user){
-                    // Save wizard state so it survives login
-                    sessionStorage.setItem("ct_wizard_ans", JSON.stringify(ans));
-                    sessionStorage.setItem("ct_wizard_step", String(step));
+                    // Wizard answers are already auto-saved to localStorage —
+                    // they'll be restored automatically after login.
                     onLoginNeeded();
                     return;
                   }
@@ -3394,6 +3677,10 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
     if(!selected) return;
     setSending(true);
     try {
+      // Store the FULL itinerary (not truncated) so the guide can see every day's
+      // activities before deciding whether to bid. Previously this was sliced to
+      // 2000 chars which cut off mid-JSON and left guides unable to see the trip.
+      const fullItin = itin ? { ...itin, days: itinDays || itin.days } : null;
       await saveTripRequest({
         guideId:      selected.uid || String(selected.id),
         guideName:    selected.fullName || selected.name,
@@ -3404,7 +3691,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
         itinTitle:    itin?.title || "Custom trip",
         itinTagline:  itin?.tagline || "",
         itinDays:     itin?.days?.length || 0,
-        itinData:     itin ? JSON.stringify(itin).slice(0,2000) : "",
+        itinFull:     fullItin, // complete itinerary object — guide can view full day-by-day plan
         // Trip start/end details — so the guide knows exactly when and where
         tripStartDate: itin?.tripMeta?.startDate || "",
         tripEndDate:   itin?.tripMeta?.endDate || "",
@@ -3525,7 +3812,15 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                         </div>
                         <div style={{ display:"flex", gap:8 }}>
                           <button onClick={()=>{ setPayModal(req); setPayStep("confirm"); setPayTermsOk(false); }} style={{ flex:1, padding:"10px", background:C.teal, color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans }}>✅ Accept & Pay</button>
-                          <button onClick={async()=>{ await window.firebase.firestore().collection("tripRequests").doc(req.id).update({status:"declined"}); setMyRequests(rs=>rs.map(r=>r.id===req.id?{...r,status:"declined"}:r)); }} style={{ flex:1, padding:"10px", background:"none", color:C.coral, border:`1px solid ${C.coral}`, borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>❌ Decline</button>
+                          <button onClick={async()=>{
+                            try {
+                              await window.firebase.firestore().collection("tripRequests").doc(req.id).update({status:"declined"});
+                              setMyRequests(rs=>rs.map(r=>r.id===req.id?{...r,status:"declined"}:r));
+                            } catch(e) {
+                              console.error("Decline bid failed:", e);
+                              alert("Could not decline this bid: " + e.message);
+                            }
+                          }} style={{ flex:1, padding:"10px", background:"none", color:C.coral, border:`1px solid ${C.coral}`, borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>❌ Decline</button>
                         </div>
                       </div>
                     )}
@@ -3687,16 +3982,16 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
 
       {/* Payment modal */}
       {payModal && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.65)", zIndex:800, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(6px)" }}>
-          <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:420, boxShadow:"0 24px 80px rgba(0,0,0,.3)", overflow:"hidden" }}>
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.65)", zIndex:800, display:"flex", alignItems:"center", justifyContent:"center", padding:14, backdropFilter:"blur(6px)" }}>
+          <div className="premium-modal" style={{ background:"#fff", borderRadius:20, width:"100%", maxWidth:400, boxShadow:"0 24px 80px rgba(0,0,0,.3)", overflow:"hidden", maxHeight:"94vh", display:"flex", flexDirection:"column" }}>
             {payStep==="confirm" && (
               <>
-                <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"1.5rem", textAlign:"center" }}>
-                  <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#fff", marginBottom:4 }}>Confirm & Pay</div>
-                  <div style={{ fontSize:13, color:"rgba(255,255,255,.8)" }}>Booking with {payModal.guideName}</div>
+                <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"1.3rem 1.2rem", textAlign:"center", flexShrink:0 }}>
+                  <div style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:"#fff", marginBottom:4 }}>Confirm & Pay</div>
+                  <div style={{ fontSize:12.5, color:"rgba(255,255,255,.8)" }}>Booking with {payModal.guideName}</div>
                 </div>
-                <div style={{ padding:"1.5rem", maxHeight:"70vh", overflowY:"auto" }}>
-                  <div style={{ background:C.surface, borderRadius:14, padding:"16px", marginBottom:16 }}>
+                <div style={{ padding:"1.2rem", overflowY:"auto", flex:1 }}>
+                  <div style={{ background:C.surface, borderRadius:14, padding:"14px", marginBottom:14 }}>
                     <div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:12 }}>Payment breakdown</div>
                     {[
                       ["Total amount", `$${payModal.bid?.price} USD`],
@@ -3725,8 +4020,8 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                     I have read and agree to the payment terms and cancellation policy above
                   </label>
 
-                  <button onClick={()=>{ if(!payTermsOk){ alert("Please accept the payment terms to continue."); return; } setPayStep("paypal"); }} style={{ width:"100%", padding:"14px", background:payTermsOk?"#0070BA":"#9CA3AF", color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:700, cursor:payTermsOk?"pointer":"not-allowed", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
-                    <span style={{ fontWeight:900, fontSize:16 }}>Pay</span><span style={{ fontWeight:300, fontSize:16, color:"#80CFFF" }}>Pal</span>
+                  <button onClick={()=>{ if(!payTermsOk){ alert("Please accept the payment terms to continue."); return; } setPayStep("paypal"); }} style={{ width:"100%", padding:"13px 10px", background:payTermsOk?"#0070BA":"#9CA3AF", color:"#fff", border:"none", borderRadius:11, fontSize:13.5, fontWeight:700, cursor:payTermsOk?"pointer":"not-allowed", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:6, flexWrap:"wrap" }}>
+                    <span style={{ fontWeight:900 }}>Pay</span><span style={{ fontWeight:300, color:"#80CFFF" }}>Pal</span>
                     <span>→ Pay ${payModal.bid?.price}</span>
                   </button>
                   <button onClick={()=>{ setPayModal(null); setPayTermsOk(false); }} style={{ width:"100%", padding:"10px", background:"none", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.inkSoft, cursor:"pointer", fontFamily:sans }}>Cancel</button>
@@ -3735,12 +4030,12 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
             )}
 
             {payStep==="paypal" && (
-              <div style={{ padding:"1.5rem" }}>
+              <div style={{ padding:"1.2rem", overflowY:"auto" }}>
                 <div style={{ textAlign:"center", marginBottom:16 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:"#0070BA", marginBottom:4 }}>PayPal Checkout</div>
                   <div style={{ fontSize:12, color:C.inkSoft }}>CeylonTrails — Guide Booking · ${payModal.bid?.price}</div>
                 </div>
-                <div style={{ background:"#F5F7FA", borderRadius:10, padding:"12px", marginBottom:14, textAlign:"center", fontSize:16, fontWeight:700 }}>Total: ${payModal.bid?.price} USD</div>
+                <div style={{ background:"#F5F7FA", borderRadius:10, padding:"12px", marginBottom:14, textAlign:"center", fontSize:15, fontWeight:700 }}>Total: ${payModal.bid?.price} USD</div>
                 <input readOnly value="tourist@email.com" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:8, boxSizing:"border-box" }}/>
                 <input readOnly type="password" value="••••••••" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:14, boxSizing:"border-box" }}/>
                 <button onClick={handleAcceptBid} disabled={paying} style={{ width:"100%", padding:"13px", background:paying?"#aaa":"#0070BA", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:paying?"wait":"pointer", fontFamily:sans, marginBottom:8 }}>
@@ -3752,9 +4047,9 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
             )}
 
             {payStep==="success" && (
-              <div style={{ padding:"2rem", textAlign:"center" }}>
-                <div style={{ width:72, height:72, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:32 }}>✅</div>
-                <div style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink, marginBottom:8 }}>Booking Confirmed!</div>
+              <div style={{ padding:"1.8rem 1.4rem", textAlign:"center", overflowY:"auto" }}>
+                <div style={{ width:64, height:64, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:28 }}>✅</div>
+                <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>Booking Confirmed!</div>
                 <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:8 }}>Payment of <strong>${payModal.bid?.price}</strong> processed successfully.</p>
                 <div style={{ background:C.tealPale, borderRadius:10, padding:"10px 14px", fontSize:12, color:C.teal, marginBottom:20, textAlign:"left" }}>
                   <div>✓ Guide receives: <strong>${Math.round(Number(payModal.bid?.price)*0.85*100)/100}</strong></div>
@@ -4604,34 +4899,34 @@ function PremiumLock({ itinId, onUnlock }) {
       </div>
 
       {show && (
-        <div onClick={e=>e.target===e.currentTarget&&setShow(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(6px)" }}>
-          <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:400, boxShadow:"0 24px 80px rgba(0,0,0,.3)", overflow:"hidden", animation:"slideUp .25s ease" }}>
+        <div onClick={e=>e.target===e.currentTarget&&setShow(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:14, backdropFilter:"blur(6px)" }}>
+          <div className="premium-modal" style={{ background:"#fff", borderRadius:20, width:"100%", maxWidth:380, boxShadow:"0 24px 80px rgba(0,0,0,.3)", overflow:"hidden", animation:"slideUp .25s ease", maxHeight:"92vh", overflowY:"auto" }}>
             {step==="lock" && <>
-              <div style={{ background:`linear-gradient(135deg,${C.amber},#D97706)`, padding:"1.5rem", textAlign:"center" }}>
-                <div style={{ fontSize:40, marginBottom:8 }}>🔒</div>
-                <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#fff", marginBottom:4 }}>Premium Feature</div>
-                <div style={{ fontSize:13, color:"rgba(255,255,255,.85)" }}>Unlock all days, maps, swapping & drag-drop</div>
+              <div style={{ background:`linear-gradient(135deg,${C.amber},#D97706)`, padding:"1.3rem 1.2rem", textAlign:"center" }}>
+                <div style={{ fontSize:36, marginBottom:8 }}>🔒</div>
+                <div style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:"#fff", marginBottom:4 }}>Premium Feature</div>
+                <div style={{ fontSize:12.5, color:"rgba(255,255,255,.85)", lineHeight:1.5 }}>Unlock all days, maps, swapping & drag-drop</div>
               </div>
-              <div style={{ padding:"1.5rem" }}>
-                <div style={{ background:C.amberLight, border:`1.5px solid #F0D48A`, borderRadius:14, padding:"14px", textAlign:"center", marginBottom:20 }}>
-                  <div style={{ fontSize:28, fontWeight:800, color:C.amber }}>${UNLOCK_PRICE} USD</div>
-                  <div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>One-time payment · Instant access</div>
+              <div style={{ padding:"1.3rem" }}>
+                <div style={{ background:C.amberLight, border:`1.5px solid #F0D48A`, borderRadius:14, padding:"12px", textAlign:"center", marginBottom:18 }}>
+                  <div style={{ fontSize:24, fontWeight:800, color:C.amber }}>${UNLOCK_PRICE} USD</div>
+                  <div style={{ fontSize:11.5, color:C.inkSoft, marginTop:2 }}>One-time payment · Instant access</div>
                 </div>
-                <button onClick={()=>setStep("demo")} style={{ width:"100%", padding:"14px", background:"#0070BA", color:"#fff", border:"none", borderRadius:12, fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
-                  <span style={{ fontWeight:900, fontSize:16 }}>Pay</span><span style={{ fontWeight:300, fontSize:16, color:"#80CFFF" }}>Pal</span>
+                <button onClick={()=>setStep("demo")} style={{ width:"100%", padding:"13px 10px", background:"#0070BA", color:"#fff", border:"none", borderRadius:11, fontSize:13.5, fontWeight:700, cursor:"pointer", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:6, flexWrap:"wrap" }}>
+                  <span style={{ fontWeight:900 }}>Pay</span><span style={{ fontWeight:300, color:"#80CFFF" }}>Pal</span>
                   <span>→ Pay ${UNLOCK_PRICE}.00</span>
                 </button>
-                <div style={{ textAlign:"center", fontSize:11, color:C.inkSoft }}>✓ Secure · ✓ Instant · ✓ No subscription</div>
+                <div style={{ textAlign:"center", fontSize:10.5, color:C.inkSoft }}>✓ Secure · ✓ Instant · ✓ No subscription</div>
                 <button onClick={()=>setShow(false)} style={{ width:"100%", marginTop:10, padding:"10px", background:"none", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.inkSoft, cursor:"pointer", fontFamily:sans }}>Cancel</button>
               </div>
             </>}
             {step==="demo" && (
-              <div style={{ padding:"1.5rem" }}>
+              <div style={{ padding:"1.3rem" }}>
                 <div style={{ textAlign:"center", marginBottom:16 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:"#0070BA", marginBottom:4 }}>PayPal Checkout</div>
                   <div style={{ fontSize:12, color:C.inkSoft }}>CeylonTrails — Full Itinerary Access</div>
                 </div>
-                <div style={{ background:"#F5F7FA", borderRadius:10, padding:"12px", marginBottom:16, textAlign:"center", fontSize:16, fontWeight:700, color:C.ink }}>Total: ${UNLOCK_PRICE}.00 USD</div>
+                <div style={{ background:"#F5F7FA", borderRadius:10, padding:"12px", marginBottom:16, textAlign:"center", fontSize:15, fontWeight:700, color:C.ink }}>Total: ${UNLOCK_PRICE}.00 USD</div>
                 <input readOnly value="demo@paypal.com" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:8, boxSizing:"border-box" }}/>
                 <input readOnly type="password" value="••••••••" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:14, boxSizing:"border-box" }}/>
                 <button onClick={handleDemoPayment} disabled={paying} style={{ width:"100%", padding:"13px", background:paying?"#aaa":"#0070BA", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:paying?"wait":"pointer", fontFamily:sans, marginBottom:8 }}>
@@ -4709,6 +5004,30 @@ async function loadSharedItinerary(shareId) {
       .update({ views: (doc.data().views||0) + 1 }).catch(()=>{});
     return doc.data();
   } catch(e) { console.error("loadSharedItinerary FAILED:", e.message); return null; }
+}
+
+// ─── SAVED ITINERARIES ("My Itineraries" — view past trips later) ───────────
+async function saveUserItinerary(uid, itin) {
+  if (!window.firebase?.firestore) return null;
+  try {
+    const ref = await window.firebase.firestore().collection("userItineraries").add({
+      uid, itin, savedAt: new Date().toISOString(),
+    });
+    return ref.id;
+  } catch(e) { console.error("saveUserItinerary FAILED:", e.message); throw e; }
+}
+async function loadUserItineraries(uid) {
+  if (!window.firebase?.firestore || !uid) return [];
+  try {
+    const snap = await window.firebase.firestore().collection("userItineraries").where("uid","==",uid).limit(50).get();
+    const items = snap.docs.map(d=>({id:d.id,...d.data()}));
+    items.sort((a,b)=> new Date(b.savedAt||0) - new Date(a.savedAt||0));
+    return items;
+  } catch(e) { console.error("loadUserItineraries FAILED:", e.message); return []; }
+}
+async function deleteUserItinerary(docId) {
+  if (!window.firebase?.firestore) return;
+  await window.firebase.firestore().collection("userItineraries").doc(docId).delete();
 }
 
 async function loadTouristRequests(touristUid) {
@@ -5159,6 +5478,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
   const [newTour, setNewTour]   = useState({ title:"", location:"", date:"", rating:5, notes:"" });
   const [addingTour, setAddTour]= useState(false);
   const [notifyToast, setNotifyToast] = useState(null); // one-time toast for declined/paid bids
+  const [viewItin, setViewItin] = useState(null); // full itinerary being viewed in modal
   const seenStatuses = useRef({}); // tracks last-seen status per request to detect changes
 
   useEffect(()=>{
@@ -5231,12 +5551,63 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
           {notifyToast.text} <span style={{ opacity:.7, marginLeft:8 }}>✕</span>
         </div>
       )}
+      {/* Full itinerary viewer — shown before guide decides to bid */}
+      {viewItin && (
+        <div onClick={e=>e.target===e.currentTarget&&setViewItin(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.65)", zIndex:950, display:"flex", alignItems:"center", justifyContent:"center", padding:14, backdropFilter:"blur(6px)" }}>
+          <div className="premium-modal" style={{ background:"#fff", borderRadius:20, width:"100%", maxWidth:700, maxHeight:"90vh", display:"flex", flexDirection:"column", boxShadow:"0 24px 80px rgba(0,0,0,.3)", overflow:"hidden" }}>
+            <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"1.2rem 1.4rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+              <div>
+                <div style={{ fontFamily:serif, fontSize:17, fontWeight:700, color:"#fff" }}>{viewItin.title}</div>
+                <div style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginTop:2 }}>{viewItin.tagline}</div>
+              </div>
+              <button onClick={()=>setViewItin(null)} style={{ width:32, height:32, borderRadius:"50%", border:"1px solid rgba(255,255,255,.3)", background:"rgba(255,255,255,.1)", color:"#fff", fontSize:16, cursor:"pointer", flexShrink:0 }}>✕</button>
+            </div>
+            <div style={{ padding:"1.2rem 1.4rem", overflowY:"auto", flex:1 }}>
+              {viewItin.tripMeta && (
+                <div style={{ display:"flex", gap:14, flexWrap:"wrap", background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:10, padding:"10px 14px", marginBottom:16, fontSize:12, color:C.teal }}>
+                  {viewItin.tripMeta.startDate && <span>📅 {new Date(viewItin.tripMeta.startDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} → {viewItin.tripMeta.endDate?new Date(viewItin.tripMeta.endDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):""}</span>}
+                  {viewItin.tripMeta.startLocation && <span>📍 From {viewItin.tripMeta.startLocation}</span>}
+                  <span>{viewItin.tripMeta.roundTrip?"🔁 Round trip":"➡️ One-way"}</span>
+                </div>
+              )}
+              {(viewItin.days||[]).map(d=>(
+                <div key={d.day} style={{ border:`1.5px solid ${C.border}`, borderRadius:14, overflow:"hidden", marginBottom:12 }}>
+                  <div style={{ padding:"10px 16px", background:"#F0F4F8", display:"flex", alignItems:"center", gap:10 }}>
+                    <span style={{ background:C.teal, color:"#fff", fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20 }}>Day {d.day}</span>
+                    <span style={{ fontSize:13, fontWeight:700, color:C.ink }}>{d.location}</span>
+                    <span style={{ fontSize:11, color:C.inkSoft, marginLeft:"auto" }}>{d.theme}</span>
+                  </div>
+                  <div style={{ padding:"4px 16px 8px" }}>
+                    {(d.activities||[]).map((a,i)=>(
+                      <div key={i} style={{ display:"flex", gap:10, padding:"7px 0", borderBottom:i<d.activities.length-1?`1px solid ${C.border}`:"none", fontSize:12 }}>
+                        <span style={{ color:C.inkSoft, fontWeight:600, flexShrink:0, minWidth:42 }}>{a.time}</span>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          {a.place && <div style={{ fontWeight:600, color:C.ink }}>{a.place}</div>}
+                          <div style={{ color:C.inkSoft }}>{a.text}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding:"1rem 1.4rem", borderTop:`1px solid ${C.border}`, flexShrink:0 }}>
+              <Btn full onClick={()=>setViewItin(null)}>Close</Btn>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Bid modal */}
       {bidModal && (
         <div onClick={e=>e.target===e.currentTarget&&setBid(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.55)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(4px)" }}>
           <div style={{ background:"#fff", borderRadius:20, width:"100%", maxWidth:480, padding:"1.5rem", boxShadow:"0 20px 60px rgba(0,0,0,.25)", maxHeight:"85vh", display:"flex", flexDirection:"column" }}>
             <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:4, flexShrink:0 }}>Submit your bid</h3>
-            <p style={{ fontSize:12, color:C.inkSoft, marginBottom:12, flexShrink:0 }}>For: <strong>{bidModal.itinTitle||"Trip request"}</strong></p>
+            <p style={{ fontSize:12, color:C.inkSoft, marginBottom:8, flexShrink:0 }}>For: <strong>{bidModal.itinTitle||"Trip request"}</strong></p>
+            {bidModal.itinFull && (
+              <button onClick={()=>setViewItin(bidModal.itinFull)} style={{ background:"none", border:"none", color:C.teal, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans, textAlign:"left", padding:0, marginBottom:12, flexShrink:0 }}>
+                🗺️ View full itinerary before pricing →
+              </button>
+            )}
 
             {/* Guide Terms */}
             <div style={{ background:"#F8FAFC", border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 12px", marginBottom:12, maxHeight:120, overflowY:"auto", fontSize:11, color:C.inkSoft, lineHeight:1.6, flexShrink:0 }}>
@@ -5368,6 +5739,11 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                   </div>
                 )}
                 {req.message && <div style={{ background:C.surface, borderRadius:8, padding:"8px 12px", fontSize:12, color:C.ink, marginBottom:10, borderLeft:`3px solid ${C.border}` }}>"{req.message}"</div>}
+                {req.itinFull && (
+                  <button onClick={()=>setViewItin(req.itinFull)} style={{ width:"100%", padding:"9px", background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:10, fontSize:12.5, fontWeight:600, color:C.teal, cursor:"pointer", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+                    🗺️ View full {req.itinDays}-day itinerary before bidding
+                  </button>
+                )}
                 {req.bid && (
                   <div style={{ background:req.status==="declined"?"#FEF2F2":C.tealPale, borderRadius:8, padding:"8px 12px", fontSize:12, color:req.status==="declined"?"#DC2626":C.teal, marginBottom:req.status==="declined"?10:0 }}>
                     Your bid: <strong>${req.bid.price}</strong> · {req.bid.dates}
@@ -5377,9 +5753,15 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                   <div style={{ display:"flex", gap:8 }}>
                     <Btn onClick={()=>{ setBid(req); setBidText({ price:"", message:"", dates:"" }); }} style={{ flex:1 }}>Submit bid →</Btn>
                     <button onClick={async()=>{
+                      if(!req.id){ alert("Error: this request is missing an ID."); return; }
                       if(!window.confirm("Decline this trip request? The tourist will be notified you're not available.")) return;
-                      await window.firebase.firestore().collection("tripRequests").doc(req.id).update({ status:"guide_declined" });
-                      setRequests(rs=>rs.map(r=>r.id===req.id?{...r,status:"guide_declined"}:r));
+                      try {
+                        await window.firebase.firestore().collection("tripRequests").doc(req.id).update({ status:"guide_declined" });
+                        setRequests(rs=>rs.map(r=>r.id===req.id?{...r,status:"guide_declined"}:r));
+                      } catch(e) {
+                        console.error("Decline failed:", e);
+                        alert("Could not decline this request: " + e.message);
+                      }
                     }} style={{ padding:"0 16px", background:"none", color:C.coral, border:`1.5px solid ${C.coral}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
                       Decline
                     </button>
@@ -5770,7 +6152,7 @@ function AdminPanel({ onClose }) {
   const [reviews,   setReviews] = useState([]);
   const [loading,   setLoading] = useState(false);
   const [selected,  setSelected]= useState(null);
-  const [filterTab, setFilter]  = useState("pending");
+  const [filterTab, setFilter]  = useState("dashboard");
   const [rejMsg,    setRejMsg]  = useState("");
   const [actioning, setActioning]=useState(false);
   const [analytics, setAnalytics] = useState(null);
@@ -5871,23 +6253,36 @@ function AdminPanel({ onClose }) {
     setLoading(false);
   };
 
-  useEffect(()=>{ if(authed) loadGuides(); },[authed]);
+  useEffect(()=>{ if(authed) { loadGuides(); loadAnalytics(); } },[authed]);
 
   const approve = async (guide) => {
+    if (!guide?.uid) { alert("Error: this guide record is missing a UID and can't be updated."); return; }
     setActioning(true);
-    await window.firebase.firestore().collection("guides").doc(guide.uid).update({ status:"approved", approvedAt:new Date().toISOString() });
-    setGuides(gs=>gs.map(g=>g.uid===guide.uid?{...g,status:"approved"}:g));
-    setSelected(s=>s?{...s,status:"approved"}:s);
+    try {
+      await window.firebase.firestore().collection("guides").doc(guide.uid).update({ status:"approved", approvedAt:new Date().toISOString() });
+      setGuides(gs=>gs.map(g=>g.uid===guide.uid?{...g,status:"approved"}:g));
+      setSelected(s=>s?{...s,status:"approved"}:s);
+    } catch(e) {
+      console.error("Approve failed:", e);
+      alert("Approval failed: " + e.message + "\n\nThis is usually a Firestore security rules issue — check that your rules allow writes to the 'guides' collection.");
+    }
     setActioning(false);
   };
 
   const reject = async (guide) => {
+    if (!guide?.uid) { alert("Error: this guide record is missing a UID and can't be updated."); return; }
     if (!rejMsg.trim()) { alert("Please enter a reason for rejection"); return; }
     setActioning(true);
-    await window.firebase.firestore().collection("guides").doc(guide.uid).update({ status:"rejected", rejectedAt:new Date().toISOString(), rejectionReason:rejMsg });
-    setGuides(gs=>gs.map(g=>g.uid===guide.uid?{...g,status:"rejected",rejectionReason:rejMsg}:g));
-    setSelected(s=>s?{...s,status:"rejected"}:s);
-    setRejMsg(""); setActioning(false);
+    try {
+      await window.firebase.firestore().collection("guides").doc(guide.uid).update({ status:"rejected", rejectedAt:new Date().toISOString(), rejectionReason:rejMsg });
+      setGuides(gs=>gs.map(g=>g.uid===guide.uid?{...g,status:"rejected",rejectionReason:rejMsg}:g));
+      setSelected(s=>s?{...s,status:"rejected"}:s);
+      setRejMsg("");
+    } catch(e) {
+      console.error("Reject failed:", e);
+      alert("Rejection failed: " + e.message + "\n\nThis is usually a Firestore security rules issue — check that your rules allow writes to the 'guides' collection.");
+    }
+    setActioning(false);
   };
 
   const statusColor = { pending:C.amber, approved:C.teal, rejected:C.coral };
@@ -5916,28 +6311,46 @@ function AdminPanel({ onClose }) {
           <span style={{ fontSize:22 }}>🔐</span>
           <div>
             <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff" }}>CeylonTrails Admin</div>
-            <div style={{ fontSize:11, color:"rgba(255,255,255,.6)" }}>Guide Management Panel</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,.6)" }}>Welcome back — here's what's happening</div>
           </div>
         </div>
         <div style={{ display:"flex", gap:10 }}>
-          <button onClick={loadGuides} style={{ padding:"7px 14px", background:"rgba(255,255,255,.1)", color:"#fff", border:"1px solid rgba(255,255,255,.25)", borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:sans }}>↺ Refresh</button>
+          <button onClick={()=>{ loadGuides(); loadAnalytics(); if(filterTab==="reviews") loadReviews(); }} style={{ padding:"7px 14px", background:"rgba(255,255,255,.1)", color:"#fff", border:"1px solid rgba(255,255,255,.25)", borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:sans }}>↺ Refresh</button>
           <button onClick={()=>{ sessionStorage.removeItem("ct_admin"); onClose(); }} style={{ padding:"7px 14px", background:"rgba(255,255,255,.1)", color:"#fff", border:"1px solid rgba(255,255,255,.25)", borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:sans }}>✕ Close</button>
         </div>
       </div>
 
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
-        {/* Left: guide list (hidden when viewing analytics — full width dashboard instead) */}
-        {filterTab!=="analytics" && (
-        <div style={{ width:320, background:"#fff", borderRight:"1px solid #E0E6ED", display:"flex", flexDirection:"column", flexShrink:0 }}>
-          {/* Filter tabs */}
-          <div style={{ display:"flex", borderBottom:"1px solid #E0E6ED", overflowX:"auto" }}>
-            {["pending","approved","rejected","reviews","analytics"].map(s=>(
-              <button key={s} onClick={()=>{ setFilter(s); if(s==="reviews") loadReviews(); if(s==="analytics") loadAnalytics(); }} style={{ flex:1, padding:"12px 8px", border:"none", background:filterTab===s?"#EEF4FF":"transparent", color:filterTab===s?"#2D4A6A":"#64748B", fontSize:11, fontWeight:filterTab===s?700:400, cursor:"pointer", fontFamily:sans, borderBottom:filterTab===s?"2.5px solid #2D4A6A":"2.5px solid transparent", textTransform:"capitalize", whiteSpace:"nowrap" }}>
-                {s==="reviews"?"📝 Reviews":s==="analytics"?"📊 Analytics":s} {s!=="analytics" && <span style={{ background:filterTab===s?"#2D4A6A":"#E2E8F0", color:filterTab===s?"#fff":"#64748B", fontSize:10, fontWeight:700, padding:"1px 6px", borderRadius:10, marginLeft:4 }}>
-                  {s==="reviews" ? reviews.length : guides.filter(g=>g.status===s).length}
-                </span>}
-              </button>
-            ))}
+        {/* Left: main navigation menu — always visible, replaces the old cramped tab strip */}
+        <div className="admin-nav-sidebar" style={{ width:200, background:"#1A2A3A", display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+          <div className="admin-nav-section-title" style={{ padding:"16px 14px 8px", fontSize:10, fontWeight:700, color:"rgba(255,255,255,.4)", textTransform:"uppercase", letterSpacing:1 }}>Main menu</div>
+          {[
+            { id:"dashboard", icon:"📊", label:"Dashboard" },
+            { id:"pending",   icon:"⏳", label:"Pending guides", count:guides.filter(g=>g.status==="pending").length },
+            { id:"approved",  icon:"✅", label:"Approved guides", count:guides.filter(g=>g.status==="approved").length },
+            { id:"rejected",  icon:"❌", label:"Rejected guides", count:guides.filter(g=>g.status==="rejected").length },
+            { id:"reviews",   icon:"📝", label:"Reviews", count:reviews.length },
+          ].map(item=>(
+            <button key={item.id} onClick={()=>{ setFilter(item.id); setSelected(null); if(item.id==="reviews") loadReviews(); if(item.id==="dashboard") loadAnalytics(); }}
+              style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", border:"none", background:filterTab===item.id?"rgba(255,255,255,.1)":"transparent", color:filterTab===item.id?"#fff":"rgba(255,255,255,.65)", fontSize:13, fontWeight:filterTab===item.id?600:400, cursor:"pointer", fontFamily:sans, borderLeft:filterTab===item.id?"3px solid #4F9CF9":"3px solid transparent", textAlign:"left", width:"100%" }}>
+              <span style={{ fontSize:15, width:18, textAlign:"center", flexShrink:0 }}>{item.icon}</span>
+              <span className="admin-nav-label" style={{ flex:1 }}>{item.label}</span>
+              {item.count>0 && <span className="admin-nav-label" style={{ background:filterTab===item.id?"#4F9CF9":"rgba(255,255,255,.15)", color:"#fff", fontSize:10, fontWeight:700, padding:"1px 7px", borderRadius:10 }}>{item.count}</span>}
+            </button>
+          ))}
+          <div className="admin-nav-label" style={{ marginTop:"auto", padding:"14px", borderTop:"1px solid rgba(255,255,255,.1)", fontSize:10, color:"rgba(255,255,255,.35)" }}>
+            CeylonTrails Admin v2
+          </div>
+        </div>
+
+        {/* Guide/review list (hidden on dashboard — full width dashboard instead) */}
+        {filterTab!=="analytics" && filterTab!=="dashboard" && (
+        <div style={{ width:300, background:"#fff", borderRight:"1px solid #E0E6ED", display:"flex", flexDirection:"column", flexShrink:0 }}>
+          {/* Section title */}
+          <div style={{ padding:"14px 16px", borderBottom:"1px solid #E0E6ED" }}>
+            <div style={{ fontSize:14, fontWeight:700, color:"#1A2A3A", textTransform:"capitalize" }}>
+              {filterTab==="reviews"?"📝 Tourist Reviews":`${{pending:"⏳",approved:"✅",rejected:"❌"}[filterTab]||""} ${filterTab} Guides`}
+            </div>
           </div>
 
           {/* Guide or Review list */}
@@ -5979,8 +6392,8 @@ function AdminPanel({ onClose }) {
         )}
 
         {/* Right: guide/review detail, OR full-width analytics dashboard */}
-        <div style={{ flex:1, overflowY:"auto", padding: filterTab==="analytics" ? "1.5rem 2rem" : "1.5rem" }}>
-          {filterTab==="analytics" ? (
+        <div style={{ flex:1, overflowY:"auto", padding: (filterTab==="analytics"||filterTab==="dashboard") ? "1.5rem 2rem" : "1.5rem" }}>
+          {(filterTab==="analytics"||filterTab==="dashboard") ? (
             <AdminAnalyticsDashboard analytics={analytics} loading={loadingAnalytics} onRefresh={loadAnalytics}/>
           ) : !selected ? (
             <div style={{ height:"100%", display:"flex", alignItems:"center", justifyContent:"center", color:"#94A3B8", flexDirection:"column", gap:12 }}>
@@ -6236,8 +6649,22 @@ function GuidePortalPage({ setPage }) {
   return <GuideDashboard user={user} profile={guideProfile} onProfileUpdate={setGuideProfile}/>;
 }
 
+// Maps in-app page names to URL paths and back, so refreshing or sharing a
+// direct link (e.g. /destinations, /journey) lands on the right page instead
+// of always resetting to Home.
+const PAGE_ROUTES = {
+  home:"/", destinations:"/destinations", journey:"/journey", srilankamap:"/map",
+  guideportal:"/guides/portal", myitineraries:"/my-trips",
+};
+const ROUTE_PAGES = Object.fromEntries(Object.entries(PAGE_ROUTES).map(([k,v])=>[v,k]));
+
+function getPageFromUrl() {
+  const path = window.location.pathname;
+  return ROUTE_PAGES[path] || "home";
+}
+
 export default function App() {
-  const [page, setPage]         = useState("home");
+  const [page, _setPage]        = useState(()=>getPageFromUrl());
   const [guideOpen, setGuide]   = useState(false);
   const [savedItin, setSaved]   = useState(null);
   const [showLogin, setLogin]   = useState(false);
@@ -6245,6 +6672,26 @@ export default function App() {
   const [welcomeUser, setWelcomeUser] = useState(null);
   const openGuide = useCallback(()=>setGuide(true), []);
   const wishlist  = useWishlist();
+
+  // Wraps setPage so every in-app navigation also pushes a real URL —
+  // enables working back/forward buttons, refresh-stays-on-page, and
+  // shareable direct links to any section of the site.
+  const setPage = useCallback((next) => {
+    _setPage(next);
+    const path = PAGE_ROUTES[next] || "/";
+    if (window.location.pathname !== path) {
+      window.history.pushState({ page: next }, "", path + window.location.search);
+    }
+  }, []);
+
+  useEffect(()=>{
+    const onPopState = (e) => {
+      // Browser back/forward — read the page from the URL rather than from state
+      _setPage(e.state?.page || getPageFromUrl());
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  },[]);
 
   const handleLoginSuccess = (user) => {
     setLogin(false);
@@ -6267,6 +6714,99 @@ export default function App() {
       />
       </AuthProvider>
     </LangProvider>
+  );
+}
+
+// ─── MY ITINERARIES PAGE (view saved trips later) ────────────────────────────
+function MyItinerariesPage({ user, setPage, setSavedItin, onLoginNeeded }) {
+  const [items, setItems]     = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(null);
+
+  useEffect(()=>{
+    if (!user) { setLoading(false); return; }
+    const load = async () => {
+      try {
+        if (!window.firebase?.firestore) await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+        const r = await loadUserItineraries(user.uid);
+        setItems(r);
+      } catch(e) { console.error(e); }
+      setLoading(false);
+    };
+    load();
+  },[user]);
+
+  const handleDelete = async (docId) => {
+    if (!window.confirm("Delete this saved itinerary? This can't be undone.")) return;
+    setDeleting(docId);
+    try {
+      await deleteUserItinerary(docId);
+      setItems(its=>its.filter(i=>i.id!==docId));
+    } catch(e) { alert("Could not delete: " + e.message); }
+    setDeleting(null);
+  };
+
+  const handleView = (item) => {
+    setSavedItin(item.itin);
+    setPage("journey");
+  };
+
+  if (!user) return (
+    <div style={{ minHeight:"70vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:16, padding:"2rem", textAlign:"center" }}>
+      <div style={{ fontSize:48 }}>🔒</div>
+      <h2 style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink }}>Sign in to view your saved trips</h2>
+      <Btn onClick={onLoginNeeded}>Sign in →</Btn>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.surface }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2.5rem 2rem" }}>
+        <div style={{ maxWidth:900, margin:"0 auto" }}>
+          <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>Your trips</div>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,38px)", fontWeight:700, color:"#fff" }}>💾 My Itineraries</h1>
+          <p style={{ fontSize:14, color:"rgba(255,255,255,.75)", marginTop:8 }}>All your saved trip plans in one place</p>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:900, margin:"0 auto", padding:"2rem" }}>
+        {loading && (
+          <div style={{ textAlign:"center", padding:"4rem" }}>
+            <div style={{ width:40, height:40, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto 14px" }}/>
+            <p style={{ fontSize:13, color:C.inkSoft }}>Loading your saved trips…</p>
+          </div>
+        )}
+        {!loading && items.length===0 && (
+          <div style={{ textAlign:"center", padding:"4rem 2rem" }}>
+            <div style={{ fontSize:48, marginBottom:16 }}>🗺️</div>
+            <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>No saved itineraries yet</h3>
+            <p style={{ fontSize:13, color:C.inkSoft, marginBottom:20 }}>Plan a trip and tap "💾 Save for later" to see it here.</p>
+            <Btn onClick={()=>setPage("journey")}>✨ Plan a trip →</Btn>
+          </div>
+        )}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:14 }}>
+          {items.map(item=>(
+            <div key={item.id} style={{ background:"#fff", border:`1.5px solid ${C.border}`, borderRadius:18, padding:"1.4rem", display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:14 }}>
+              <div style={{ flex:1, minWidth:220 }}>
+                <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:4 }}>{item.itin?.title||"Untitled trip"}</h3>
+                <p style={{ fontSize:13, color:C.inkSoft, marginBottom:8 }}>{item.itin?.tagline}</p>
+                <div style={{ display:"flex", gap:12, flexWrap:"wrap", fontSize:11, color:C.inkSoft }}>
+                  <span>📅 Saved {new Date(item.savedAt).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}</span>
+                  <span>🗓️ {item.itin?.days?.length||0} days</span>
+                  {item.itin?.tripMeta?.startLocation && <span>📍 From {item.itin.tripMeta.startLocation}</span>}
+                </div>
+              </div>
+              <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+                <Btn onClick={()=>handleView(item)}>View →</Btn>
+                <button onClick={()=>handleDelete(item.id)} disabled={deleting===item.id} style={{ padding:"11px 16px", background:"none", border:`1.5px solid ${C.coral}`, color:C.coral, borderRadius:11, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, opacity:deleting===item.id?.5:1 }}>
+                  {deleting===item.id?"…":"🗑️"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -6395,6 +6935,7 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
       {page==="journey"      && <JourneyPage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} onGuideOpen={openGuide} user={user} onLoginNeeded={()=>setLogin(true)} premium={premium}/>}
       {page==="srilankamap" && <SriLankaMapPage  setPage={setPage} savedItin={savedItin} setSavedItin={setSaved}/>}
       {page==="guideportal"  && <GuidePortalPage  setPage={setPage}/>}
+      {page==="myitineraries" && <MyItinerariesPage user={user} setPage={setPage} setSavedItin={setSaved} onLoginNeeded={()=>setLogin(true)}/>}
 
       <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin} user={user} onLoginNeeded={()=>setLogin(true)} onReviewGuide={(prefill)=>{ setReviewPrefill(prefill); setShowReview(true); }}/>
       <WishlistPanel wishlist={wishlist} savedItin={savedItin} setSavedItin={setSaved}/>

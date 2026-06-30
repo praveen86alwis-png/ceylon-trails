@@ -6,6 +6,7 @@
     { "source": "/api/places/photo",    "destination": "/api/places" },
     { "source": "/api/places/(.*)",     "destination": "/api/places" },
     { "source": "/api/photos/search",   "destination": "/api/photos" },
-    { "source": "/api/photos/(.*)",     "destination": "/api/photos" }
+    { "source": "/api/photos/(.*)",     "destination": "/api/photos" },
+    { "source": "/((?!api/).*)",        "destination": "/index.html" }
   ]
 }
