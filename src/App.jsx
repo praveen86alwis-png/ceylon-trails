@@ -3617,6 +3617,174 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 }
 
 // ─── GUIDE DRAWER ────────────────────────────────────────────────────────────
+// ─── BOOKING MANAGEMENT PANEL ─────────────────────────────────────────────────
+// Shown to both tourist and guide once a booking is confirmed (paid). Handles:
+//  - In-app chat between the two parties
+//  - Trip completion confirmation (both must confirm to release held funds)
+//  - No-show reporting (tourist only)
+//  - Optional WhatsApp/phone contact sharing
+function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, guidePhone }) {
+  const [showChat, setShowChat]   = useState(false);
+  const [messages, setMessages]   = useState([]);
+  const [msgInput, setMsgInput]   = useState("");
+  const [loadingMsgs, setLM]      = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [showNoShow, setShowNoShow] = useState(false);
+  const [noShowReason, setNoShowReason] = useState("");
+
+  const myConfirmField   = role==="tourist" ? "touristConfirmedComplete" : "guideConfirmedComplete";
+  const theirConfirmField= role==="tourist" ? "guideConfirmedComplete" : "touristConfirmedComplete";
+  const iConfirmed    = !!req[myConfirmField];
+  const theyConfirmed = !!req[theirConfirmField];
+  const tripEnded = req.tripEndDate && new Date(req.tripEndDate) < new Date();
+  const otherPartyName = role==="tourist" ? req.guideName : (req.touristName||req.touristEmail);
+
+  const loadChat = async () => {
+    setLM(true);
+    if (!window.firebase?.firestore) await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+    const msgs = await loadBookingMessages(req.id);
+    setMessages(msgs);
+    setLM(false);
+  };
+
+  const handleSend = async () => {
+    if (!msgInput.trim()) return;
+    const text = msgInput;
+    setMsgInput("");
+    try {
+      await sendBookingMessage(req.id, role, role==="tourist"?(user?.displayName||user?.email):req.guideName, text);
+      setMessages(m=>[...m, { fromRole:role, text, sentAt:new Date().toISOString() }]);
+    } catch(e) { alert("Could not send message: " + e.message); }
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!window.confirm("Confirm that this trip happened as planned? This helps release payment to your " + (role==="tourist"?"guide":"client") + ".")) return;
+    setConfirming(true);
+    try {
+      const bothNow = await confirmTripCompletion(req.id, role, req.guideId);
+      onUpdate({ [myConfirmField]: true, status: bothNow ? "completed" : req.status, payment: bothNow ? { ...req.payment, heldReleased:true } : req.payment });
+    } catch(e) { alert("Could not confirm: " + e.message); }
+    setConfirming(false);
+  };
+
+  const handleReportNoShow = async () => {
+    if (!noShowReason.trim()) { alert("Please describe what happened."); return; }
+    try {
+      await reportNoShow(req.id, noShowReason);
+      onUpdate({ status:"disputed", disputeReason:noShowReason });
+      setShowNoShow(false);
+    } catch(e) { alert("Could not submit report: " + e.message); }
+  };
+
+  return (
+    <div style={{ background: req.status==="disputed"?"#FEF2F2":req.status==="completed"?C.tealPale:C.tealPale, border:`1px solid ${req.status==="disputed"?"#FECACA":"#9FE1CB"}`, borderRadius:10, padding:"12px 14px" }}>
+      <div style={{ fontSize:12, color: req.status==="disputed"?"#DC2626":C.teal, marginBottom:10 }}>
+        {req.status==="completed" ? "✅ Trip completed · Full payment released" :
+         req.status==="disputed"  ? "⚠️ Under review by CeylonTrails admin" :
+         "✅ Booking confirmed"} · Paid ${req.payment.total}
+      </div>
+
+      {req.status!=="disputed" && (
+        <div style={{ background:"rgba(255,255,255,.7)", borderRadius:8, padding:"8px 10px", fontSize:11, color:C.ink, marginBottom:10 }}>
+          <div style={{ display:"flex", justifyContent:"space-between" }}><span>Paid to guide now (30%)</span><strong>${req.payment.guideInstantShare ?? Math.round(req.payment.guideAmount*0.3*100)/100}</strong></div>
+          <div style={{ display:"flex", justifyContent:"space-between" }}>
+            <span>{req.payment.heldReleased ? "Released to guide (70%)" : "🔒 Held until both confirm (70%)"}</span>
+            <strong>${req.payment.guideHeldShare ?? Math.round(req.payment.guideAmount*0.7*100)/100}</strong>
+          </div>
+        </div>
+      )}
+
+      {/* Chat toggle */}
+      <button onClick={()=>{ setShowChat(s=>!s); if(!showChat) loadChat(); }} style={{ width:"100%", padding:"9px", background:"#fff", border:`1px solid ${C.border}`, borderRadius:8, fontSize:12, fontWeight:600, color:C.ink, cursor:"pointer", fontFamily:sans, marginBottom:8 }}>
+        💬 {showChat?"Hide":"Message"} {otherPartyName}
+      </button>
+
+      {showChat && (
+        <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:10, marginBottom:10, overflow:"hidden" }}>
+          <div style={{ maxHeight:220, overflowY:"auto", padding:"10px" }}>
+            {loadingMsgs && <p style={{ fontSize:11, color:C.inkSoft, textAlign:"center" }}>Loading messages…</p>}
+            {!loadingMsgs && messages.length===0 && <p style={{ fontSize:11, color:C.inkSoft, textAlign:"center" }}>No messages yet — say hello!</p>}
+            {messages.map((m,i)=>(
+              <div key={m.id||i} style={{ display:"flex", justifyContent:m.fromRole===role?"flex-end":"flex-start", marginBottom:6 }}>
+                <div style={{ maxWidth:"75%", background:m.fromRole===role?C.teal:C.surface, color:m.fromRole===role?"#fff":C.ink, padding:"7px 11px", borderRadius:12, fontSize:12 }}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display:"flex", gap:6, padding:"8px", borderTop:`1px solid ${C.border}` }}>
+            <input value={msgInput} onChange={e=>setMsgInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSend()}
+              placeholder="Type a message…" style={{ flex:1, padding:"8px 10px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:12, fontFamily:sans, outline:"none", minWidth:0 }}/>
+            <button onClick={handleSend} style={{ padding:"8px 14px", background:C.teal, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Send</button>
+          </div>
+          {role==="tourist" && req.guidePhone && (
+            <div style={{ padding:"8px 10px", borderTop:`1px solid ${C.border}`, fontSize:11, color:C.inkSoft }}>
+              📞 Guide's phone (shared by them): <a href={`tel:${req.guidePhone}`} style={{ color:C.teal, fontWeight:600 }}>{req.guidePhone}</a>
+            </div>
+          )}
+          {role==="guide" && guidePhone && !req.guidePhone && (
+            <button onClick={async()=>{
+              try {
+                await window.firebase.firestore().collection("tripRequests").doc(req.id).update({ guidePhone });
+                onUpdate({ guidePhone });
+              } catch(e) { alert("Could not share phone: " + e.message); }
+            }} style={{ width:"100%", padding:"8px", borderTop:`1px solid ${C.border}`, background:"none", border:"none", borderTopColor:C.border, fontSize:11, color:C.teal, cursor:"pointer", fontFamily:sans, fontWeight:600 }}>
+              📞 Share my phone number with this tourist
+            </button>
+          )}
+          {role==="guide" && req.guidePhone && (
+            <div style={{ padding:"8px 10px", borderTop:`1px solid ${C.border}`, fontSize:11, color:C.inkSoft }}>
+              📞 You shared: <strong>{req.guidePhone}</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Completion confirmation */}
+      {req.status==="confirmed" && tripEnded && (
+        <div style={{ marginBottom:8 }}>
+          {!iConfirmed ? (
+            <button onClick={handleConfirmComplete} disabled={confirming} style={{ width:"100%", padding:"9px", background:C.teal, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:confirming?.6:1 }}>
+              {confirming?"Confirming…":"✅ Confirm this trip happened"}
+            </button>
+          ) : (
+            <div style={{ fontSize:11, color:C.teal, textAlign:"center", padding:"6px 0" }}>
+              ✓ You confirmed · {theyConfirmed ? "Both sides confirmed — payment released!" : `Waiting for ${otherPartyName} to confirm too`}
+            </div>
+          )}
+          {role==="tourist" && !iConfirmed && (
+            <button onClick={()=>setShowNoShow(true)} style={{ width:"100%", marginTop:6, padding:"7px", background:"none", border:"none", color:C.coral, fontSize:11, cursor:"pointer", fontFamily:sans, textDecoration:"underline" }}>
+              The guide didn't show up — report this
+            </button>
+          )}
+        </div>
+      )}
+
+      {req.status==="completed" && role==="tourist" && (
+        <button onClick={()=>onReviewGuide?.({ guideName:req.guideName, tripRef:req.id })} style={{ width:"100%", padding:"9px", background:C.amber, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:sans }}>
+          ⭐ Leave a review for {req.guideName}
+        </button>
+      )}
+
+      {/* No-show report modal */}
+      {showNoShow && (
+        <div onClick={e=>e.target===e.currentTarget&&setShowNoShow(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", zIndex:1100, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div style={{ background:"#fff", borderRadius:16, padding:"1.4rem", width:"100%", maxWidth:380 }}>
+            <h4 style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:C.ink, marginBottom:8 }}>Report a no-show</h4>
+            <p style={{ fontSize:12, color:C.inkSoft, marginBottom:10, lineHeight:1.6 }}>This pauses the held payment and flags the booking for CeylonTrails admin review.</p>
+            <textarea value={noShowReason} onChange={e=>setNoShowReason(e.target.value)} rows={3} placeholder="What happened?"
+              style={{ width:"100%", padding:"9px 11px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:12, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box", marginBottom:12 }}/>
+            <div style={{ display:"flex", gap:8 }}>
+              <button onClick={handleReportNoShow} style={{ flex:1, padding:"10px", background:C.coral, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:sans }}>Submit report</button>
+              <button onClick={()=>setShowNoShow(false)} style={{ flex:1, padding:"10px", background:"none", border:`1px solid ${C.border}`, borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:sans }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }) {
   const [screen,    setScreen]   = useState("terms");
   const [termsOk,   setTermsOk]  = useState(false);
@@ -3714,8 +3882,13 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
     // Simulate PayPal processing
     setTimeout(async()=>{
       try{
-        await acceptBidAndPay(payModal.id, Number(payModal.bid?.price||0), payModal.guideId);
-        setMyRequests(rs=>rs.map(r=>r.id===payModal.id?{...r,status:"accepted",payment:{total:Number(payModal.bid?.price),commission:Math.round(Number(payModal.bid?.price)*0.15*100)/100,guideAmount:Math.round(Number(payModal.bid?.price)*0.85*100)/100}}:r));
+        const total = Number(payModal.bid?.price||0);
+        const commission = Math.round(total * 0.15 * 100) / 100;
+        const guideAmount = Math.round((total - commission) * 100) / 100;
+        const guideInstantShare = Math.round(guideAmount * GUIDE_INSTANT_RATE * 100) / 100;
+        const guideHeldShare = Math.round((guideAmount - guideInstantShare) * 100) / 100;
+        await payFullAndEscrow(payModal.id, total, payModal.guideId);
+        setMyRequests(rs=>rs.map(r=>r.id===payModal.id?{...r,status:"confirmed",touristConfirmedComplete:false,guideConfirmedComplete:false,payment:{total,commission,guideAmount,guideInstantShare,guideHeldShare,heldReleased:false}}:r));
         setPayStep("success");
       } catch(e){ alert("Payment error: "+e.message); }
       setPaying(false);
@@ -3787,10 +3960,10 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                         <div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>{req.itinTitle} · {req.itinDays} days</div>
                       </div>
                       <span style={{ fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20,
-                        background:req.status==="accepted"?C.tealLight:req.status==="guide_declined"?"#FEE2E2":req.bid?C.amberLight:C.surface,
-                        color:req.status==="accepted"?C.teal:req.status==="guide_declined"?"#DC2626":req.bid?C.amber:C.inkSoft,
-                        border:`1px solid ${req.status==="accepted"?"#9FE1CB":req.status==="guide_declined"?"#FECACA":req.bid?"#F0D48A":C.border}` }}>
-                        {req.status==="accepted"?"✅ Confirmed":req.status==="guide_declined"?"🚫 Guide unavailable":req.bid?"💬 Bid received":"⏳ Awaiting bid"}
+                        background:req.status==="completed"?C.tealLight:req.status==="confirmed"?C.tealLight:req.status==="disputed"?"#FEF9C3":req.status==="guide_declined"?"#FEE2E2":req.bid?C.amberLight:C.surface,
+                        color:req.status==="completed"?C.teal:req.status==="confirmed"?C.teal:req.status==="disputed"?"#CA8A04":req.status==="guide_declined"?"#DC2626":req.bid?C.amber:C.inkSoft,
+                        border:`1px solid ${req.status==="completed"||req.status==="confirmed"?"#9FE1CB":req.status==="disputed"?"#FDE047":req.status==="guide_declined"?"#FECACA":req.bid?"#F0D48A":C.border}` }}>
+                        {req.status==="completed"?"✅ Trip completed":req.status==="confirmed"?"✅ Confirmed":req.status==="disputed"?"⚠️ Under review":req.status==="guide_declined"?"🚫 Guide unavailable":req.bid?"💬 Bid received":"⏳ Awaiting bid"}
                       </span>
                     </div>
                     {req.status==="guide_declined" && (
@@ -3798,7 +3971,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                         {req.guideName} isn't able to take this trip. Try browsing other guides.
                       </div>
                     )}
-                    {req.bid && req.status!=="accepted" && (
+                    {req.bid && req.status!=="confirmed" && req.status!=="completed" && req.status!=="disputed" && (
                       <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"12px 14px", marginBottom:12 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:4 }}>Bid from {req.guideName}</div>
                         <div style={{ fontSize:20, fontWeight:800, color:C.amber, marginBottom:4 }}>${req.bid.price} USD</div>
@@ -3824,17 +3997,8 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                         </div>
                       </div>
                     )}
-                    {req.status==="accepted" && req.payment && (
-                      <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:10, padding:"10px 14px" }}>
-                        <div style={{ fontSize:12, color:C.teal, marginBottom: (req.tripEndDate && new Date(req.tripEndDate) < new Date()) ? 10 : 0 }}>
-                          ✅ Booking confirmed · Paid ${req.payment.total} · Guide receives ${req.payment.guideAmount}
-                        </div>
-                        {req.tripEndDate && new Date(req.tripEndDate) < new Date() && (
-                          <button onClick={()=>onReviewGuide?.({ guideName:req.guideName, tripRef:req.id })} style={{ width:"100%", padding:"9px", background:C.teal, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:sans }}>
-                            ⭐ Leave a review for {req.guideName}
-                          </button>
-                        )}
-                      </div>
+                    {(req.status==="confirmed" || req.status==="completed" || req.status==="disputed") && req.payment && (
+                      <BookingManagementPanel req={req} role="tourist" user={user} onUpdate={(updated)=>setMyRequests(rs=>rs.map(r=>r.id===req.id?{...r,...updated}:r))} onReviewGuide={onReviewGuide}/>
                     )}
                   </div>
                 );
@@ -3992,17 +4156,36 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                 </div>
                 <div style={{ padding:"1.2rem", overflowY:"auto", flex:1 }}>
                   <div style={{ background:C.surface, borderRadius:14, padding:"14px", marginBottom:14 }}>
-                    <div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:12 }}>Payment breakdown</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:12 }}>You pay today (full amount)</div>
                     {[
                       ["Total amount", `$${payModal.bid?.price} USD`],
-                      ["Guide receives (85%)", `$${Math.round(Number(payModal.bid?.price)*0.85*100)/100}`],
-                      ["CeylonTrails commission (15%)", `$${Math.round(Number(payModal.bid?.price)*0.15*100)/100}`],
                       ["Dates", payModal.bid?.dates||"As agreed"],
                     ].map(([l,v])=>(
                       <div key={l} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
                         <span style={{ color:C.inkSoft }}>{l}</span><span style={{ fontWeight:700, color:C.ink }}>{v}</span>
                       </div>
                     ))}
+                  </div>
+
+                  <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:14, padding:"14px", marginBottom:14 }}>
+                    <div style={{ fontSize:13, fontWeight:600, color:C.teal, marginBottom:10 }}>🛡️ How your payment is protected</div>
+                    <div style={{ fontSize:12, color:C.ink, lineHeight:1.7 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                        <span>✅ Paid to guide now (30%)</span>
+                        <strong>${Math.round(Number(payModal.bid?.price)*0.85*0.30*100)/100}</strong>
+                      </div>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                        <span>🔒 Held until trip is confirmed complete (70%)</span>
+                        <strong>${Math.round(Number(payModal.bid?.price)*0.85*0.70*100)/100}</strong>
+                      </div>
+                      <div style={{ display:"flex", justifyContent:"space-between", paddingTop:6, borderTop:"1px solid #9FE1CB" }}>
+                        <span>CeylonTrails commission (15%)</span>
+                        <strong>${Math.round(Number(payModal.bid?.price)*0.15*100)/100}</strong>
+                      </div>
+                    </div>
+                    <p style={{ fontSize:11, color:C.teal, marginTop:10, lineHeight:1.5 }}>
+                      We hold most of the guide's payment until you both confirm the trip happened — so if a guide doesn't show up, the bulk of your money was never released to them.
+                    </p>
                   </div>
 
                   {/* Payment terms & conditions */}
@@ -4051,9 +4234,13 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                 <div style={{ width:64, height:64, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:28 }}>✅</div>
                 <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>Booking Confirmed!</div>
                 <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:8 }}>Payment of <strong>${payModal.bid?.price}</strong> processed successfully.</p>
-                <div style={{ background:C.tealPale, borderRadius:10, padding:"10px 14px", fontSize:12, color:C.teal, marginBottom:20, textAlign:"left" }}>
-                  <div>✓ Guide receives: <strong>${Math.round(Number(payModal.bid?.price)*0.85*100)/100}</strong></div>
+                <div style={{ background:C.tealPale, borderRadius:10, padding:"10px 14px", fontSize:12, color:C.teal, marginBottom:14, textAlign:"left" }}>
+                  <div>✓ Guide paid now: <strong>${Math.round(Number(payModal.bid?.price)*0.85*0.30*100)/100}</strong></div>
+                  <div>🔒 Held until trip completes: <strong>${Math.round(Number(payModal.bid?.price)*0.85*0.70*100)/100}</strong></div>
                   <div>✓ CeylonTrails commission: <strong>${Math.round(Number(payModal.bid?.price)*0.15*100)/100}</strong></div>
+                </div>
+                <div style={{ background:C.amberLight, borderRadius:10, padding:"10px 14px", fontSize:11.5, color:C.amber, marginBottom:20, textAlign:"left", lineHeight:1.6 }}>
+                  💬 You can now message {payModal.guideName} directly from "My requests" to coordinate pickup, meeting points and any details.
                 </div>
                 <button onClick={()=>{ setPayModal(null); setPayStep("confirm"); }} style={{ width:"100%", padding:"13px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans }}>Done</button>
               </div>
@@ -5041,26 +5228,106 @@ async function loadTouristRequests(touristUid) {
   } catch(e) { console.error("loadTouristRequests FAILED:", e.message); return []; }
 }
 
-async function acceptBidAndPay(requestId, bidAmount, guideId) {
+// ─── ESCROW PAYMENT MODEL ─────────────────────────────────────────────────────
+// The tourist pays the FULL amount to CeylonTrails in ONE payment. We then:
+//  • Release 30% to the guide IMMEDIATELY (working capital, shows good faith)
+//  • HOLD the remaining 70% in platform custody — not paid to the guide yet
+//  • Release that 70% only once BOTH tourist and guide confirm the trip
+//    actually happened. There is no auto-release if only one side confirms —
+//    this protects the tourist if a guide takes the 30% and disappears, and
+//    protects the guide from a tourist who simply never bothers to confirm
+//    (admin can step in and resolve disputes manually in that case).
+const GUIDE_INSTANT_RATE = 0.30; // % of the GUIDE's 85% share paid out immediately
+
+async function payFullAndEscrow(requestId, bidAmount, guideId) {
   if (!window.firebase?.firestore) return;
-  const commission = Math.round(bidAmount * 0.15 * 100) / 100;
-  const guideAmount = Math.round((bidAmount - commission) * 100) / 100;
+  const commission        = Math.round(bidAmount * 0.15 * 100) / 100;
+  const guideTotalShare   = Math.round((bidAmount - commission) * 100) / 100;
+  const guideInstantShare = Math.round(guideTotalShare * GUIDE_INSTANT_RATE * 100) / 100;
+  const guideHeldShare    = Math.round((guideTotalShare - guideInstantShare) * 100) / 100;
+
   await window.firebase.firestore().collection("tripRequests").doc(requestId).update({
-    status:"accepted",
-    payment:{ total:bidAmount, commission, guideAmount, paidAt:new Date().toISOString(), method:"PayPal" },
-    acceptedAt: new Date().toISOString(),
+    status: "confirmed", // full payment received, booking confirmed, trip not yet completed
+    payment: {
+      total: bidAmount, commission, guideAmount: guideTotalShare,
+      guideInstantShare, guideHeldShare,
+      paidAt: new Date().toISOString(),
+      heldReleased: false, method: "PayPal",
+    },
+    confirmedAt: new Date().toISOString(),
+    touristConfirmedComplete: false,
+    guideConfirmedComplete: false,
   });
-  // Track real earnings on the guide's profile so the Earnings tab reflects actual paid bookings
+
+  // Pay out the guide's instant 30% share right away
   if (guideId) {
     try {
       const ref = window.firebase.firestore().collection("guides").doc(guideId);
       const doc = await ref.get();
       const prev = doc.exists ? doc.data() : {};
-      const totalEarned = (prev.totalEarned || 0) + guideAmount;
-      const confirmedBookings = (prev.confirmedBookings || 0) + 1;
-      await ref.update({ totalEarned, confirmedBookings });
-    } catch(e) { console.warn("Could not update guide earnings:", e.message); }
+      await ref.update({
+        totalEarned: (prev.totalEarned || 0) + guideInstantShare,
+        confirmedBookings: (prev.confirmedBookings || 0) + 1,
+      });
+    } catch(e) { console.warn("Could not pay guide instant share:", e.message); }
   }
+}
+
+// Called when either side ticks "this trip happened". Requires BOTH to confirm
+// before the held 70% releases — no auto-release on a single confirmation.
+async function confirmTripCompletion(requestId, who, guideId) {
+  if (!window.firebase?.firestore) return false;
+  const ref = window.firebase.firestore().collection("tripRequests").doc(requestId);
+  const field = who === "tourist" ? "touristConfirmedComplete" : "guideConfirmedComplete";
+  await ref.update({ [field]: true, [`${field}At`]: new Date().toISOString() });
+
+  const doc = await ref.get();
+  const data = doc.data();
+  const bothConfirmed = data.touristConfirmedComplete && data.guideConfirmedComplete;
+  if (bothConfirmed && data.payment && !data.payment.heldReleased) {
+    await ref.update({
+      status: "completed",
+      "payment.heldReleased": true,
+      "payment.heldReleasedAt": new Date().toISOString(),
+    });
+    if (guideId) {
+      try {
+        const gRef = window.firebase.firestore().collection("guides").doc(guideId);
+        const gDoc = await gRef.get();
+        const prev = gDoc.exists ? gDoc.data() : {};
+        await gRef.update({ totalEarned: (prev.totalEarned || 0) + (data.payment.guideHeldShare || 0) });
+      } catch(e) { console.warn("Could not release held balance to guide:", e.message); }
+    }
+  }
+  return bothConfirmed;
+}
+
+// Tourist reports the guide never showed up — flags for admin review and
+// freezes the held 70% from being released until manually resolved.
+async function reportNoShow(requestId, reason) {
+  if (!window.firebase?.firestore) return;
+  await window.firebase.firestore().collection("tripRequests").doc(requestId).update({
+    status: "disputed", disputeReason: reason || "Tourist reported the guide did not show up.",
+    disputedAt: new Date().toISOString(),
+  });
+}
+
+// ─── IN-APP BOOKING CHAT ──────────────────────────────────────────────────────
+async function sendBookingMessage(requestId, fromRole, fromName, text) {
+  if (!window.firebase?.firestore || !text?.trim()) return;
+  await window.firebase.firestore().collection("bookingMessages").add({
+    requestId, fromRole, fromName, text: text.trim(), sentAt: new Date().toISOString(),
+  });
+}
+async function loadBookingMessages(requestId) {
+  if (!window.firebase?.firestore || !requestId) return [];
+  try {
+    const snap = await window.firebase.firestore().collection("bookingMessages")
+      .where("requestId","==",requestId).limit(200).get();
+    const msgs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    msgs.sort((a,b)=> new Date(a.sentAt) - new Date(b.sentAt));
+    return msgs;
+  } catch(e) { console.error("loadBookingMessages FAILED:", e.message); return []; }
 }
 
 const GUIDE_TERMS = `CEYLONTRAILS GUIDE TERMS & RULES
@@ -5069,19 +5336,21 @@ By submitting a bid, you agree to the following:
 
 1. COMMISSION: CeylonTrails deducts 15% from each booking. You receive 85% of the agreed price.
 
-2. CONDUCT: You must behave professionally at all times. Harassment, discrimination or misconduct will result in immediate removal from the platform.
+2. PAYMENT STRUCTURE: The tourist pays the full amount to CeylonTrails in one payment. We release 30% of your share to you immediately once the booking is confirmed. The remaining 70% is held by CeylonTrails and released to you once BOTH you and the tourist confirm the trip was completed. This protects tourists from no-shows while ensuring you're paid in full for completed work.
 
-3. PUNCTUALITY: You must arrive on time. Lateness of more than 30 minutes without notice may result in a full refund to the tourist.
+3. CONDUCT: You must behave professionally at all times. Harassment, discrimination or misconduct will result in immediate removal from the platform.
 
-4. ACCURACY: Your bid must cover all services stated. Hidden charges to tourists are strictly prohibited.
+4. PUNCTUALITY: You must arrive on time. Lateness of more than 30 minutes without notice may result in a full refund to the tourist.
 
-5. CANCELLATION: Cancelling within 48 hours of a confirmed booking without a valid reason incurs a penalty deducted from your next payment.
+5. ACCURACY: Your bid must cover all services stated. Hidden charges to tourists are strictly prohibited.
 
-6. SLTDA COMPLIANCE: Your licence must remain valid. Expired licence = suspended account.
+6. CANCELLATION: Cancelling within 48 hours of a confirmed booking without a valid reason incurs a penalty deducted from your next payment.
 
-7. PAYMENTS: All payments are processed through CeylonTrails. Accepting cash directly from tourists for platform-booked tours is not permitted.
+7. SLTDA COMPLIANCE: Your licence must remain valid. Expired licence = suspended account.
 
-8. DISPUTES: All disputes are mediated by CeylonTrails. Our decision is final.
+8. PAYMENTS: All payments are processed through CeylonTrails. Accepting cash directly from tourists for platform-booked tours is not permitted.
+
+9. DISPUTES: All disputes are mediated by CeylonTrails. Our decision is final.
 
 By proceeding, you confirm you have read and agree to all terms above.`;
 
@@ -5485,12 +5754,13 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
     if (activeTab==="requests") {
       setLR(true);
       loadTripRequests(user.uid).then(r=>{
-        // Detect status changes since last load (declined / accepted+paid) for one-time toast
+        // Detect status changes since last load (declined / paid / completed) for one-time toast
         r.forEach(req=>{
           const prevStatus = seenStatuses.current[req.id];
           if (prevStatus && prevStatus!==req.status) {
             if (req.status==="declined") setNotifyToast({ type:"declined", text:`A tourist declined your bid for "${req.itinTitle||"a trip"}".` });
-            if (req.status==="accepted") setNotifyToast({ type:"accepted", text:`💰 Payment received for "${req.itinTitle||"a trip"}"! Check your earnings.` });
+            if (req.status==="confirmed") setNotifyToast({ type:"accepted", text:`💰 Booking confirmed for "${req.itinTitle||"a trip"}"! Your initial payment has landed.` });
+            if (req.status==="completed") setNotifyToast({ type:"accepted", text:`✅ Trip completed for "${req.itinTitle||"a trip"}"! Your remaining payment has been released.` });
           }
           seenStatuses.current[req.id] = req.status;
         });
@@ -5744,10 +6014,13 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                     🗺️ View full {req.itinDays}-day itinerary before bidding
                   </button>
                 )}
-                {req.bid && (
+                {req.bid && (req.status==="pending"||req.status==="declined") && (
                   <div style={{ background:req.status==="declined"?"#FEF2F2":C.tealPale, borderRadius:8, padding:"8px 12px", fontSize:12, color:req.status==="declined"?"#DC2626":C.teal, marginBottom:req.status==="declined"?10:0 }}>
                     Your bid: <strong>${req.bid.price}</strong> · {req.bid.dates}
                   </div>
+                )}
+                {(req.status==="confirmed"||req.status==="completed"||req.status==="disputed") && req.payment && (
+                  <BookingManagementPanel req={req} role="guide" user={user} guidePhone={profile?.phone} onUpdate={(updated)=>setRequests(rs=>rs.map(r=>r.id===req.id?{...r,...updated}:r))}/>
                 )}
                 {!req.bid && req.status==="pending" && (
                   <div style={{ display:"flex", gap:8 }}>
@@ -6089,6 +6362,7 @@ function AdminAnalyticsDashboard({ analytics, loading, onRefresh }) {
         <StatCard icon="✅" label="Confirmed bookings" value={analytics.totalBookings} sub={`${analytics.conversionRate}% conversion`}/>
         <StatCard icon="📩" label="Total trip requests" value={analytics.totalRequests}/>
         <StatCard icon="🧑‍🤝‍🧑" label="Approved guides" value={`${analytics.approvedGuides} / ${analytics.totalGuides}`} sub={analytics.pendingGuides>0?`${analytics.pendingGuides} pending`:null}/>
+        <StatCard icon="⚠️" label="Open disputes" value={analytics.disputedCount||0} color={analytics.disputedCount>0?"#DC2626":"#2D4A6A"}/>
       </div>
 
       {/* Bookings & revenue trend (last 6 months) */}
@@ -6172,7 +6446,8 @@ function AdminPanel({ onClose }) {
       const requests = reqSnap.docs.map(d=>d.data());
       const allGuides = guideSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-      const accepted = requests.filter(r=>r.status==="accepted" && r.payment);
+      const accepted = requests.filter(r=>(r.status==="confirmed"||r.status==="completed") && r.payment);
+      const disputed = requests.filter(r=>r.status==="disputed");
       const totalRevenue    = accepted.reduce((s,r)=>s+(r.payment.total||0), 0);
       const totalCommission = accepted.reduce((s,r)=>s+(r.payment.commission||0), 0);
       const totalGuideEarnings = accepted.reduce((s,r)=>s+(r.payment.guideAmount||0), 0);
@@ -6217,6 +6492,7 @@ function AdminPanel({ onClose }) {
         totalGuides: allGuides.length,
         approvedGuides: allGuides.filter(g=>g.status==="approved").length,
         pendingGuides: allGuides.filter(g=>g.status==="pending").length,
+        disputedCount: disputed.length,
         monthBuckets, popularDest, topGuides,
       });
     } catch(e) { console.error("Analytics load failed:", e.message); }
