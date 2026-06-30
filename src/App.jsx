@@ -11,6 +11,153 @@ const C = {
 const serif = "'Playfair Display','Georgia',serif";
 const sans  = "'Inter',system-ui,sans-serif";
 
+// ─── i18n / MULTI-LANGUAGE SYSTEM ────────────────────────────────────────────
+const LANGUAGES = [
+  { code:"en", label:"English",  flag:"🇬🇧" },
+  { code:"si", label:"සිංහල",    flag:"🇱🇰" },
+  { code:"ta", label:"தமிழ்",     flag:"🇱🇰" },
+  { code:"de", label:"Deutsch",  flag:"🇩🇪" },
+  { code:"fr", label:"Français", flag:"🇫🇷" },
+  { code:"zh", label:"中文",      flag:"🇨🇳" },
+];
+
+// Translations cover the highest-traffic surface: nav, home page hero/services,
+// the journey wizard, common buttons, and footer. Deeper content (destination
+// descriptions, AI-generated itineraries, guide bios) stays in English since
+// that content is dynamic/AI-generated and translating it live would need a
+// separate translation API call per item.
+const TRANSLATIONS = {
+  en: {
+    nav_home:"Home", nav_destinations:"Destinations", nav_map:"Sri Lanka Map", nav_plan:"Plan a trip",
+    nav_findguide:"Find a Guide", nav_guideportal:"Guide Portal", nav_signin:"Sign in", nav_signout:"Sign out",
+    nav_planmytrip:"Plan my trip",
+    hero_badge:"Pearl of the Indian Ocean", hero_title1:"Discover", hero_title2:"Sri Lanka", hero_title3:"your way",
+    hero_sub:"AI-crafted journeys or certified local guides — tailored to exactly how you want to explore.",
+    hero_cta1:"✨ Create my journey", hero_cta2:"Browse guides",
+    stat_dest:"Destinations", stat_guides:"Certified guides", stat_rating:"Avg rating", stat_travellers:"Travellers",
+    services_label:"Our services", services_title:"How would you like to explore?",
+    svc1_title:"Create your journey", svc1_desc:"Answer a few questions and get a day-by-day itinerary crafted by AI — real restaurants, trails, and hidden gems.", svc1_cta:"Get started →",
+    svc2_title:"Search for a guide", svc2_desc:"Browse SLTDA-certified local guides, share your itinerary, and request personalised price quotes.", svc2_cta:"Browse guides →",
+    why_label:"Why CeylonTrails", why_title:"Everything in one place",
+    why1_t:"AI itinerary builder", why1_s:"Real AI crafts a unique plan with named restaurants, trails and hotels.",
+    why2_t:"Verified guides", why2_s:"Every guide is SLTDA-certified. We verify credentials before listing.",
+    why3_t:"Bid & compare", why3_s:"Submit your itinerary and collect price bids. No obligation.",
+    why4_t:"Responsible tourism", why4_s:"We partner only with eco-conscious guides and sustainable operators.",
+    wiz_title:"Build your perfect trip", wiz_sub:"A few quick questions. Real AI builds your day-by-day Sri Lanka itinerary.",
+    wiz_back:"← Back", wiz_next:"Next →", wiz_generate:"✨ Generate my itinerary",
+    btn_planmytripshere:"✨ Plan a trip here",
+  },
+  si: {
+    nav_home:"මුල් පිටුව", nav_destinations:"ගමනාන්ත", nav_map:"ශ්‍රී ලංකා සිතියම", nav_plan:"සැලැස්මක් කරන්න",
+    nav_findguide:"මාර්ගෝපදේශකයෙකු සොයන්න", nav_guideportal:"මාර්ගෝපදේශක ද්වාරය", nav_signin:"පුරන්න", nav_signout:"ඉවත් වන්න",
+    nav_planmytrip:"මගේ සංචාරය සැලසුම් කරන්න",
+    hero_badge:"ඉන්දියන් සාගරයේ මුතු ඇටය", hero_title1:"සොයාගන්න", hero_title2:"ශ්‍රී ලංකාව", hero_title3:"ඔබේ ආකාරයෙන්",
+    hero_sub:"AI මගින් සැලසුම් කළ ගමන් හෝ සහතික කළ දේශීය මාර්ගෝපදේශකයින් — ඔබට අවශ්‍ය ආකාරයටම සකස් කර ඇත.",
+    hero_cta1:"✨ මගේ ගමන සාදන්න", hero_cta2:"මාර්ගෝපදේශකයින් බලන්න",
+    stat_dest:"ගමනාන්ත", stat_guides:"සහතික කළ මාර්ගෝපදේශකයින්", stat_rating:"සාමාන්‍ය ශ්‍රේණිගත කිරීම", stat_travellers:"සංචාරකයින්",
+    services_label:"අපගේ සේවාවන්", services_title:"ඔබ ගවේෂණය කිරීමට කැමති ආකාරය කුමක්ද?",
+    svc1_title:"ඔබේ ගමන සාදන්න", svc1_desc:"ප්‍රශ්න කිහිපයකට පිළිතුරු දී AI මගින් සැලසුම් කළ දිනපතා සංචාර සැලැස්මක් ලබාගන්න.", svc1_cta:"ආරම්භ කරන්න →",
+    svc2_title:"මාර්ගෝපදේශකයෙකු සොයන්න", svc2_desc:"SLTDA සහතික කළ දේශීය මාර්ගෝපදේශකයින් බලා, ඔබේ සැලැස්ම බෙදාගෙන මිල ගණන් ඉල්ලන්න.", svc2_cta:"මාර්ගෝපදේශකයින් බලන්න →",
+    why_label:"CeylonTrails තෝරාගන්නේ ඇයි", why_title:"සියල්ල එක තැනක",
+    why1_t:"AI සංචාර සැලසුම් කරණය", why1_s:"සැබෑ AI මගින් නම් කළ අවන්හල්, මං පෙත් සහ හෝටල් සහිත සුවිශේෂී සැලැස්මක් සකස් කරයි.",
+    why2_t:"සත්‍යාපිත මාර්ගෝපදේශකයින්", why2_s:"සෑම මාර්ගෝපදේශකයෙකුම SLTDA සහතික කර ඇත.",
+    why3_t:"ලංසු සහ සැසඳීම", why3_s:"ඔබේ සැලැස්ම ඉදිරිපත් කර මිල ගණන් රැස් කරගන්න. බැඳීමක් නැත.",
+    why4_t:"වගකිවයුතු සංචාරක ව්‍යාපාරය", why4_s:"අපි පරිසර හිතකාමී මාර්ගෝපදේශකයින් සමඟ පමණක් සහයෝගයෙන් කටයුතු කරමු.",
+    wiz_title:"ඔබේ පරිපූර්ණ ගමන සාදන්න", wiz_sub:"ඉක්මන් ප්‍රශ්න කිහිපයක්. සැබෑ AI ඔබේ දිනපතා ශ්‍රී ලංකා සංචාර සැලැස්ම සාදයි.",
+    wiz_back:"← ආපසු", wiz_next:"ඊළඟ →", wiz_generate:"✨ මගේ සැලැස්ම සාදන්න",
+    btn_planmytripshere:"✨ මෙහි ගමනක් සැලසුම් කරන්න",
+  },
+  ta: {
+    nav_home:"முகப்பு", nav_destinations:"இடங்கள்", nav_map:"இலங்கை வரைபடம்", nav_plan:"பயணம் திட்டமிடுங்கள்",
+    nav_findguide:"வழிகாட்டியைக் கண்டறியவும்", nav_guideportal:"வழிகாட்டி வாயில்", nav_signin:"உள்நுழைய", nav_signout:"வெளியேறு",
+    nav_planmytrip:"எனது பயணத்தைத் திட்டமிடுங்கள்",
+    hero_badge:"இந்தியப் பெருங்கடலின் முத்து", hero_title1:"கண்டறியுங்கள்", hero_title2:"இலங்கை", hero_title3:"உங்கள் வழியில்",
+    hero_sub:"AI வடிவமைத்த பயணங்கள் அல்லது சான்றளிக்கப்பட்ட உள்ளூர் வழிகாட்டிகள் — நீங்கள் விரும்பும் வகையில் தயாரிக்கப்பட்டது.",
+    hero_cta1:"✨ எனது பயணத்தை உருவாக்கு", hero_cta2:"வழிகாட்டிகளைப் பார்வையிடுங்கள்",
+    stat_dest:"இடங்கள்", stat_guides:"சான்றளிக்கப்பட்ட வழிகாட்டிகள்", stat_rating:"சராசரி மதிப்பீடு", stat_travellers:"பயணிகள்",
+    services_label:"எங்கள் சேவைகள்", services_title:"நீங்கள் எவ்வாறு ஆராய விரும்புகிறீர்கள்?",
+    svc1_title:"உங்கள் பயணத்தை உருவாக்குங்கள்", svc1_desc:"சில கேள்விகளுக்கு பதிலளித்து AI வடிவமைத்த தினசரி பயணத் திட்டத்தைப் பெறுங்கள்.", svc1_cta:"தொடங்குங்கள் →",
+    svc2_title:"வழிகாட்டியைத் தேடுங்கள்", svc2_desc:"SLTDA சான்றளிக்கப்பட்ட உள்ளூர் வழிகாட்டிகளை உலாவி, உங்கள் திட்டத்தைப் பகிர்ந்து விலைமனுக்களைக் கோருங்கள்.", svc2_cta:"வழிகாட்டிகளைப் பார்வையிடுங்கள் →",
+    why_label:"ஏன் CeylonTrails", why_title:"அனைத்தும் ஒரே இடத்தில்",
+    why1_t:"AI பயணத் திட்டமிடுபவர்", why1_s:"உண்மையான AI பெயரிடப்பட்ட உணவகங்கள், பாதைகள் மற்றும் ஹோட்டல்களுடன் தனித்துவமான திட்டத்தை உருவாக்குகிறது.",
+    why2_t:"சரிபார்க்கப்பட்ட வழிகாட்டிகள்", why2_s:"ஒவ்வொரு வழிகாட்டியும் SLTDA சான்றளிக்கப்பட்டவர்.",
+    why3_t:"விலைமனு & ஒப்பீடு", why3_s:"உங்கள் திட்டத்தைச் சமர்ப்பித்து விலை மனுக்களைச் சேகரிக்கவும். கடப்பாடு இல்லை.",
+    why4_t:"பொறுப்பான சுற்றுலா", why4_s:"சுற்றுச்சூழல் உணர்வுள்ள வழிகாட்டிகளுடன் மட்டுமே நாங்கள் கூட்டாண்மை செய்கிறோம்.",
+    wiz_title:"உங்கள் சரியான பயணத்தை உருவாக்குங்கள்", wiz_sub:"சில விரைவான கேள்விகள். உண்மையான AI உங்கள் தினசரி இலங்கை பயணத் திட்டத்தை உருவாக்குகிறது.",
+    wiz_back:"← பின்", wiz_next:"அடுத்து →", wiz_generate:"✨ எனது திட்டத்தை உருவாக்கு",
+    btn_planmytripshere:"✨ இங்கே ஒரு பயணத்தைத் திட்டமிடுங்கள்",
+  },
+  de: {
+    nav_home:"Startseite", nav_destinations:"Reiseziele", nav_map:"Sri-Lanka-Karte", nav_plan:"Reise planen",
+    nav_findguide:"Reiseführer finden", nav_guideportal:"Reiseführer-Portal", nav_signin:"Anmelden", nav_signout:"Abmelden",
+    nav_planmytrip:"Meine Reise planen",
+    hero_badge:"Perle des Indischen Ozeans", hero_title1:"Entdecke", hero_title2:"Sri Lanka", hero_title3:"auf deine Weise",
+    hero_sub:"KI-gestaltete Reisen oder zertifizierte lokale Reiseführer — genau auf deine Wünsche zugeschnitten.",
+    hero_cta1:"✨ Meine Reise erstellen", hero_cta2:"Reiseführer durchsuchen",
+    stat_dest:"Reiseziele", stat_guides:"Zertifizierte Führer", stat_rating:"Durchschn. Bewertung", stat_travellers:"Reisende",
+    services_label:"Unsere Leistungen", services_title:"Wie möchtest du Sri Lanka erkunden?",
+    svc1_title:"Erstelle deine Reise", svc1_desc:"Beantworte ein paar Fragen und erhalte einen tagesgenauen Reiseplan von KI — echte Restaurants, Wege und Geheimtipps.", svc1_cta:"Loslegen →",
+    svc2_title:"Reiseführer suchen", svc2_desc:"Durchsuche SLTDA-zertifizierte lokale Reiseführer, teile deinen Plan und fordere individuelle Angebote an.", svc2_cta:"Reiseführer durchsuchen →",
+    why_label:"Warum CeylonTrails", why_title:"Alles an einem Ort",
+    why1_t:"KI-Reiseplaner", why1_s:"Echte KI erstellt einen einzigartigen Plan mit benannten Restaurants, Wegen und Hotels.",
+    why2_t:"Verifizierte Reiseführer", why2_s:"Jeder Führer ist SLTDA-zertifiziert. Wir prüfen die Qualifikationen vor der Listung.",
+    why3_t:"Angebote & Vergleich", why3_s:"Reiche deinen Plan ein und sammle Preisangebote. Unverbindlich.",
+    why4_t:"Verantwortungsvoller Tourismus", why4_s:"Wir arbeiten nur mit umweltbewussten Führern und nachhaltigen Anbietern zusammen.",
+    wiz_title:"Erstelle deine perfekte Reise", wiz_sub:"Ein paar kurze Fragen. Echte KI erstellt deinen tagesgenauen Sri-Lanka-Reiseplan.",
+    wiz_back:"← Zurück", wiz_next:"Weiter →", wiz_generate:"✨ Meinen Reiseplan erstellen",
+    btn_planmytripshere:"✨ Hier eine Reise planen",
+  },
+  fr: {
+    nav_home:"Accueil", nav_destinations:"Destinations", nav_map:"Carte du Sri Lanka", nav_plan:"Planifier un voyage",
+    nav_findguide:"Trouver un guide", nav_guideportal:"Portail guide", nav_signin:"Connexion", nav_signout:"Déconnexion",
+    nav_planmytrip:"Planifier mon voyage",
+    hero_badge:"Perle de l'océan Indien", hero_title1:"Découvrez", hero_title2:"le Sri Lanka", hero_title3:"à votre façon",
+    hero_sub:"Voyages conçus par IA ou guides locaux certifiés — adaptés exactement à votre façon d'explorer.",
+    hero_cta1:"✨ Créer mon voyage", hero_cta2:"Parcourir les guides",
+    stat_dest:"Destinations", stat_guides:"Guides certifiés", stat_rating:"Note moyenne", stat_travellers:"Voyageurs",
+    services_label:"Nos services", services_title:"Comment souhaitez-vous explorer ?",
+    svc1_title:"Créez votre voyage", svc1_desc:"Répondez à quelques questions et obtenez un itinéraire jour par jour conçu par IA — vrais restaurants, sentiers et trésors cachés.", svc1_cta:"Commencer →",
+    svc2_title:"Rechercher un guide", svc2_desc:"Parcourez les guides locaux certifiés SLTDA, partagez votre itinéraire et demandez des devis personnalisés.", svc2_cta:"Parcourir les guides →",
+    why_label:"Pourquoi CeylonTrails", why_title:"Tout en un seul endroit",
+    why1_t:"Créateur d'itinéraire IA", why1_s:"Une vraie IA crée un plan unique avec des restaurants, sentiers et hôtels nommés.",
+    why2_t:"Guides vérifiés", why2_s:"Chaque guide est certifié SLTDA. Nous vérifions les qualifications avant la mise en ligne.",
+    why3_t:"Devis & comparaison", why3_s:"Soumettez votre itinéraire et recueillez des devis. Sans engagement.",
+    why4_t:"Tourisme responsable", why4_s:"Nous collaborons uniquement avec des guides éco-responsables et des opérateurs durables.",
+    wiz_title:"Créez votre voyage parfait", wiz_sub:"Quelques questions rapides. Une vraie IA crée votre itinéraire jour par jour au Sri Lanka.",
+    wiz_back:"← Retour", wiz_next:"Suivant →", wiz_generate:"✨ Générer mon itinéraire",
+    btn_planmytripshere:"✨ Planifier un voyage ici",
+  },
+  zh: {
+    nav_home:"首页", nav_destinations:"目的地", nav_map:"斯里兰卡地图", nav_plan:"规划行程",
+    nav_findguide:"寻找导游", nav_guideportal:"导游门户", nav_signin:"登录", nav_signout:"退出登录",
+    nav_planmytrip:"规划我的行程",
+    hero_badge:"印度洋明珠", hero_title1:"探索", hero_title2:"斯里兰卡", hero_title3:"用您的方式",
+    hero_sub:"AI 定制行程或认证当地导游 — 完全按照您想要的探索方式量身定制。",
+    hero_cta1:"✨ 创建我的行程", hero_cta2:"浏览导游",
+    stat_dest:"目的地", stat_guides:"认证导游", stat_rating:"平均评分", stat_travellers:"旅行者",
+    services_label:"我们的服务", services_title:"您想如何探索？",
+    svc1_title:"创建您的行程", svc1_desc:"回答几个问题，获取由 AI 精心制作的逐日行程 — 真实的餐厅、步道和隐藏景点。", svc1_cta:"开始 →",
+    svc2_title:"寻找导游", svc2_desc:"浏览经 SLTDA 认证的当地导游，分享您的行程并请求个性化报价。", svc2_cta:"浏览导游 →",
+    why_label:"为什么选择 CeylonTrails", why_title:"一切尽在一处",
+    why1_t:"AI 行程规划器", why1_s:"真正的 AI 打造独特行程，包含具体的餐厅、步道和酒店。",
+    why2_t:"认证导游", why2_s:"每位导游均经过 SLTDA 认证。我们在列出之前核实资质。",
+    why3_t:"报价与比较", why3_s:"提交您的行程并收集报价。无需承诺。",
+    why4_t:"负责任的旅游", why4_s:"我们只与具有环保意识的导游和可持续运营商合作。",
+    wiz_title:"打造您的完美行程", wiz_sub:"几个简短的问题。真正的 AI 为您打造逐日斯里兰卡行程。",
+    wiz_back:"← 返回", wiz_next:"下一步 →", wiz_generate:"✨ 生成我的行程",
+    btn_planmytripshere:"✨ 在此规划行程",
+  },
+};
+
+const LangContext = React.createContext({ lang:"en", setLang:()=>{}, t:(k)=>k });
+function useLang() { return React.useContext(LangContext); }
+function LangProvider({ children }) {
+  const [lang, setLang] = useState(()=>localStorage.getItem("ct_lang") || "en");
+  const changeLang = (code) => { setLang(code); localStorage.setItem("ct_lang", code); };
+  const t = (key) => TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
+  return <LangContext.Provider value={{ lang, setLang:changeLang, t }}>{children}</LangContext.Provider>;
+}
+
 // ─── ACTIVITY ↔ REGION COMPATIBILITY ────────────────────────────────────────
 // Maps activity choices to travel styles that support them
 const ACT_COMPAT = {
@@ -655,7 +802,10 @@ function MobileStyles() {
 function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }) {
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [destHover, setDestHover] = useState(false);
+  const [langOpen,  setLangOpen]  = useState(false);
   const hoverTimer = useRef(null);
+  const { lang, setLang, t } = useLang();
+  const currentLangObj = LANGUAGES.find(l=>l.code===lang) || LANGUAGES[0];
 
   const openDest = (catId) => {
     setPage("destinations"); setDestHover(false); setMenuOpen(false);
@@ -676,7 +826,7 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
 
         {/* Desktop links */}
         <div className="desktop-nav" style={{ display:"flex", gap:"1.6rem", alignItems:"center" }}>
-          <span onClick={()=>setPage("home")} style={{ fontSize:14, color:page==="home"?C.teal:C.inkSoft, fontWeight:page==="home"?600:400, cursor:"pointer", borderBottom:page==="home"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2 }}>Home</span>
+          <span onClick={()=>setPage("home")} style={{ fontSize:14, color:page==="home"?C.teal:C.inkSoft, fontWeight:page==="home"?600:400, cursor:"pointer", borderBottom:page==="home"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2 }}>{t("nav_home")}</span>
 
           <div style={{ position:"relative" }} onMouseEnter={handleDestEnter} onMouseLeave={handleDestLeave}>
             <span style={{ fontSize:14, color:page==="destinations"?C.teal:C.inkSoft, fontWeight:page==="destinations"?600:400, cursor:"pointer", borderBottom:page==="destinations"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, display:"flex", alignItems:"center", gap:4 }}
@@ -703,13 +853,35 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
             )}
           </div>
 
-          <span onClick={()=>setPage("srilankamap")} style={{ fontSize:14, color:page==="srilankamap"?C.teal:C.inkSoft, fontWeight:page==="srilankamap"?600:400, cursor:"pointer", borderBottom:page==="srilankamap"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>Sri Lanka Map</span>
-          <span onClick={()=>setPage("journey")} style={{ fontSize:14, color:page==="journey"?C.teal:C.inkSoft, fontWeight:page==="journey"?600:400, cursor:"pointer", borderBottom:page==="journey"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>Plan a trip</span>
-          <span onClick={onGuideOpen} style={{ fontSize:14, color:C.inkSoft, cursor:"pointer", paddingBottom:2, whiteSpace:"nowrap" }}>Find a Guide</span>
-          <span onClick={()=>setPage("guideportal")} style={{ fontSize:14, color:page==="guideportal"?C.teal:C.inkSoft, fontWeight:page==="guideportal"?600:400, cursor:"pointer", borderBottom:page==="guideportal"?"2px solid "+C.teal:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>Guide Portal</span>
+          <span onClick={()=>setPage("srilankamap")} style={{ fontSize:14, color:page==="srilankamap"?C.teal:C.inkSoft, fontWeight:page==="srilankamap"?600:400, cursor:"pointer", borderBottom:page==="srilankamap"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>{t("nav_map")}</span>
+          <span onClick={()=>setPage("journey")} style={{ fontSize:14, color:page==="journey"?C.teal:C.inkSoft, fontWeight:page==="journey"?600:400, cursor:"pointer", borderBottom:page==="journey"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>{t("nav_plan")}</span>
+          <span onClick={onGuideOpen} style={{ fontSize:14, color:C.inkSoft, cursor:"pointer", paddingBottom:2, whiteSpace:"nowrap" }}>{t("nav_findguide")}</span>
+          <span onClick={()=>setPage("guideportal")} style={{ fontSize:14, color:page==="guideportal"?C.teal:C.inkSoft, fontWeight:page==="guideportal"?600:400, cursor:"pointer", borderBottom:page==="guideportal"?"2px solid "+C.teal:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>{t("nav_guideportal")}</span>
         </div>
 
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          {/* Language switcher */}
+          <div style={{ position:"relative" }}>
+            <button onClick={()=>setLangOpen(o=>!o)} style={{ display:"flex", alignItems:"center", gap:5, padding:"7px 10px", background:"none", border:`1px solid ${C.border}`, borderRadius:10, cursor:"pointer", fontFamily:sans, fontSize:13 }}>
+              <span>{currentLangObj.flag}</span>
+              <span style={{ fontSize:11, fontWeight:600, color:C.inkSoft, display:"none" }} className="lang-code-label">{currentLangObj.code.toUpperCase()}</span>
+              <span style={{ fontSize:9, opacity:.6 }}>▾</span>
+            </button>
+            {langOpen && (
+              <>
+                <div onClick={()=>setLangOpen(false)} style={{ position:"fixed", inset:0, zIndex:450 }}/>
+                <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:"#fff", borderRadius:12, boxShadow:"0 8px 30px rgba(0,0,0,.15)", border:`1px solid ${C.border}`, padding:6, width:160, zIndex:500 }}>
+                  {LANGUAGES.map(l=>(
+                    <div key={l.code} onClick={()=>{ setLang(l.code); setLangOpen(false); }} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:8, cursor:"pointer", background:lang===l.code?C.tealPale:"transparent", fontSize:13, color:lang===l.code?C.teal:C.ink, fontWeight:lang===l.code?600:400 }}
+                      onMouseEnter={e=>{ if(lang!==l.code) e.currentTarget.style.background=C.surface; }}
+                      onMouseLeave={e=>{ if(lang!==l.code) e.currentTarget.style.background="transparent"; }}>
+                      <span style={{ fontSize:16 }}>{l.flag}</span><span>{l.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           {/* Auth button */}
           {user ? (
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -717,12 +889,12 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
                 {displayName?.[0]?.toUpperCase()||"U"}
               </div>
               <span style={{ fontSize:13, fontWeight:600, color:C.ink }}>{displayName}</span>
-              <button onClick={signOut} style={{ fontSize:12, color:C.inkSoft, background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"4px 10px", cursor:"pointer", fontFamily:sans }}>Sign out</button>
+              <button onClick={signOut} style={{ fontSize:12, color:C.inkSoft, background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"4px 10px", cursor:"pointer", fontFamily:sans }}>{t("nav_signout")}</button>
             </div>
           ) : (
-            <button onClick={onLoginClick} style={{ padding:"8px 18px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Sign in</button>
+            <button onClick={onLoginClick} style={{ padding:"8px 18px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{t("nav_signin")}</button>
           )}
-          <button onClick={()=>setPage("journey")} style={{ padding:"9px 18px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>Plan my trip</button>
+          <button onClick={()=>setPage("journey")} style={{ padding:"9px 18px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>{t("nav_planmytrip")}</button>
           <button onClick={()=>setMenuOpen(o=>!o)} style={{ display:"flex", flexDirection:"column", gap:5, padding:8, background:"none", border:`1px solid ${C.border}`, borderRadius:10, cursor:"pointer" }}>
             <span style={{ width:20, height:2, background:menuOpen?C.teal:C.ink, borderRadius:2 }}/>
             <span style={{ width:20, height:2, background:menuOpen?C.teal:C.ink, borderRadius:2 }}/>
@@ -979,26 +1151,27 @@ function SriLankaSlideshow({ setPage }) {
 }
 
 function HomePage({ setPage, onGuideOpen }) {
+  const { t } = useLang();
   return (
     <div>
       <section style={{ position:"relative", minHeight:"92vh", background:"linear-gradient(160deg,#04322A 0%,#0B6B52 38%,#147856 60%,#9C6A10 100%)", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", padding:"6rem 2rem 5rem" }}>
         <HeroArt />
         <div style={{ position:"relative", zIndex:2, textAlign:"center", maxWidth:720 }}>
           <div style={{ display:"inline-flex", alignItems:"center", gap:6, background:"rgba(255,255,255,.12)", border:"1px solid rgba(255,255,255,.22)", borderRadius:40, padding:"6px 16px", fontSize:12, fontWeight:500, color:"rgba(255,255,255,.9)", letterSpacing:"0.5px", textTransform:"uppercase", marginBottom:28 }}>
-            <span style={{ width:6, height:6, background:C.amberMid, borderRadius:"50%", display:"inline-block" }}/> Pearl of the Indian Ocean
+            <span style={{ width:6, height:6, background:C.amberMid, borderRadius:"50%", display:"inline-block" }}/> {t("hero_badge")}
           </div>
           <h1 style={{ fontFamily:serif, fontSize:"clamp(38px,6vw,62px)", fontWeight:700, color:"#fff", lineHeight:1.1, marginBottom:22 }}>
-            Discover<br/><span style={{ color:C.amberMid, fontStyle:"italic" }}>Sri Lanka</span><br/>your way
+            {t("hero_title1")}<br/><span style={{ color:C.amberMid, fontStyle:"italic" }}>{t("hero_title2")}</span><br/>{t("hero_title3")}
           </h1>
           <p style={{ fontSize:17, color:"rgba(255,255,255,.75)", maxWidth:520, margin:"0 auto 36px", lineHeight:1.7, fontWeight:300 }}>
-            AI-crafted journeys or certified local guides — tailored to exactly how you want to explore.
+            {t("hero_sub")}
           </p>
           <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap" }}>
-            <button onClick={()=>setPage("journey")} style={{ padding:"14px 32px", background:C.amberMid, color:"#2C1800", fontSize:15, fontWeight:600, border:"none", borderRadius:12, cursor:"pointer", boxShadow:"0 4px 20px rgba(232,168,37,.4)", fontFamily:sans }}>✨ Create my journey</button>
-            <button onClick={onGuideOpen} style={{ padding:"14px 32px", background:"rgba(255,255,255,.1)", color:"#fff", fontSize:15, fontWeight:500, border:"1px solid rgba(255,255,255,.35)", borderRadius:12, cursor:"pointer", backdropFilter:"blur(8px)", fontFamily:sans }}>Browse guides</button>
+            <button onClick={()=>setPage("journey")} style={{ padding:"14px 32px", background:C.amberMid, color:"#2C1800", fontSize:15, fontWeight:600, border:"none", borderRadius:12, cursor:"pointer", boxShadow:"0 4px 20px rgba(232,168,37,.4)", fontFamily:sans }}>{t("hero_cta1")}</button>
+            <button onClick={onGuideOpen} style={{ padding:"14px 32px", background:"rgba(255,255,255,.1)", color:"#fff", fontSize:15, fontWeight:500, border:"1px solid rgba(255,255,255,.35)", borderRadius:12, cursor:"pointer", backdropFilter:"blur(8px)", fontFamily:sans }}>{t("hero_cta2")}</button>
           </div>
           <div className="hero-stats" style={{ display:"flex", justifyContent:"center", gap:"3rem", marginTop:"4rem", paddingTop:"2.5rem", borderTop:"1px solid rgba(255,255,255,.12)" }}>
-            {[["200+","Destinations"],["150+","Certified guides"],["4.9★","Avg rating"],["12K+","Travellers"]].map(([n,l])=>(
+            {[["200+",t("stat_dest")],["150+",t("stat_guides")],["4.9★",t("stat_rating")],["12K+",t("stat_travellers")]].map(([n,l])=>(
               <div key={l} style={{ textAlign:"center" }}>
                 <div style={{ fontFamily:serif, fontSize:28, fontWeight:700, color:C.amberMid, lineHeight:1 }}>{n}</div>
                 <div style={{ fontSize:11, color:"rgba(255,255,255,.55)", marginTop:4, textTransform:"uppercase", letterSpacing:"0.8px" }}>{l}</div>
@@ -1011,8 +1184,8 @@ function HomePage({ setPage, onGuideOpen }) {
       {/* SERVICES */}
       <section style={{ padding:"6rem 2rem", background:C.white }}>
         <div style={{ textAlign:"center", marginBottom:"3.5rem" }}>
-          <div style={{ fontSize:11, fontWeight:600, color:C.tealMid, textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Our services</div>
-          <h2 style={{ fontFamily:serif, fontSize:"clamp(28px,4vw,42px)", fontWeight:700, color:C.ink, marginBottom:14 }}>How would you like to explore?</h2>
+          <div style={{ fontSize:11, fontWeight:600, color:C.tealMid, textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>{t("services_label")}</div>
+          <h2 style={{ fontFamily:serif, fontSize:"clamp(28px,4vw,42px)", fontWeight:700, color:C.ink, marginBottom:14 }}>{t("services_title")}</h2>
         </div>
         <div className="services-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem", maxWidth:900, margin:"0 auto" }}>
           <div onClick={()=>setPage("journey")} style={{ borderRadius:24, padding:"3rem 2.5rem", cursor:"pointer", background:"linear-gradient(145deg,#E6F8F2,#C8EFE2)", border:"1px solid #B2E5D0", transition:"transform .2s,box-shadow .2s" }}
@@ -1020,18 +1193,18 @@ function HomePage({ setPage, onGuideOpen }) {
             onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
             <div style={{ width:64, height:64, borderRadius:18, background:"rgba(29,158,117,.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:30, marginBottom:20 }}>🗺️</div>
             <div style={{ display:"flex", gap:6, marginBottom:14 }}><Pill>AI-powered</Pill><Pill>Personalised</Pill></div>
-            <h3 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:10 }}>Create your journey</h3>
-            <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, marginBottom:24 }}>Answer a few questions and get a day-by-day itinerary crafted by AI — real restaurants, trails, and hidden gems.</p>
-            <Btn onClick={e=>{ e.stopPropagation(); setPage("journey"); }}>Get started →</Btn>
+            <h3 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:10 }}>{t("svc1_title")}</h3>
+            <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, marginBottom:24 }}>{t("svc1_desc")}</p>
+            <Btn onClick={e=>{ e.stopPropagation(); setPage("journey"); }}>{t("svc1_cta")}</Btn>
           </div>
           <div onClick={onGuideOpen} style={{ borderRadius:24, padding:"3rem 2.5rem", cursor:"pointer", background:"linear-gradient(145deg,#FDF5E0,#FAE8BA)", border:"1px solid #F0D48A", transition:"transform .2s,box-shadow .2s" }}
             onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.boxShadow="0 12px 40px rgba(0,0,0,.12)"; }}
             onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
             <div style={{ width:64, height:64, borderRadius:18, background:"rgba(194,122,14,.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:30, marginBottom:20 }}>🧭</div>
             <div style={{ display:"flex", gap:6, marginBottom:14 }}><Pill amber>Ministry verified</Pill><Pill amber>Bid system</Pill></div>
-            <h3 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:10 }}>Search for a guide</h3>
-            <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, marginBottom:24 }}>Browse SLTDA-certified local guides, share your itinerary, and request personalised price quotes.</p>
-            <Btn variant="amber" onClick={e=>{ e.stopPropagation(); onGuideOpen(); }}>Browse guides →</Btn>
+            <h3 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:10 }}>{t("svc2_title")}</h3>
+            <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, marginBottom:24 }}>{t("svc2_desc")}</p>
+            <Btn variant="amber" onClick={e=>{ e.stopPropagation(); onGuideOpen(); }}>{t("svc2_cta")}</Btn>
           </div>
         </div>
       </section>
@@ -1043,11 +1216,11 @@ function HomePage({ setPage, onGuideOpen }) {
       <section style={{ padding:"5rem 2rem", background:C.white }}>
         <div style={{ maxWidth:1000, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:"3rem" }}>
-            <div style={{ fontSize:11, fontWeight:600, color:C.tealMid, textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Why CeylonTrails</div>
-            <h2 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,38px)", fontWeight:700, color:C.ink }}>Everything in one place</h2>
+            <div style={{ fontSize:11, fontWeight:600, color:C.tealMid, textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>{t("why_label")}</div>
+            <h2 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,38px)", fontWeight:700, color:C.ink }}>{t("why_title")}</h2>
           </div>
           <div className="why-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1.5rem" }}>
-            {[{i:"🤖",t:"AI itinerary builder",s:"Real AI crafts a unique plan with named restaurants, trails and hotels."},{i:"🛡️",t:"Verified guides",s:"Every guide is SLTDA-certified. We verify credentials before listing."},{i:"💬",t:"Bid & compare",s:"Submit your itinerary and collect price bids. No obligation."},{i:"🌿",t:"Responsible tourism",s:"We partner only with eco-conscious guides and sustainable operators."}].map(w=>(
+            {[{i:"🤖",t:t("why1_t"),s:t("why1_s")},{i:"🛡️",t:t("why2_t"),s:t("why2_s")},{i:"💬",t:t("why3_t"),s:t("why3_s")},{i:"🌿",t:t("why4_t"),s:t("why4_s")}].map(w=>(
               <div key={w.t} style={{ padding:"1.8rem 1.5rem", border:`1px solid ${C.border}`, borderRadius:20, transition:"border-color .2s" }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor=C.tealMid}
                 onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
@@ -2315,6 +2488,7 @@ function MismatchWarning({ travel, activities }) {
 
 // ─── JOURNEY PAGE ────────────────────────────────────────────────────────────
 function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLoginNeeded, premium }) {
+  const { t } = useLang();
   const [step, setStep]    = useState(()=>{
     // Restore step if user just logged in mid-wizard
     const saved = sessionStorage.getItem("ct_wizard_step");
@@ -2332,6 +2506,7 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   const [itinDays, setItinDays] = useState(savedItin?.days||null);
   const [placeInput, setPlaceInput] = useState("");
   const [startLabel, setStartLabel] = useState("Sri Lanka");
+  const [shareModal, setShareModal] = useState(null); // {url, loading} or null
 
   // Auto-generate ref — used after generate() is defined below
   const didAutoGenerate = useRef(false);
@@ -2657,6 +2832,15 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             )}
             <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
               <button onClick={downloadPDF} style={{ padding:"10px 20px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>📄 Download PDF</button>
+              <button onClick={async()=>{
+                setShareModal({ url:null, loading:true });
+                try {
+                  if (!window.firebase?.firestore) await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+                  const shareId = await saveSharedItinerary({ ...itin, days: itinDays||itin.days }, user?.uid);
+                  const url = `${window.location.origin}${window.location.pathname}?share=${shareId}`;
+                  setShareModal({ url, loading:false });
+                } catch(e) { setShareModal({ url:null, loading:false, error:e.message }); }
+              }} style={{ padding:"10px 20px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>🔗 Share itinerary</button>
               {/* Google Maps multi-waypoint route */}
               <button onClick={()=>{
                 // Build Google Maps directions URL with all unique day locations as waypoints
@@ -2723,6 +2907,39 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             </div>
           </div>
         </div>
+
+        {/* Share itinerary modal */}
+        {shareModal && (
+          <div onClick={e=>e.target===e.currentTarget&&setShareModal(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(6px)" }}>
+            <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:440, padding:"1.8rem", boxShadow:"0 20px 60px rgba(0,0,0,.25)" }}>
+              <h3 style={{ fontFamily:serif, fontSize:19, fontWeight:700, color:C.ink, marginBottom:6 }}>🔗 Share your itinerary</h3>
+              <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16, lineHeight:1.6 }}>Anyone with this link can view your trip plan — no account needed.</p>
+              {shareModal.loading && (
+                <div style={{ textAlign:"center", padding:"1.5rem" }}>
+                  <div style={{ width:32, height:32, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto 10px" }}/>
+                  <p style={{ fontSize:13, color:C.inkSoft }}>Creating your shareable link…</p>
+                </div>
+              )}
+              {shareModal.error && <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#DC2626" }}>Couldn't create link: {shareModal.error}</div>}
+              {shareModal.url && (
+                <>
+                  <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+                    <input readOnly value={shareModal.url} onClick={e=>e.target.select()}
+                      style={{ flex:1, padding:"11px 14px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:12, fontFamily:sans, color:C.ink, outline:"none", minWidth:0 }}/>
+                    <button onClick={()=>{ navigator.clipboard.writeText(shareModal.url); }} style={{ padding:"11px 16px", background:C.teal, color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>Copy</button>
+                  </div>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                    <a href={`https://wa.me/?text=${encodeURIComponent("Check out my Sri Lanka trip plan: "+shareModal.url)}`} target="_blank" rel="noopener noreferrer"
+                      style={{ flex:1, textAlign:"center", padding:"10px", background:"#25D366", color:"#fff", borderRadius:10, fontSize:13, fontWeight:600, textDecoration:"none", fontFamily:sans }}>💬 WhatsApp</a>
+                    <a href={`mailto:?subject=${encodeURIComponent("My Sri Lanka itinerary")}&body=${encodeURIComponent("Take a look at my trip plan: "+shareModal.url)}`}
+                      style={{ flex:1, textAlign:"center", padding:"10px", background:C.surface, color:C.ink, border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, fontWeight:600, textDecoration:"none", fontFamily:sans }}>✉️ Email</a>
+                  </div>
+                </>
+              )}
+              <button onClick={()=>setShareModal(null)} style={{ width:"100%", marginTop:14, padding:"10px", background:"none", border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.inkSoft, cursor:"pointer", fontFamily:sans }}>Close</button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -2995,15 +3212,15 @@ Return ONLY valid raw JSON — no markdown, no backticks:
         <HeroArt/>
         <div style={{ position:"relative", zIndex:2, maxWidth:680, margin:"0 auto", textAlign:"center" }}>
           <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Journey Creator</div>
-          <h1 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,42px)", fontWeight:700, color:"#fff", marginBottom:10 }}>Build your perfect trip</h1>
-          <p style={{ fontSize:15, color:"rgba(255,255,255,.7)", fontWeight:300 }}>7 quick questions. Real AI builds your day-by-day Sri Lanka itinerary.</p>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,42px)", fontWeight:700, color:"#fff", marginBottom:10 }}>{t("wiz_title")}</h1>
+          <p style={{ fontSize:15, color:"rgba(255,255,255,.7)", fontWeight:300 }}>{t("wiz_sub")}</p>
         </div>
       </div>
       <div style={{ maxWidth:640, margin:"2.5rem auto", padding:"0 1.5rem 4rem" }}>
         <div className="wizard-card" style={{ background:C.white, borderRadius:24, padding:"2.5rem", border:`1px solid ${C.border}`, boxShadow:"0 4px 24px rgba(0,0,0,.06)" }}>
           {steps[step]}
           <div className="wizard-btn-row" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:28, paddingTop:20, borderTop:`1px solid ${C.border}`, gap:12 }}>
-            {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>← Back</Btn> : <span/>}
+            {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>{t("wiz_back")}</Btn> : <span/>}
             {step<9
               ? <Btn onClick={()=>{
                   if (step===0) {
@@ -3011,7 +3228,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                     if (ans.roundTrip===undefined) { alert("Please choose whether this is a round trip or one-way."); return; }
                   }
                   setStep(s=>s+1);
-                }}>Next →</Btn>
+                }}>{t("wiz_next")}</Btn>
               : <Btn variant="amber" onClick={()=>{
                   if(!user){
                     // Save wizard state so it survives login
@@ -3021,7 +3238,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                     return;
                   }
                   generate();
-                }}>✨ Generate my itinerary</Btn>
+                }}>{t("wiz_generate")}</Btn>
             }
           </div>
         </div>
@@ -4376,6 +4593,31 @@ async function saveTripRequest(request) {
   return ref.id;
 }
 
+// ─── SHAREABLE ITINERARY LINKS ────────────────────────────────────────────────
+// Anyone with the link can view (no login required) — read-only public copy.
+function generateShareId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+async function saveSharedItinerary(itin, ownerUid) {
+  if (!window.firebase?.firestore) return null;
+  const shareId = generateShareId();
+  await window.firebase.firestore().collection("sharedItineraries").doc(shareId).set({
+    itin, ownerUid: ownerUid||null, createdAt: new Date().toISOString(), views: 0,
+  });
+  return shareId;
+}
+async function loadSharedItinerary(shareId) {
+  if (!window.firebase?.firestore) return null;
+  try {
+    const doc = await window.firebase.firestore().collection("sharedItineraries").doc(shareId).get();
+    if (!doc.exists) return null;
+    // Fire-and-forget view counter increment — don't block the render on this
+    window.firebase.firestore().collection("sharedItineraries").doc(shareId)
+      .update({ views: (doc.data().views||0) + 1 }).catch(()=>{});
+    return doc.data();
+  } catch(e) { console.error("loadSharedItinerary FAILED:", e.message); return null; }
+}
+
 async function loadTouristRequests(touristUid) {
   if (!window.firebase?.firestore) return [];
   try {
@@ -5331,6 +5573,102 @@ function GuideReviewModal({ onClose, user }) {
 }
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
+// ─── ADMIN ANALYTICS DASHBOARD ────────────────────────────────────────────────
+function AdminAnalyticsDashboard({ analytics, loading, onRefresh }) {
+  if (loading || !analytics) return (
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", gap:14, color:"#64748B" }}>
+      <div style={{ width:40, height:40, border:"3px solid #E0E6ED", borderTopColor:"#2D4A6A", borderRadius:"50%", animation:"spin .8s linear infinite" }}/>
+      <p style={{ fontSize:13 }}>Crunching the numbers…</p>
+    </div>
+  );
+
+  const maxMonthRevenue = Math.max(1, ...Object.values(analytics.monthBuckets).map(m=>m.revenue));
+  const maxDestCount = Math.max(1, ...analytics.popularDest.map(([,c])=>c));
+
+  const StatCard = ({ icon, label, value, sub, color="#2D4A6A" }) => (
+    <div style={{ background:"#fff", border:"1px solid #E0E6ED", borderRadius:14, padding:"16px 18px" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+        <span style={{ fontSize:20 }}>{icon}</span>
+        {sub && <span style={{ fontSize:11, color:"#16A34A", fontWeight:600 }}>{sub}</span>}
+      </div>
+      <div style={{ fontFamily:serif, fontSize:24, fontWeight:700, color }}>{value}</div>
+      <div style={{ fontSize:12, color:"#64748B", marginTop:2 }}>{label}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ maxWidth:900 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:10 }}>
+        <div>
+          <h2 style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:"#1A2A3A" }}>📊 Business Analytics</h2>
+          <p style={{ fontSize:12, color:"#64748B", marginTop:2 }}>Bookings, revenue, and guide performance at a glance</p>
+        </div>
+        <button onClick={onRefresh} style={{ padding:"8px 16px", background:"#EEF4FF", color:"#2D4A6A", border:"1px solid #B4D0EF", borderRadius:10, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>↺ Refresh</button>
+      </div>
+
+      {/* Top stat cards */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:12, marginBottom:24 }}>
+        <StatCard icon="💰" label="Total revenue" value={`$${analytics.totalRevenue.toFixed(0)}`} color="#16A34A"/>
+        <StatCard icon="🏛️" label="CeylonTrails commission" value={`$${analytics.totalCommission.toFixed(0)}`} color="#2D4A6A"/>
+        <StatCard icon="🧭" label="Guide earnings paid" value={`$${analytics.totalGuideEarnings.toFixed(0)}`} color="#C27A0E"/>
+        <StatCard icon="✅" label="Confirmed bookings" value={analytics.totalBookings} sub={`${analytics.conversionRate}% conversion`}/>
+        <StatCard icon="📩" label="Total trip requests" value={analytics.totalRequests}/>
+        <StatCard icon="🧑‍🤝‍🧑" label="Approved guides" value={`${analytics.approvedGuides} / ${analytics.totalGuides}`} sub={analytics.pendingGuides>0?`${analytics.pendingGuides} pending`:null}/>
+      </div>
+
+      {/* Bookings & revenue trend (last 6 months) */}
+      <div style={{ background:"#fff", border:"1px solid #E0E6ED", borderRadius:16, padding:"18px 20px", marginBottom:20 }}>
+        <h3 style={{ fontSize:14, fontWeight:700, color:"#1A2A3A", marginBottom:16 }}>Revenue trend — last 6 months</h3>
+        <div style={{ display:"flex", alignItems:"flex-end", gap:14, height:140 }}>
+          {Object.entries(analytics.monthBuckets).map(([month, data])=>(
+            <div key={month} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
+              <div style={{ fontSize:10, color:"#64748B", fontWeight:600 }}>{data.revenue>0?`$${data.revenue.toFixed(0)}`:""}</div>
+              <div style={{ width:"100%", maxWidth:36, height:`${Math.max(4, (data.revenue/maxMonthRevenue)*100)}px`, background:"linear-gradient(180deg,#2D4A6A,#1A2A3A)", borderRadius:"6px 6px 0 0", transition:"height .3s" }}/>
+              <div style={{ fontSize:11, color:"#64748B" }}>{month}</div>
+              <div style={{ fontSize:9, color:"#94A3B8" }}>{data.bookings} bkg</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+        {/* Popular destinations */}
+        <div style={{ background:"#fff", border:"1px solid #E0E6ED", borderRadius:16, padding:"18px 20px" }}>
+          <h3 style={{ fontSize:14, fontWeight:700, color:"#1A2A3A", marginBottom:14 }}>🗺️ Popular trip styles</h3>
+          {analytics.popularDest.length===0 && <p style={{ fontSize:12, color:"#94A3B8" }}>No trip requests yet</p>}
+          {analytics.popularDest.map(([title, count])=>(
+            <div key={title} style={{ marginBottom:10 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4 }}>
+                <span style={{ color:"#1A2A3A", fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:180 }}>{title}</span>
+                <span style={{ color:"#64748B" }}>{count}</span>
+              </div>
+              <div style={{ height:6, background:"#F1F5F9", borderRadius:6, overflow:"hidden" }}>
+                <div style={{ height:"100%", width:`${(count/maxDestCount)*100}%`, background:"#2D4A6A", borderRadius:6 }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Top performing guides */}
+        <div style={{ background:"#fff", border:"1px solid #E0E6ED", borderRadius:16, padding:"18px 20px" }}>
+          <h3 style={{ fontSize:14, fontWeight:700, color:"#1A2A3A", marginBottom:14 }}>🏆 Top performing guides</h3>
+          {analytics.topGuides.length===0 && <p style={{ fontSize:12, color:"#94A3B8" }}>No completed bookings yet</p>}
+          {analytics.topGuides.map((g,i)=>(
+            <div key={g.name+i} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:i<analytics.topGuides.length-1?"1px solid #F1F5F9":"none" }}>
+              <span style={{ width:22, height:22, borderRadius:"50%", background:i===0?"#FDE047":i===1?"#E2E8F0":"#FDBA74", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:"#1A2A3A", flexShrink:0 }}>{i+1}</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:12, fontWeight:600, color:"#1A2A3A", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{g.name}</div>
+                <div style={{ fontSize:11, color:"#64748B" }}>{g.bookings} booking{g.bookings!==1?"s":""}</div>
+              </div>
+              <div style={{ fontSize:13, fontWeight:700, color:"#16A34A" }}>${g.earnings.toFixed(0)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminPanel({ onClose }) {
   const ADMIN_PWD = import.meta.env.VITE_ADMIN_PASSWORD || "ceylontrails2024";
   const [authed,    setAuthed]  = useState(()=>sessionStorage.getItem("ct_admin")==="1");
@@ -5342,6 +5680,73 @@ function AdminPanel({ onClose }) {
   const [filterTab, setFilter]  = useState("pending");
   const [rejMsg,    setRejMsg]  = useState("");
   const [actioning, setActioning]=useState(false);
+  const [analytics, setAnalytics] = useState(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  // Pulls bookings (tripRequests) + guides and computes business metrics client-side.
+  // Kept lightweight (no separate analytics collection) since Firestore reads
+  // are cheap at this scale and this avoids needing a backend cron job.
+  const loadAnalytics = async () => {
+    setLoadingAnalytics(true);
+    try {
+      if (!window.firebase?.firestore) await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+      const [reqSnap, guideSnap] = await Promise.all([
+        window.firebase.firestore().collection("tripRequests").limit(500).get(),
+        window.firebase.firestore().collection("guides").limit(200).get(),
+      ]);
+      const requests = reqSnap.docs.map(d=>d.data());
+      const allGuides = guideSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+      const accepted = requests.filter(r=>r.status==="accepted" && r.payment);
+      const totalRevenue    = accepted.reduce((s,r)=>s+(r.payment.total||0), 0);
+      const totalCommission = accepted.reduce((s,r)=>s+(r.payment.commission||0), 0);
+      const totalGuideEarnings = accepted.reduce((s,r)=>s+(r.payment.guideAmount||0), 0);
+
+      // Bookings by month (last 6 months) for the trend chart
+      const monthBuckets = {};
+      const now = new Date();
+      for (let i=5; i>=0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+        const key = d.toLocaleDateString("en-GB",{month:"short",year:"2-digit"});
+        monthBuckets[key] = { bookings:0, revenue:0 };
+      }
+      accepted.forEach(r=>{
+        const d = new Date(r.acceptedAt||r.createdAt||Date.now());
+        const key = d.toLocaleDateString("en-GB",{month:"short",year:"2-digit"});
+        if (monthBuckets[key]) { monthBuckets[key].bookings++; monthBuckets[key].revenue += (r.payment.total||0); }
+      });
+
+      // Popular destinations — count itinTitle keywords across all requests
+      const destCounts = {};
+      requests.forEach(r=>{
+        const title = (r.itinTitle||"").replace(/^\d+-Day\s*/i,"").trim();
+        if (title) destCounts[title] = (destCounts[title]||0) + 1;
+      });
+      const popularDest = Object.entries(destCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+
+      // Guide performance — bookings + earnings per guide
+      const guidePerf = {};
+      accepted.forEach(r=>{
+        if (!r.guideId) return;
+        if (!guidePerf[r.guideId]) guidePerf[r.guideId] = { name:r.guideName||"Unknown", bookings:0, earnings:0 };
+        guidePerf[r.guideId].bookings++;
+        guidePerf[r.guideId].earnings += (r.payment?.guideAmount||0);
+      });
+      const topGuides = Object.values(guidePerf).sort((a,b)=>b.earnings-a.earnings).slice(0,5);
+
+      setAnalytics({
+        totalBookings: accepted.length,
+        totalRequests: requests.length,
+        totalRevenue, totalCommission, totalGuideEarnings,
+        conversionRate: requests.length ? Math.round((accepted.length/requests.length)*100) : 0,
+        totalGuides: allGuides.length,
+        approvedGuides: allGuides.filter(g=>g.status==="approved").length,
+        pendingGuides: allGuides.filter(g=>g.status==="pending").length,
+        monthBuckets, popularDest, topGuides,
+      });
+    } catch(e) { console.error("Analytics load failed:", e.message); }
+    setLoadingAnalytics(false);
+  };
 
   const loadReviews = async () => {
     try {
@@ -5428,15 +5833,16 @@ function AdminPanel({ onClose }) {
       </div>
 
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
-        {/* Left: guide list */}
+        {/* Left: guide list (hidden when viewing analytics — full width dashboard instead) */}
+        {filterTab!=="analytics" && (
         <div style={{ width:320, background:"#fff", borderRight:"1px solid #E0E6ED", display:"flex", flexDirection:"column", flexShrink:0 }}>
           {/* Filter tabs */}
           <div style={{ display:"flex", borderBottom:"1px solid #E0E6ED", overflowX:"auto" }}>
-            {["pending","approved","rejected","reviews"].map(s=>(
-              <button key={s} onClick={()=>{ setFilter(s); if(s==="reviews") loadReviews(); }} style={{ flex:1, padding:"12px 8px", border:"none", background:filterTab===s?"#EEF4FF":"transparent", color:filterTab===s?"#2D4A6A":"#64748B", fontSize:11, fontWeight:filterTab===s?700:400, cursor:"pointer", fontFamily:sans, borderBottom:filterTab===s?"2.5px solid #2D4A6A":"2.5px solid transparent", textTransform:"capitalize", whiteSpace:"nowrap" }}>
-                {s==="reviews"?"📝 Reviews":s} <span style={{ background:filterTab===s?"#2D4A6A":"#E2E8F0", color:filterTab===s?"#fff":"#64748B", fontSize:10, fontWeight:700, padding:"1px 6px", borderRadius:10, marginLeft:4 }}>
+            {["pending","approved","rejected","reviews","analytics"].map(s=>(
+              <button key={s} onClick={()=>{ setFilter(s); if(s==="reviews") loadReviews(); if(s==="analytics") loadAnalytics(); }} style={{ flex:1, padding:"12px 8px", border:"none", background:filterTab===s?"#EEF4FF":"transparent", color:filterTab===s?"#2D4A6A":"#64748B", fontSize:11, fontWeight:filterTab===s?700:400, cursor:"pointer", fontFamily:sans, borderBottom:filterTab===s?"2.5px solid #2D4A6A":"2.5px solid transparent", textTransform:"capitalize", whiteSpace:"nowrap" }}>
+                {s==="reviews"?"📝 Reviews":s==="analytics"?"📊 Analytics":s} {s!=="analytics" && <span style={{ background:filterTab===s?"#2D4A6A":"#E2E8F0", color:filterTab===s?"#fff":"#64748B", fontSize:10, fontWeight:700, padding:"1px 6px", borderRadius:10, marginLeft:4 }}>
                   {s==="reviews" ? reviews.length : guides.filter(g=>g.status===s).length}
-                </span>
+                </span>}
               </button>
             ))}
           </div>
@@ -5477,10 +5883,13 @@ function AdminPanel({ onClose }) {
             ))}
           </div>
         </div>
+        )}
 
-        {/* Right: guide or review detail */}
-        <div style={{ flex:1, overflowY:"auto", padding:"1.5rem" }}>
-          {!selected ? (
+        {/* Right: guide/review detail, OR full-width analytics dashboard */}
+        <div style={{ flex:1, overflowY:"auto", padding: filterTab==="analytics" ? "1.5rem 2rem" : "1.5rem" }}>
+          {filterTab==="analytics" ? (
+            <AdminAnalyticsDashboard analytics={analytics} loading={loadingAnalytics} onRefresh={loadAnalytics}/>
+          ) : !selected ? (
             <div style={{ height:"100%", display:"flex", alignItems:"center", justifyContent:"center", color:"#94A3B8", flexDirection:"column", gap:12 }}>
               <span style={{ fontSize:48 }}>👈</span>
               <p style={{ fontSize:14 }}>Select an item to review</p>
@@ -5751,18 +6160,116 @@ export default function App() {
   };
 
   return (
-    <AuthProvider>
-      <AppInner
-        page={page} setPage={setPage}
-        guideOpen={guideOpen} setGuide={setGuide} openGuide={openGuide}
-        savedItin={savedItin} setSaved={setSaved}
-        showLogin={showLogin} setLogin={setLogin}
-        showWelcome={showWelcome} setWelcome={setWelcome}
-        welcomeUser={welcomeUser} setWelcomeUser={setWelcomeUser}
-        handleLoginSuccess={handleLoginSuccess}
-        wishlist={wishlist}
+    <LangProvider>
+      <AuthProvider>
+        <AppInner
+          page={page} setPage={setPage}
+          guideOpen={guideOpen} setGuide={setGuide} openGuide={openGuide}
+          savedItin={savedItin} setSaved={setSaved}
+          showLogin={showLogin} setLogin={setLogin}
+          showWelcome={showWelcome} setWelcome={setWelcome}
+          welcomeUser={welcomeUser} setWelcomeUser={setWelcomeUser}
+          handleLoginSuccess={handleLoginSuccess}
+          wishlist={wishlist}
       />
-    </AuthProvider>
+      </AuthProvider>
+    </LangProvider>
+  );
+}
+
+// ─── SHARED ITINERARY PAGE (public, read-only, no login needed) ─────────────
+function SharedItineraryPage({ shareId, onGoHome }) {
+  const [data, setData]       = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(()=>{
+    const load = async () => {
+      try {
+        if (!window.firebase?.firestore) await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+        const result = await loadSharedItinerary(shareId);
+        if (!result) { setNotFound(true); setLoading(false); return; }
+        setData(result);
+      } catch(e) { setNotFound(true); }
+      setLoading(false);
+    };
+    load();
+  },[shareId]);
+
+  if (loading) return (
+    <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:16 }}>
+      <div style={{ width:48, height:48, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite" }}/>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <p style={{ fontSize:14, color:C.inkSoft, fontFamily:sans }}>Loading shared itinerary…</p>
+    </div>
+  );
+
+  if (notFound) return (
+    <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:16, padding:"2rem", textAlign:"center" }}>
+      <div style={{ fontSize:48 }}>🔍</div>
+      <h2 style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink }}>This itinerary link wasn't found</h2>
+      <p style={{ fontSize:13, color:C.inkSoft, maxWidth:380 }}>It may have been removed, or the link is incomplete.</p>
+      <Btn onClick={onGoHome}>Go to CeylonTrails →</Btn>
+    </div>
+  );
+
+  const itin = data.itin;
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.surface, fontFamily:sans }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"1.2rem 1.5rem" }}>
+        <div style={{ maxWidth:820, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div onClick={onGoHome} style={{ cursor:"pointer", fontFamily:serif, fontSize:18, fontWeight:700, color:"#fff" }}>
+            Ceylon<span style={{ color:C.amberMid }}>Trails</span>
+          </div>
+          <span style={{ fontSize:11, color:"rgba(255,255,255,.7)", padding:"4px 12px", background:"rgba(255,255,255,.12)", borderRadius:20 }}>👁️ Shared itinerary — view only</span>
+        </div>
+      </div>
+
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2.5rem 2rem" }}>
+        <div style={{ maxWidth:820, margin:"0 auto" }}>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,38px)", fontWeight:700, color:"#fff", marginBottom:8 }}>🗺️ {itin.title}</h1>
+          <p style={{ fontSize:14, color:"rgba(255,255,255,.8)", marginBottom:14 }}>{itin.tagline}</p>
+          {itin.tripMeta && (
+            <div style={{ display:"flex", gap:16, flexWrap:"wrap", fontSize:12, color:"rgba(255,255,255,.75)" }}>
+              {itin.tripMeta.startDate && <span>📅 {new Date(itin.tripMeta.startDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} → {itin.tripMeta.endDate?new Date(itin.tripMeta.endDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):""}</span>}
+              {itin.tripMeta.startLocation && <span>📍 From {itin.tripMeta.startLocation}</span>}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:820, margin:"0 auto", padding:"2rem" }}>
+        {itin.hotel && (
+          <div style={{ display:"flex", alignItems:"center", gap:10, background:"#fff", border:`1.5px solid ${C.border}`, borderRadius:12, padding:"12px 16px", marginBottom:20 }}>
+            <span style={{ fontSize:22 }}>🏨</span>
+            <div>
+              <div style={{ fontSize:13, fontWeight:700, color:C.ink }}>{itin.hotel.name}</div>
+              <div style={{ fontSize:11, color:C.inkSoft }}>{"★".repeat(itin.hotel.stars||3)} · {itin.hotel.area}</div>
+            </div>
+          </div>
+        )}
+
+        {(itin.days||[]).map(d=>(
+          <div key={d.day} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, marginBottom:16, boxShadow:"0 2px 12px rgba(0,0,0,.04)" }}>
+            <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,#0B6B52,#147856)`, display:"flex", alignItems:"center", gap:12 }}>
+              <span style={{ background:"rgba(255,255,255,.2)", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Day {d.day}</span>
+              <span style={{ fontSize:15, fontWeight:700, color:"#fff", fontFamily:serif }}>{d.location}</span>
+              <span style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginLeft:"auto" }}>— {d.theme}</span>
+            </div>
+            <div style={{ padding:"6px 20px 10px" }}>
+              {(d.activities||[]).map((a,i)=><ActivityRow key={i} act={a} isLast={i===d.activities.length-1}/>)}
+            </div>
+          </div>
+        ))}
+
+        <div style={{ marginTop:"2rem", background:"linear-gradient(135deg,#FDF5E0,#FFF7E6)", border:"1.5px solid #F0D48A", borderRadius:20, padding:"2rem", textAlign:"center" }}>
+          <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>Want to plan your own Sri Lanka trip?</h3>
+          <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Create a free AI-powered itinerary in minutes, just like this one.</p>
+          <Btn variant="amber" onClick={onGoHome}>✨ Plan my own trip on CeylonTrails →</Btn>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -5771,12 +6278,18 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
   const premium = usePremium();
   const [showAdmin,  setShowAdmin]  = useState(()=>window.location.search.includes("admin"));
   const [showReview, setShowReview] = useState(false);
+  const [shareId] = useState(()=>new URLSearchParams(window.location.search).get("share"));
 
   useEffect(()=>{
     const check = () => setShowAdmin(window.location.search.includes("admin"));
     window.addEventListener("popstate", check);
     return ()=>window.removeEventListener("popstate", check);
   },[]);
+
+  // Shared itinerary links take over the whole page — no nav, no login wall
+  if (shareId) {
+    return <SharedItineraryPage shareId={shareId} onGoHome={()=>{ window.history.replaceState({},"",window.location.pathname); window.location.reload(); }}/>;
+  }
 
   return (
     <div style={{ fontFamily:sans, color:C.ink, background:C.white, minHeight:"100vh" }}>
