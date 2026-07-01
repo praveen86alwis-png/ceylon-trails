@@ -3001,6 +3001,21 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   const [startLabel, setStartLabel] = useState("Sri Lanka");
   const [shareModal, setShareModal] = useState(null); // {url, loading} or null
   const [saveStatus, setSaveStatus] = useState(null); // null | "saving" | "saved" | "error"
+  // ── Plan-your-own-trip (manual builder) ──────────────────────────────────
+  // "choose" = ask AI-vs-manual first; "ai" = existing wizard; "manual" = new builder.
+  // Skips straight to "ai" if we're resuming an already-generated/saved itinerary
+  // or a wizard session already in progress, so nobody gets re-asked mid-flow.
+  const [planMode, setPlanMode] = useState(()=>{
+    if (savedItin) return "ai";
+    const savedStep = localStorage.getItem("ct_wizard_step");
+    if (savedStep && parseInt(savedStep) > 0) return "ai";
+    return "choose";
+  });
+  const [manualStep, setManualStep] = useState(0); // 0: trip basics, 1: day-by-day picker
+  const [manualAns, setManualAns] = useState({ startCity:"airport", customStart:"", startDate:"", endDate:"", roundTrip:true, title:"" });
+  const [manualDays, setManualDays] = useState([]); // [{ location, activities:[] }, ...]
+  const [manualActiveDay, setManualActiveDay] = useState(0);
+  const [manualCat, setManualCat] = useState("beaches");
 
   // Continuously persist wizard progress so a refresh never loses answers —
   // only while still in the wizard (step < 10); once an itinerary is generated
@@ -3359,7 +3374,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:10 }}>🗺️ {itin.title}</h1>
             <p style={{ fontSize:15, color:"rgba(255,255,255,.75)", marginBottom:16 }}>{itin.tagline}</p>
             <p style={{ fontSize:13, color:"rgba(255,255,255,.65)", marginBottom:16 }}>📅 {ans.days} days · {ans.nights} nights · {ans.group||"solo"} · {ans.budget||"mid-range"} budget · Starting: {startLabel}</p>
-            {itin.highlights&&<div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16 }}>{itin.highlights.map((h,i)=><span key={i} style={{ fontSize:12, fontWeight:500, padding:"4px 12px", borderRadius:20, background:"rgba(255,255,255,.15)", color:"rgba(255,255,255,.9)", border:"1px solid rgba(255,255,255,.25)" }}>✓ {h}</span>)}</div>}
+            {itin.highlights&&itin.highlights.length>0&&<div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16 }}>{itin.highlights.map((h,i)=><span key={i} style={{ fontSize:12, fontWeight:500, padding:"4px 12px", borderRadius:20, background:"rgba(255,255,255,.15)", color:"rgba(255,255,255,.9)", border:"1px solid rgba(255,255,255,.25)" }}>✓ {h}</span>)}</div>}
             {/* Hotel recommendation */}
             {itin.hotel && (
               <div style={{ display:"inline-flex", alignItems:"center", gap:10, background:"rgba(255,255,255,.12)", border:"1px solid rgba(255,255,255,.25)", borderRadius:12, padding:"10px 16px", marginBottom:14 }}>
@@ -3457,7 +3472,8 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
               <Btn variant="amber" onClick={onGuideOpen}>Find a guide & request bid →</Btn>
               <Btn variant="outline" onClick={downloadPDF}>{t("res_pdf")}</Btn>
-              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true }); }}>↺ New itinerary</Btn>
+              {itin.source!=="manual" && <Btn variant="outline" onClick={generate}>🔄 Regenerate with same details</Btn>}
+              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true }); setPlanMode("choose"); setManualStep(0); setManualDays([]); setManualAns({ startCity:"airport", customStart:"", startDate:"", endDate:"", roundTrip:true, title:"" }); }}>↺ New itinerary</Btn>
             </div>
           </div>
         </div>
@@ -3500,6 +3516,209 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 
   // Wizard steps
   const STEPS_TOTAL = 10;
+
+  // ── Mode choice screen ────────────────────────────────────────────────────
+  if (planMode==="choose") {
+    return (
+      <div style={{ minHeight:"100vh", background:C.surface, display:"flex", alignItems:"center", padding:"3rem 1.5rem" }}>
+        <div style={{ maxWidth:800, margin:"0 auto", width:"100%" }}>
+          <div style={{ textAlign:"center", marginBottom:36 }}>
+            <div style={{ fontSize:11, fontWeight:600, color:C.teal, textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Journey Creator</div>
+            <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,34px)", fontWeight:700, color:C.ink, marginBottom:10 }}>How would you like to plan your trip?</h1>
+            <p style={{ fontSize:14, color:C.inkSoft }}>Either way, you'll end up with a real day-by-day itinerary you can save, share, and send to guides.</p>
+          </div>
+          <div className="info-2col" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
+            <div onClick={()=>setPlanMode("ai")} style={{ background:"#fff", border:`1.5px solid ${C.border}`, borderRadius:20, padding:"2rem 1.6rem", cursor:"pointer", transition:"border-color .15s, transform .15s" }}
+              onMouseEnter={e=>{ e.currentTarget.style.borderColor=C.teal; e.currentTarget.style.transform="translateY(-2px)"; }}
+              onMouseLeave={e=>{ e.currentTarget.style.borderColor=C.border; e.currentTarget.style.transform="translateY(0)"; }}>
+              <div style={{ width:48, height:48, borderRadius:14, background:C.tealLight, color:C.teal, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:16 }}><Sparkles size={22}/></div>
+              <h3 style={{ fontFamily:serif, fontSize:19, fontWeight:700, color:C.ink, marginBottom:8 }}>Generate a trip using AI</h3>
+              <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:16 }}>Answer a few quick questions about your dates, budget, and interests — our planner builds a complete day-by-day route for you in seconds.</p>
+              <Btn full>✨ Start the AI wizard</Btn>
+            </div>
+            <div onClick={()=>setPlanMode("manual")} style={{ background:"#fff", border:`1.5px solid ${C.border}`, borderRadius:20, padding:"2rem 1.6rem", cursor:"pointer", transition:"border-color .15s, transform .15s" }}
+              onMouseEnter={e=>{ e.currentTarget.style.borderColor=C.teal; e.currentTarget.style.transform="translateY(-2px)"; }}
+              onMouseLeave={e=>{ e.currentTarget.style.borderColor=C.border; e.currentTarget.style.transform="translateY(0)"; }}>
+              <div style={{ width:48, height:48, borderRadius:14, background:C.amberLight, color:C.amber, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:16 }}><Compass size={22}/></div>
+              <h3 style={{ fontFamily:serif, fontSize:19, fontWeight:700, color:C.ink, marginBottom:8 }}>Plan a trip yourself</h3>
+              <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:16 }}>Set your dates, then pick exactly which places go into each day from our destination guides — full control over your route.</p>
+              <Btn full variant="amber">🗂️ Build it myself</Btn>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Manual builder: step 0 — trip basics ──────────────────────────────────
+  if (planMode==="manual" && manualStep===0) {
+    const mDays = manualAns.startDate && manualAns.endDate
+      ? Math.max(1, Math.round((new Date(manualAns.endDate)-new Date(manualAns.startDate))/86400000)+1) : null;
+    const canContinue = manualAns.startDate && manualAns.endDate && mDays>0 && (manualAns.startCity!=="custom" || manualAns.customStart);
+    return (
+      <div style={{ minHeight:"100vh", background:C.surface, padding:"3rem 1.5rem" }}>
+        <div style={{ maxWidth:640, margin:"0 auto" }}>
+          <button onClick={()=>setPlanMode("choose")} style={{ background:"none", border:"none", color:C.teal, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, marginBottom:18 }}>← Back</button>
+          <div style={{ background:C.white, borderRadius:24, padding:"2.2rem", border:`1px solid ${C.border}`, boxShadow:"0 4px 24px rgba(0,0,0,.06)" }}>
+            <h2 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:6 }}>Let's start with the basics</h2>
+            <p style={{ fontSize:13, color:C.inkSoft, marginBottom:22 }}>Just the essentials — you'll pick the actual places next.</p>
+
+            <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:8 }}>Where does your trip start?</label>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:10, marginBottom:16 }}>
+              {START_OPTS.map(o=><OptBtn key={o.v} sel={manualAns.startCity===o.v} onClick={()=>setManualAns(a=>({...a,startCity:o.v}))} icon={o.i} label={ot(o.v).l} sub={ot(o.v).s}/>)}
+            </div>
+            {manualAns.startCity==="custom" && (
+              <input value={manualAns.customStart} onChange={e=>setManualAns(a=>({...a,customStart:e.target.value}))} placeholder="e.g. Galle, Negombo, Kandy…"
+                style={{ width:"100%", marginBottom:16, padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+            )}
+
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+              <div>
+                <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>Start date</label>
+                <input type="date" value={manualAns.startDate} min={new Date().toISOString().split("T")[0]}
+                  onChange={e=>setManualAns(a=>({...a,startDate:e.target.value, endDate: a.endDate && a.endDate<e.target.value ? "" : a.endDate}))}
+                  style={{ width:"100%", padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+              </div>
+              <div>
+                <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:6 }}>End date</label>
+                <input type="date" value={manualAns.endDate} min={manualAns.startDate||new Date().toISOString().split("T")[0]}
+                  onChange={e=>setManualAns(a=>({...a,endDate:e.target.value}))}
+                  style={{ width:"100%", padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+              </div>
+            </div>
+            {mDays && <p style={{ fontSize:12, color:C.teal, fontWeight:600, marginBottom:16 }}>📅 {mDays} day{mDays>1?"s":""}, {mDays-1} night{mDays-1!==1?"s":""}</p>}
+
+            <label style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer", marginBottom:24 }}>
+              <input type="checkbox" checked={manualAns.roundTrip} onChange={e=>setManualAns(a=>({...a,roundTrip:e.target.checked}))} style={{ width:16, height:16 }}/>
+              <span style={{ fontSize:13, color:C.ink }}>Round trip — I'll return to my starting point</span>
+            </label>
+
+            <Btn full onClick={()=>{
+              setManualDays(Array.from({length:mDays}, ()=>({ location:"", activities:[] })));
+              setManualActiveDay(0);
+              setManualStep(1);
+            }} style={{ opacity: canContinue?1:.5, pointerEvents: canContinue?"auto":"none" }}>Continue to pick places →</Btn>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Manual builder: step 1 — day-by-day place picker ───────────────────────
+  if (planMode==="manual" && manualStep===1) {
+    const DEST_CATS = [
+      { id:"beaches", label:"🏖️ Beaches" }, { id:"hills", label:"⛰️ Hill Country" }, { id:"cultural", label:"🛕 Cultural" },
+      { id:"wildlife", label:"🐘 Wildlife" }, { id:"adventure", label:"🧗 Adventure" }, { id:"rural", label:"🌾 Rural" }, { id:"hidden", label:"💎 Hidden Gems" },
+    ];
+    const activeDayPlaces = manualDays[manualActiveDay]?.activities || [];
+    const addPlace = (place) => {
+      setManualDays(days => days.map((d,i) => i!==manualActiveDay ? d : {
+        location: d.location || place.name,
+        activities: [...d.activities, { name:place.name, tag:place.tag, desc:place.desc }],
+      }));
+    };
+    const removePlace = (idx) => {
+      setManualDays(days => days.map((d,i) => i!==manualActiveDay ? d : { ...d, activities: d.activities.filter((_,j)=>j!==idx) }));
+    };
+    const totalPicked = manualDays.reduce((s,d)=>s+d.activities.length, 0);
+
+    const finishBuilding = () => {
+      const customStart = manualAns.startCity==="custom" && manualAns.customStart
+        ? manualAns.customStart.trim()
+        : manualAns.startCity==="colombo" ? "Colombo"
+        : manualAns.startCity==="airport" ? "Bandaranaike International Airport, Katunayake"
+        : "Colombo";
+      const days = manualDays.map((d,i) => ({
+        day: i+1,
+        location: d.location || customStart,
+        theme: "",
+        activities: d.activities.map(a => ({
+          time: "", place: a.name, area: a.name, type: "sightseeing",
+          text: a.desc || "", why: a.tag || "", mapQuery: `${a.name}, Sri Lanka`,
+          hours: "", price: "", travelFromPrev: "",
+        })),
+      }));
+      const built = {
+        title: manualAns.title?.trim() || `My ${manualDays.length}-Day Sri Lanka Trip`,
+        tagline: "Built exactly the way you wanted it",
+        source: "manual",
+        days,
+        hotel: null,
+        highlights: [],
+        tripMeta: { startDate:manualAns.startDate, endDate:manualAns.endDate, startTime:"09:00", startLocation:customStart, roundTrip:manualAns.roundTrip, endLocation: manualAns.roundTrip ? customStart : (days.slice(-1)[0]?.location || customStart) },
+      };
+      setStartLabel(customStart);
+      setAns(a=>({ ...a, days:manualDays.length, nights:manualDays.length-1, startDate:manualAns.startDate, endDate:manualAns.endDate, startTime:"09:00", roundTrip:manualAns.roundTrip, group:"", budget:"" }));
+      setItin(built); setSavedItin(built); setItinDays(days);
+      setPlanMode("ai"); // reuses the exact same results view as the AI flow
+      setStep(10);
+    };
+
+    return (
+      <div style={{ minHeight:"100vh", background:C.surface }}>
+        <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"1.6rem 1.5rem" }}>
+          <div style={{ maxWidth:1100, margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
+            <div>
+              <button onClick={()=>setManualStep(0)} style={{ background:"none", border:"none", color:"rgba(255,255,255,.7)", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans, marginBottom:4 }}>← Trip basics</button>
+              <h2 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#fff" }}>Add places to each day</h2>
+            </div>
+            <Btn variant="amber" onClick={finishBuilding} style={{ opacity: totalPicked>0?1:.5, pointerEvents: totalPicked>0?"auto":"none" }}>✅ Build my itinerary ({totalPicked} places)</Btn>
+          </div>
+        </div>
+
+        <div style={{ maxWidth:1100, margin:"0 auto", padding:"1.5rem" }}>
+          {/* Day tabs */}
+          <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:10, marginBottom:16 }}>
+            {manualDays.map((d,i)=>(
+              <button key={i} onClick={()=>setManualActiveDay(i)} style={{ flexShrink:0, padding:"9px 16px", borderRadius:12, border:`1.5px solid ${manualActiveDay===i?C.teal:C.border}`, background:manualActiveDay===i?C.tealPale:"#fff", color:manualActiveDay===i?C.teal:C.inkSoft, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>
+                Day {i+1} {d.activities.length>0 && <span style={{ marginLeft:5, fontSize:11, opacity:.7 }}>({d.activities.length})</span>}
+              </button>
+            ))}
+          </div>
+
+          <div className="info-2col" style={{ display:"grid", gridTemplateColumns:"1fr 320px", gap:20 }}>
+            {/* Browse destinations */}
+            <div>
+              <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:8, marginBottom:14 }}>
+                {DEST_CATS.map(c=>(
+                  <button key={c.id} onClick={()=>setManualCat(c.id)} style={{ flexShrink:0, padding:"7px 14px", borderRadius:20, border:`1.5px solid ${manualCat===c.id?C.teal:C.border}`, background:manualCat===c.id?C.teal:"#fff", color:manualCat===c.id?"#fff":C.inkSoft, fontSize:12.5, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>{c.label}</button>
+                ))}
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }} className="info-2col">
+                {(DESTINATIONS[manualCat]||[]).map(place=>{
+                  const alreadyAdded = activeDayPlaces.some(a=>a.name===place.name);
+                  return (
+                    <div key={place.name} style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:14, padding:"1rem" }}>
+                      <div style={{ fontSize:14, fontWeight:700, color:C.ink, marginBottom:3 }}>{place.name}</div>
+                      <div style={{ fontSize:11.5, color:C.teal, fontWeight:600, marginBottom:6 }}>{place.tag}</div>
+                      <p style={{ fontSize:12, color:C.inkSoft, lineHeight:1.6, marginBottom:10 }}>{place.desc}</p>
+                      <button onClick={()=>!alreadyAdded && addPlace(place)} disabled={alreadyAdded}
+                        style={{ width:"100%", padding:"8px", borderRadius:9, border:"none", background:alreadyAdded?C.tealLight:C.teal, color:alreadyAdded?C.teal:"#fff", fontSize:12, fontWeight:700, cursor:alreadyAdded?"default":"pointer", fontFamily:sans }}>
+                        {alreadyAdded?`✓ Added to Day ${manualActiveDay+1}`:`+ Add to Day ${manualActiveDay+1}`}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Current day summary */}
+            <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:16, padding:"1.2rem", alignSelf:"start", position:"sticky", top:20 }}>
+              <h4 style={{ fontSize:14, fontWeight:700, color:C.ink, marginBottom:12 }}>Day {manualActiveDay+1} plan</h4>
+              {activeDayPlaces.length===0 && <p style={{ fontSize:12, color:C.inkSoft }}>No places added yet — pick some from the left.</p>}
+              {activeDayPlaces.map((a,i)=>(
+                <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:i<activeDayPlaces.length-1?`1px solid ${C.border}`:"none" }}>
+                  <span style={{ fontSize:12.5, color:C.ink, fontWeight:600 }}>{i+1}. {a.name}</span>
+                  <button onClick={()=>removePlace(i)} style={{ background:"none", border:"none", color:C.coral, cursor:"pointer", fontSize:13 }}>✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const steps = [
     // 0: Starting point + calendar date range
     <>
@@ -5551,10 +5770,15 @@ async function loadSharedItinerary(shareId) {
 
 // ─── SAVED ITINERARIES ("My Itineraries" — view past trips later) ───────────
 async function saveUserItinerary(uid, itin) {
-  if (!window.firebase?.firestore) return null;
+  if (!window.firebase?.firestore) throw new Error("Firestore isn't loaded yet — please try again in a moment.");
   try {
+    // Firestore rejects any field that is `undefined` anywhere in the object
+    // (a very easy thing to end up with in an AI-generated itinerary that has
+    // lots of optional fields) — this was the actual cause of saves silently
+    // failing. Round-tripping through JSON strips undefined values safely.
+    const clean = JSON.parse(JSON.stringify(itin));
     const ref = await window.firebase.firestore().collection("userItineraries").add({
-      uid, itin, savedAt: new Date().toISOString(),
+      uid, itin: clean, savedAt: new Date().toISOString(),
     });
     return ref.id;
   } catch(e) { console.error("saveUserItinerary FAILED:", e.message); throw e; }
