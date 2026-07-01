@@ -2981,6 +2981,181 @@ function ItineraryLoadingAnimation() {
   );
 }
 
+// ─── MANUAL BUILDER: ROUTE MATH, TIMELINE, WARNINGS ──────────────────────────
+function mbDistKm(a, b) {
+  if (!a || !b || a.lat==null || b.lat==null) return null;
+  const R = 6371, dLat = (b.lat-a.lat)*Math.PI/180, dLng = (b.lng-a.lng)*Math.PI/180;
+  const s = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1-s));
+}
+// Same realistic Sri Lankan road-speed assumption used by the AI generator's
+// travel-time correction, kept here for the manual builder's own route math.
+function legMinutes(km) {
+  if (km==null) return 30; // unknown distance — assume a modest local hop
+  const avgKmh = km > 80 ? 55 : km > 30 ? 42 : 28;
+  return Math.max(10, Math.round((km / avgKmh) * 60));
+}
+const DEFAULT_DURATION_MIN = { beaches:120, hills:90, cultural:75, wildlife:180, adventure:150, rural:90, hidden:90 };
+
+// Greedy nearest-neighbour reorder — not a perfect TSP solve, but a solid,
+// fast, and predictable route-tightening pass for the handful of stops (2-8)
+// a single day realistically has.
+function optimizeDayOrder(activities) {
+  if (activities.length <= 2) return activities;
+  const remaining = [...activities];
+  const ordered = [remaining.shift()];
+  while (remaining.length) {
+    const last = ordered[ordered.length-1];
+    let bestIdx = 0, bestDist = Infinity;
+    remaining.forEach((a,i) => {
+      const d = mbDistKm(last, a);
+      if (d!=null && d < bestDist) { bestDist = d; bestIdx = i; }
+    });
+    ordered.push(remaining.splice(bestIdx,1)[0]);
+  }
+  return ordered;
+}
+function routeTotalMinutes(activities) {
+  let total = 0;
+  for (let i=1;i<activities.length;i++) total += legMinutes(mbDistKm(activities[i-1], activities[i]));
+  return total;
+}
+// Builds a full departure→arrival timeline for one day, including meal
+// breaks and hotel check-in, from a plain list of picked activities.
+function computeDayTimeline(activities, startTime="09:00", hotel=null) {
+  const [sh,sm] = startTime.split(":").map(Number);
+  let mins = sh*60+sm;
+  const blocks = [];
+  const addBlock = (b) => { blocks.push(b); };
+  let mealsInserted = { breakfast:false, lunch:false, dinner:false };
+
+  const maybeInsertMeal = () => {
+    const hr = mins/60;
+    if (!mealsInserted.breakfast && hr>=7 && hr<9.5) { addBlock({ type:"meal", label:"🍳 Breakfast", time:fmtHM(mins) }); mealsInserted.breakfast=true; mins+=40; }
+    else if (!mealsInserted.lunch && hr>=12 && hr<14.5) { addBlock({ type:"meal", label:"🍛 Lunch", time:fmtHM(mins) }); mealsInserted.lunch=true; mins+=50; }
+    else if (!mealsInserted.dinner && hr>=18.5 && hr<21) { addBlock({ type:"meal", label:"🍽️ Dinner", time:fmtHM(mins) }); mealsInserted.dinner=true; mins+=60; }
+  };
+
+  activities.forEach((a,i) => {
+    if (i>0) {
+      const km = mbDistKm(activities[i-1], a);
+      const travel = legMinutes(km);
+      addBlock({ type:"travel", label: km!=null ? `🚗 ${travel} min drive (~${Math.round(km)}km)` : `🚗 ~${travel} min drive`, time:fmtHM(mins) });
+      mins += travel;
+    }
+    maybeInsertMeal();
+    const dur = DEFAULT_DURATION_MIN[a.category] || 90;
+    addBlock({ type:"activity", label:a.name, sub:a.tag, time:fmtHM(mins), arrival:fmtHM(mins), duration:dur, endTime:fmtHM(mins+dur) });
+    mins += dur;
+  });
+  if (!mealsInserted.dinner) maybeInsertMeal();
+  if (hotel) { addBlock({ type:"hotel", label:`🏨 Check in — ${hotel.name}`, time:fmtHM(mins) }); }
+  return { blocks, endMins:mins, startMins:sh*60+sm };
+}
+function fmtHM(totalMin) {
+  const h = Math.floor((totalMin%1440)/60), m = Math.round(totalMin%60);
+  const period = h>=12 ? "PM":"AM"; const h12 = h%12===0?12:h%12;
+  return `${h12}:${String(m).padStart(2,"0")} ${period}`;
+}
+// Real-time validation — flags overloaded days, excessive driving, and
+// schedules that run unrealistically late, with a plain-language nudge.
+function getDayWarnings(activities, timeline, dayIndex) {
+  const warnings = [];
+  if (activities.length >= 5) warnings.push(`Day ${dayIndex+1} has ${activities.length} stops — that's a lot for one day. Consider moving one to another day.`);
+  const travelMin = activities.length>1 ? routeTotalMinutes(activities) : 0;
+  if (travelMin > 240) warnings.push(`Day ${dayIndex+1}'s driving adds up to ${Math.floor(travelMin/60)}h ${travelMin%60}m — that's a lot of time in the car.`);
+  if (timeline && timeline.endMins - timeline.startMins > 12*60) warnings.push(`Day ${dayIndex+1}'s plan runs about ${Math.round((timeline.endMins-timeline.startMins)/60)} hours from start to finish — likely unrealistic.`);
+  // No real opening-hours data is available per destination, so this is a
+  // general heuristic: most attractions expect visitors before ~6pm.
+  const lateArrival = timeline?.blocks.find(b => b.type==="activity" && (()=>{
+    const [t,period] = b.arrival.split(" "); let [h] = t.split(":").map(Number);
+    if (period==="PM" && h!==12) h+=12; if (period==="AM" && h===12) h=0;
+    return h >= 18;
+  })());
+  if (lateArrival) warnings.push(`You'd likely arrive at "${lateArrival.label}" around ${lateArrival.arrival} — many attractions close by then.`);
+  return warnings;
+}
+
+// ─── MANUAL BUILDER: SAVED DRAFTS (separate from the "My Itineraries" system) ─
+async function saveManualDraft(uid, draft) {
+  if (!window.firebase?.firestore) await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+  const clean = JSON.parse(JSON.stringify(draft));
+  const ref = await window.firebase.firestore().collection("manualTripDrafts").add({
+    uid, ...clean, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(),
+  });
+  return ref.id;
+}
+async function updateManualDraft(draftId, patch) {
+  if (!window.firebase?.firestore) return;
+  const clean = JSON.parse(JSON.stringify(patch));
+  await window.firebase.firestore().collection("manualTripDrafts").doc(draftId).update({ ...clean, updatedAt:new Date().toISOString() });
+}
+async function loadManualDrafts(uid) {
+  if (!window.firebase?.firestore || !uid) return [];
+  try {
+    const snap = await window.firebase.firestore().collection("manualTripDrafts").where("uid","==",uid).limit(50).get();
+    const items = snap.docs.map(d=>({id:d.id,...d.data()}));
+    items.sort((a,b)=> new Date(b.updatedAt||0) - new Date(a.updatedAt||0));
+    return items;
+  } catch(e) { console.error("loadManualDrafts FAILED:", e.message); return []; }
+}
+async function renameManualDraft(draftId, title) { await updateManualDraft(draftId, { title }); }
+async function duplicateManualDraft(uid, draft) {
+  return saveManualDraft(uid, { title:`${draft.title} (copy)`, manualAns:draft.manualAns, manualDays:draft.manualDays, manualHotels:draft.manualHotels||{}, manualRestaurants:draft.manualRestaurants||{} });
+}
+async function deleteManualDraft(draftId) {
+  if (!window.firebase?.firestore) return;
+  await window.firebase.firestore().collection("manualTripDrafts").doc(draftId).delete();
+}
+
+// Destination picker card — real photo via the existing Pexels-backed hook.
+function ManualDestCard({ place, alreadyAdded, dayNum, onAdd }) {
+  const photo = useDestPhoto(place.name);
+  return (
+    <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:14, overflow:"hidden" }}>
+      <div style={{ width:"100%", aspectRatio:"16/10", background:C.surface, position:"relative" }}>
+        {photo ? <img src={photo} alt={place.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+          : <div style={{ width:"100%", height:"100%", background:`linear-gradient(135deg,${C.tealLight},${C.surface})` }}/>}
+      </div>
+      <div style={{ padding:"0.85rem 1rem 1rem" }}>
+        <div style={{ fontSize:14, fontWeight:700, color:C.ink, marginBottom:3 }}>{place.name}</div>
+        <div style={{ fontSize:11.5, color:C.teal, fontWeight:600, marginBottom:6 }}>{place.tag}</div>
+        <p style={{ fontSize:12, color:C.inkSoft, lineHeight:1.6, marginBottom:10 }}>{place.desc}</p>
+        <button onClick={onAdd} disabled={alreadyAdded}
+          style={{ width:"100%", padding:"8px", borderRadius:9, border:"none", background:alreadyAdded?C.tealLight:C.teal, color:alreadyAdded?C.teal:"#fff", fontSize:12, fontWeight:700, cursor:alreadyAdded?"default":"pointer", fontFamily:sans }}>
+          {alreadyAdded?`✓ Added to Day ${dayNum}`:`+ Add to Day ${dayNum}`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Hotel/restaurant recommendation card — real Google Places data: photo,
+// rating, price level, and distance from the day's last stop.
+function PlaceRecCard({ place, kind }) {
+  const photoRef = place.photos?.[0]?.photo_reference;
+  const priceLabel = place.price_level!=null ? "$".repeat(Math.max(1,place.price_level)) : null;
+  const cuisineTypes = (place.types||[]).filter(t=>!["restaurant","food","point_of_interest","establishment","lodging"].includes(t));
+  return (
+    <div style={{ display:"flex", gap:10, background:C.surface, borderRadius:12, padding:8, border:`1px solid ${C.border}` }}>
+      <div style={{ width:64, height:64, borderRadius:9, overflow:"hidden", flexShrink:0, background:C.tealLight }}>
+        {photoRef ? <img src={photoUrl(photoRef,160)} alt={place.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+          : <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20 }}>{kind==="hotel"?"🏨":"🍽️"}</div>}
+      </div>
+      <div style={{ minWidth:0, flex:1 }}>
+        <div style={{ fontSize:12.5, fontWeight:700, color:C.ink, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{place.name}</div>
+        <div style={{ fontSize:11, color:C.inkSoft, marginBottom:2 }}>
+          {place.rating && <span style={{ color:C.amberMid, fontWeight:600 }}>★ {place.rating}</span>}
+          {priceLabel && <span> · {priceLabel}</span>}
+          {place._distKm!=null && <span> · {place._distKm<1?`${Math.round(place._distKm*1000)}m`:`${place._distKm.toFixed(1)}km`} away</span>}
+        </div>
+        {kind==="restaurant" && cuisineTypes[0] && <div style={{ fontSize:10.5, color:C.teal, textTransform:"capitalize" }}>{cuisineTypes[0].replace(/_/g," ")}</div>}
+        {place.vicinity && <div style={{ fontSize:10.5, color:C.inkSoft, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{place.vicinity}</div>}
+      </div>
+    </div>
+  );
+}
+
 function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLoginNeeded, premium }) {
   const { t, ot, lang } = useLang();
   const [step, setStep]    = useState(()=>{
@@ -3016,6 +3191,17 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   const [manualDays, setManualDays] = useState([]); // [{ location, activities:[] }, ...]
   const [manualActiveDay, setManualActiveDay] = useState(0);
   const [manualCat, setManualCat] = useState("beaches");
+  const [manualHotels, setManualHotels] = useState({});       // { [dayIdx]: {place, alternatives:[]} }
+  const [manualRestaurants, setManualRestaurants] = useState({}); // { [dayIdx]: {breakfast,lunch,dinner each: {place,alternatives:[]}} }
+  const [manualLoadingRecs, setManualLoadingRecs] = useState({}); // { [dayIdx]: true } while fetching
+  const [dragInfo, setDragInfo] = useState(null); // { fromDay, fromIdx }
+  const [dragOverInfo, setDragOverInfo] = useState(null); // { day, idx }
+  const [manualDraftId, setManualDraftId] = useState(null);
+  const [manualDraftSaving, setManualDraftSaving] = useState(false);
+  const [manualDraftSaved, setManualDraftSaved] = useState(false);
+  const [showDraftsList, setShowDraftsList] = useState(false);
+  const [savedDrafts, setSavedDrafts] = useState([]);
+  const [loadingDrafts, setLoadingDrafts] = useState(false);
 
   // Continuously persist wizard progress so a refresh never loses answers —
   // only while still in the wizard (step < 10); once an itinerary is generated
@@ -3555,10 +3741,65 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     const mDays = manualAns.startDate && manualAns.endDate
       ? Math.max(1, Math.round((new Date(manualAns.endDate)-new Date(manualAns.startDate))/86400000)+1) : null;
     const canContinue = manualAns.startDate && manualAns.endDate && mDays>0 && (manualAns.startCity!=="custom" || manualAns.customStart);
+
+    const openDraftsList = async () => {
+      if (!user) { onLoginNeeded(); return; }
+      setShowDraftsList(true); setLoadingDrafts(true);
+      const drafts = await loadManualDrafts(user.uid);
+      setSavedDrafts(drafts); setLoadingDrafts(false);
+    };
+    const resumeDraft = (d) => {
+      setManualAns(d.manualAns); setManualDays(d.manualDays);
+      setManualHotels(d.manualHotels||{}); setManualRestaurants(d.manualRestaurants||{});
+      setManualDraftId(d.id); setManualActiveDay(0);
+      setShowDraftsList(false); setManualStep(1);
+    };
+    const renameDraft = async (d) => {
+      const title = prompt("Rename trip", d.title);
+      if (!title) return;
+      await renameManualDraft(d.id, title);
+      setSavedDrafts(ds=>ds.map(x=>x.id===d.id?{...x,title}:x));
+    };
+    const dupDraft = async (d) => {
+      const newId = await duplicateManualDraft(user.uid, d);
+      setSavedDrafts(ds=>[{ ...d, id:newId, title:`${d.title} (copy)` }, ...ds]);
+    };
+    const delDraft = async (d) => {
+      if (!window.confirm(`Delete "${d.title}"? This can't be undone.`)) return;
+      await deleteManualDraft(d.id);
+      setSavedDrafts(ds=>ds.filter(x=>x.id!==d.id));
+    };
+
     return (
       <div style={{ minHeight:"100vh", background:C.surface, padding:"3rem 1.5rem" }}>
         <div style={{ maxWidth:640, margin:"0 auto" }}>
-          <button onClick={()=>setPlanMode("choose")} style={{ background:"none", border:"none", color:C.teal, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, marginBottom:18 }}>← Back</button>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
+            <button onClick={()=>setPlanMode("choose")} style={{ background:"none", border:"none", color:C.teal, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>← Back</button>
+            <button onClick={openDraftsList} style={{ background:"none", border:`1px solid ${C.border}`, color:C.ink, fontSize:12.5, fontWeight:600, cursor:"pointer", fontFamily:sans, padding:"7px 14px", borderRadius:10 }}>📂 Continue a saved trip</button>
+          </div>
+
+          {showDraftsList && (
+            <div onClick={e=>e.target===e.currentTarget&&setShowDraftsList(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.5)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+              <div style={{ background:"#fff", borderRadius:20, padding:"1.6rem", width:"100%", maxWidth:460, maxHeight:"80vh", overflowY:"auto" }}>
+                <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:14 }}>Your saved trips</h3>
+                {loadingDrafts && <p style={{ fontSize:13, color:C.inkSoft }}>Loading…</p>}
+                {!loadingDrafts && savedDrafts.length===0 && <p style={{ fontSize:13, color:C.inkSoft }}>No saved trips yet — start building one and hit "Save trip."</p>}
+                {savedDrafts.map(d=>(
+                  <div key={d.id} style={{ border:`1px solid ${C.border}`, borderRadius:12, padding:"10px 12px", marginBottom:8 }}>
+                    <div style={{ fontSize:13.5, fontWeight:700, color:C.ink, marginBottom:2 }}>{d.title}</div>
+                    <div style={{ fontSize:11, color:C.inkSoft, marginBottom:8 }}>{d.manualDays?.length||0} days · {d.manualDays?.reduce((s,x)=>s+(x.activities?.length||0),0)||0} places · updated {new Date(d.updatedAt).toLocaleDateString()}</div>
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      <button onClick={()=>resumeDraft(d)} style={{ fontSize:11.5, fontWeight:700, color:"#fff", background:C.teal, border:"none", borderRadius:7, padding:"5px 11px", cursor:"pointer", fontFamily:sans }}>Continue editing</button>
+                      <button onClick={()=>renameDraft(d)} style={{ fontSize:11.5, fontWeight:600, color:C.ink, background:C.surface, border:`1px solid ${C.border}`, borderRadius:7, padding:"5px 11px", cursor:"pointer", fontFamily:sans }}>Rename</button>
+                      <button onClick={()=>dupDraft(d)} style={{ fontSize:11.5, fontWeight:600, color:C.ink, background:C.surface, border:`1px solid ${C.border}`, borderRadius:7, padding:"5px 11px", cursor:"pointer", fontFamily:sans }}>Duplicate</button>
+                      <button onClick={()=>delDraft(d)} style={{ fontSize:11.5, fontWeight:600, color:C.coral, background:C.coralLight, border:"none", borderRadius:7, padding:"5px 11px", cursor:"pointer", fontFamily:sans }}>Delete</button>
+                    </div>
+                  </div>
+                ))}
+                <button onClick={()=>setShowDraftsList(false)} style={{ width:"100%", marginTop:8, padding:"9px", background:"none", border:"none", color:C.inkSoft, fontSize:12.5, cursor:"pointer", fontFamily:sans }}>Close</button>
+              </div>
+            </div>
+          )}
           <div style={{ background:C.white, borderRadius:24, padding:"2.2rem", border:`1px solid ${C.border}`, boxShadow:"0 4px 24px rgba(0,0,0,.06)" }}>
             <h2 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:6 }}>Let's start with the basics</h2>
             <p style={{ fontSize:13, color:C.inkSoft, marginBottom:22 }}>Just the essentials — you'll pick the actual places next.</p>
@@ -3611,16 +3852,102 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       { id:"wildlife", label:"🐘 Wildlife" }, { id:"adventure", label:"🧗 Adventure" }, { id:"rural", label:"🌾 Rural" }, { id:"hidden", label:"💎 Hidden Gems" },
     ];
     const activeDayPlaces = manualDays[manualActiveDay]?.activities || [];
+
     const addPlace = (place) => {
       setManualDays(days => days.map((d,i) => i!==manualActiveDay ? d : {
         location: d.location || place.name,
-        activities: [...d.activities, { name:place.name, tag:place.tag, desc:place.desc }],
+        activities: [...d.activities, { name:place.name, tag:place.tag, desc:place.desc, lat:place.lat, lng:place.lng, category:manualCat }],
       }));
+      // Picks changed — old hotel/restaurant suggestions for this day are stale.
+      setManualHotels(h=>{ const c={...h}; delete c[manualActiveDay]; return c; });
+      setManualRestaurants(r=>{ const c={...r}; delete c[manualActiveDay]; return c; });
     };
-    const removePlace = (idx) => {
-      setManualDays(days => days.map((d,i) => i!==manualActiveDay ? d : { ...d, activities: d.activities.filter((_,j)=>j!==idx) }));
+    const removePlace = (dayIdx, idx) => {
+      setManualDays(days => days.map((d,i) => i!==dayIdx ? d : { ...d, activities: d.activities.filter((_,j)=>j!==idx) }));
+      setManualHotels(h=>{ const c={...h}; delete c[dayIdx]; return c; });
+      setManualRestaurants(r=>{ const c={...r}; delete c[dayIdx]; return c; });
     };
     const totalPicked = manualDays.reduce((s,d)=>s+d.activities.length, 0);
+
+    // ── Drag and drop — reorder within a day, or move between days ──────────
+    const onDragStart = (dayIdx, idx) => setDragInfo({ fromDay:dayIdx, fromIdx:idx });
+    const onDragOverItem = (dayIdx, idx, e) => { e.preventDefault(); setDragOverInfo({ day:dayIdx, idx }); };
+    const onDropItem = (dayIdx, idx) => {
+      if (!dragInfo) return;
+      setManualDays(days => {
+        const copy = days.map(d=>({ ...d, activities:[...d.activities] }));
+        const [moved] = copy[dragInfo.fromDay].activities.splice(dragInfo.fromIdx, 1);
+        const insertAt = dragInfo.fromDay===dayIdx && dragInfo.fromIdx<idx ? idx-1 : idx;
+        copy[dayIdx].activities.splice(insertAt, 0, moved);
+        return copy;
+      });
+      if (dragInfo.fromDay!==dayIdx) { setManualHotels(h=>{ const c={...h}; delete c[dayIdx]; delete c[dragInfo.fromDay]; return c; }); setManualRestaurants(r=>{ const c={...r}; delete c[dayIdx]; delete c[dragInfo.fromDay]; return c; }); }
+      setDragInfo(null); setDragOverInfo(null);
+    };
+    const onDragEnd = () => { setDragInfo(null); setDragOverInfo(null); };
+
+    // ── Route optimization ───────────────────────────────────────────────────
+    const optimizeDay = (dayIdx) => {
+      setManualDays(days => days.map((d,i)=> i!==dayIdx ? d : { ...d, activities: optimizeDayOrder(d.activities) }));
+      setManualHotels(h=>{ const c={...h}; delete c[dayIdx]; return c; });
+      setManualRestaurants(r=>{ const c={...r}; delete c[dayIdx]; return c; });
+    };
+
+    // ── Hotel & restaurant recommendations via Google Places ────────────────
+    const fetchDayRecommendations = async (dayIdx) => {
+      const acts = manualDays[dayIdx]?.activities || [];
+      if (!acts.length) return;
+      const last = acts[acts.length-1];
+      if (last.lat==null) return;
+      setManualLoadingRecs(r=>({ ...r, [dayIdx]:true }));
+      try {
+        const [hotels, restaurants] = await Promise.all([
+          placesNearby(last.lat, last.lng, "lodging", 8000),
+          placesNearby(last.lat, last.lng, "restaurant", 4000),
+        ]);
+        const withDist = (arr) => arr.map(p => ({ ...p, _distKm: mbDistKm(last, { lat:p.geometry?.location?.lat, lng:p.geometry?.location?.lng }) }))
+          .sort((a,b)=>(a._distKm??999)-(b._distKm??999));
+        const h = withDist(hotels), r = withDist(restaurants);
+        setManualHotels(prev=>({ ...prev, [dayIdx]: { place:h[0]||null, alternatives:h.slice(1,6) } }));
+        setManualRestaurants(prev=>({ ...prev, [dayIdx]: {
+          lunch:  { place:r[0]||null, alternatives:r.slice(1,5) },
+          dinner: { place:r[1]||r[0]||null, alternatives:r.slice(2,6) },
+        } }));
+      } catch(e) { console.error("Recommendation fetch failed:", e.message); }
+      setManualLoadingRecs(r=>({ ...r, [dayIdx]:false }));
+    };
+    const swapHotel = (dayIdx, alt) => {
+      setManualHotels(prev => {
+        const cur = prev[dayIdx]; if (!cur) return prev;
+        const newAlts = [cur.place, ...cur.alternatives.filter(a=>a.place_id!==alt.place_id)];
+        return { ...prev, [dayIdx]: { place:alt, alternatives:newAlts } };
+      });
+    };
+    const swapRestaurant = (dayIdx, meal, alt) => {
+      setManualRestaurants(prev => {
+        const cur = prev[dayIdx]?.[meal]; if (!cur) return prev;
+        const newAlts = [cur.place, ...cur.alternatives.filter(a=>a.place_id!==alt.place_id)];
+        return { ...prev, [dayIdx]: { ...prev[dayIdx], [meal]: { place:alt, alternatives:newAlts } } };
+      });
+    };
+
+    // ── Timeline + warnings, recomputed on every change ──────────────────────
+    const dayTimelines = manualDays.map((d,i)=> d.activities.length
+      ? computeDayTimeline(d.activities, i===0?(manualAns.startTime||"09:00"):"08:00", manualHotels[i]?.place ? { name:manualHotels[i].place.name } : null)
+      : null);
+
+    // ── Save trip draft (separate system, per your request) ─────────────────
+    const saveDraftNow = async () => {
+      if (!user) { onLoginNeeded(); return; }
+      setManualDraftSaving(true);
+      const draft = { title: manualAns.title?.trim() || `Draft — ${manualDays.length} days`, manualAns, manualDays, manualHotels, manualRestaurants };
+      try {
+        if (manualDraftId) await updateManualDraft(manualDraftId, draft);
+        else { const id = await saveManualDraft(user.uid, draft); setManualDraftId(id); }
+        setManualDraftSaved(true); setTimeout(()=>setManualDraftSaved(false), 2200);
+      } catch(e) { alert("Could not save draft: " + e.message); }
+      setManualDraftSaving(false);
+    };
 
     const finishBuilding = () => {
       const customStart = manualAns.startCity==="custom" && manualAns.customStart
@@ -3628,28 +3955,37 @@ Return ONLY valid raw JSON — no markdown, no backticks:
         : manualAns.startCity==="colombo" ? "Colombo"
         : manualAns.startCity==="airport" ? "Bandaranaike International Airport, Katunayake"
         : "Colombo";
-      const days = manualDays.map((d,i) => ({
-        day: i+1,
-        location: d.location || customStart,
-        theme: "",
-        activities: d.activities.map(a => ({
+      const days = manualDays.map((d,i) => {
+        const rec = manualRestaurants[i];
+        const hotelRec = manualHotels[i]?.place;
+        const acts = d.activities.map(a => ({
           time: "", place: a.name, area: a.name, type: "sightseeing",
           text: a.desc || "", why: a.tag || "", mapQuery: `${a.name}, Sri Lanka`,
           hours: "", price: "", travelFromPrev: "",
-        })),
-      }));
+        }));
+        if (rec?.lunch?.place) acts.push({ time:"", place:rec.lunch.place.name, area:rec.lunch.place.vicinity||"", type:"food", text:`Lunch stop`, why:"Recommended nearby", mapQuery:`${rec.lunch.place.name}, Sri Lanka`, hours:"", price: rec.lunch.place.price_level?"$".repeat(rec.lunch.place.price_level):"", travelFromPrev:"" });
+        if (rec?.dinner?.place) acts.push({ time:"", place:rec.dinner.place.name, area:rec.dinner.place.vicinity||"", type:"food", text:`Dinner stop`, why:"Recommended nearby", mapQuery:`${rec.dinner.place.name}, Sri Lanka`, hours:"", price: rec.dinner.place.price_level?"$".repeat(rec.dinner.place.price_level):"", travelFromPrev:"" });
+        return {
+          day: i+1,
+          location: d.location || customStart,
+          theme: "",
+          activities: acts,
+          hotel: hotelRec ? { name:hotelRec.name, stars: hotelRec.rating?Math.round(hotelRec.rating):4, area: hotelRec.vicinity||"", why:"Closest to your last stop of the day" } : undefined,
+        };
+      });
       const built = {
         title: manualAns.title?.trim() || `My ${manualDays.length}-Day Sri Lanka Trip`,
         tagline: "Built exactly the way you wanted it",
         source: "manual",
         days,
-        hotel: null,
+        hotel: days.find(d=>d.hotel)?.hotel || null,
         highlights: [],
         tripMeta: { startDate:manualAns.startDate, endDate:manualAns.endDate, startTime:"09:00", startLocation:customStart, roundTrip:manualAns.roundTrip, endLocation: manualAns.roundTrip ? customStart : (days.slice(-1)[0]?.location || customStart) },
       };
       setStartLabel(customStart);
       setAns(a=>({ ...a, days:manualDays.length, nights:manualDays.length-1, startDate:manualAns.startDate, endDate:manualAns.endDate, startTime:"09:00", roundTrip:manualAns.roundTrip, group:"", budget:"" }));
       setItin(built); setSavedItin(built); setItinDays(days);
+      if (manualDraftId) deleteManualDraft(manualDraftId).catch(()=>{}); // finished — no longer a draft
       setPlanMode("ai"); // reuses the exact same results view as the AI flow
       setStep(10);
     };
@@ -3657,17 +3993,32 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     return (
       <div style={{ minHeight:"100vh", background:C.surface }}>
         <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"1.6rem 1.5rem" }}>
-          <div style={{ maxWidth:1100, margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
+          <div style={{ maxWidth:1200, margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
             <div>
               <button onClick={()=>setManualStep(0)} style={{ background:"none", border:"none", color:"rgba(255,255,255,.7)", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans, marginBottom:4 }}>← Trip basics</button>
               <h2 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#fff" }}>Add places to each day</h2>
             </div>
-            <Btn variant="amber" onClick={finishBuilding} style={{ opacity: totalPicked>0?1:.5, pointerEvents: totalPicked>0?"auto":"none" }}>✅ Build my itinerary ({totalPicked} places)</Btn>
+            <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+              <button onClick={saveDraftNow} disabled={manualDraftSaving} style={{ padding:"9px 16px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:11, fontSize:12.5, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
+                {manualDraftSaving?"Saving…":manualDraftSaved?"✅ Saved!":"💾 Save trip"}
+              </button>
+              <Btn variant="amber" onClick={finishBuilding} style={{ opacity: totalPicked>0?1:.5, pointerEvents: totalPicked>0?"auto":"none" }}>✅ Build my itinerary ({totalPicked} places)</Btn>
+            </div>
           </div>
         </div>
 
-        <div style={{ maxWidth:1100, margin:"0 auto", padding:"1.5rem" }}>
-          {/* Day tabs */}
+        <div style={{ maxWidth:1200, margin:"0 auto", padding:"1.5rem" }}>
+          {/* Warnings */}
+          {manualDays.some(d=>d.activities.length>1) && (()=>{
+            const warnings = manualDays.flatMap((d,i)=> d.activities.length>1 ? getDayWarnings(d.activities, dayTimelines[i], i) : []);
+            return warnings.length>0 && (
+              <div style={{ background:C.amberLight, border:`1px solid #DFCBA0`, borderRadius:14, padding:"12px 16px", marginBottom:16 }}>
+                {warnings.map((w,i)=><div key={i} style={{ fontSize:12.5, color:C.amber, fontWeight:600, marginBottom:i<warnings.length-1?4:0 }}>⚠️ {w}</div>)}
+              </div>
+            );
+          })()}
+
+          {/* Day tabs — click to set which day new picks go into */}
           <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:10, marginBottom:16 }}>
             {manualDays.map((d,i)=>(
               <button key={i} onClick={()=>setManualActiveDay(i)} style={{ flexShrink:0, padding:"9px 16px", borderRadius:12, border:`1.5px solid ${manualActiveDay===i?C.teal:C.border}`, background:manualActiveDay===i?C.tealPale:"#fff", color:manualActiveDay===i?C.teal:C.inkSoft, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>
@@ -3676,8 +4027,8 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             ))}
           </div>
 
-          <div className="info-2col" style={{ display:"grid", gridTemplateColumns:"1fr 320px", gap:20 }}>
-            {/* Browse destinations */}
+          <div className="info-2col" style={{ display:"grid", gridTemplateColumns:"1fr 380px", gap:20 }}>
+            {/* Browse destinations — add to whichever day tab is active */}
             <div>
               <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:8, marginBottom:14 }}>
                 {DEST_CATS.map(c=>(
@@ -3687,31 +4038,125 @@ Return ONLY valid raw JSON — no markdown, no backticks:
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }} className="info-2col">
                 {(DESTINATIONS[manualCat]||[]).map(place=>{
                   const alreadyAdded = activeDayPlaces.some(a=>a.name===place.name);
-                  return (
-                    <div key={place.name} style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:14, padding:"1rem" }}>
-                      <div style={{ fontSize:14, fontWeight:700, color:C.ink, marginBottom:3 }}>{place.name}</div>
-                      <div style={{ fontSize:11.5, color:C.teal, fontWeight:600, marginBottom:6 }}>{place.tag}</div>
-                      <p style={{ fontSize:12, color:C.inkSoft, lineHeight:1.6, marginBottom:10 }}>{place.desc}</p>
-                      <button onClick={()=>!alreadyAdded && addPlace(place)} disabled={alreadyAdded}
-                        style={{ width:"100%", padding:"8px", borderRadius:9, border:"none", background:alreadyAdded?C.tealLight:C.teal, color:alreadyAdded?C.teal:"#fff", fontSize:12, fontWeight:700, cursor:alreadyAdded?"default":"pointer", fontFamily:sans }}>
-                        {alreadyAdded?`✓ Added to Day ${manualActiveDay+1}`:`+ Add to Day ${manualActiveDay+1}`}
-                      </button>
-                    </div>
-                  );
+                  return <ManualDestCard key={place.name} place={place} alreadyAdded={alreadyAdded} dayNum={manualActiveDay+1} onAdd={()=>!alreadyAdded && addPlace(place)}/>;
                 })}
               </div>
             </div>
 
-            {/* Current day summary */}
-            <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:16, padding:"1.2rem", alignSelf:"start", position:"sticky", top:20 }}>
-              <h4 style={{ fontSize:14, fontWeight:700, color:C.ink, marginBottom:12 }}>Day {manualActiveDay+1} plan</h4>
-              {activeDayPlaces.length===0 && <p style={{ fontSize:12, color:C.inkSoft }}>No places added yet — pick some from the left.</p>}
-              {activeDayPlaces.map((a,i)=>(
-                <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:i<activeDayPlaces.length-1?`1px solid ${C.border}`:"none" }}>
-                  <span style={{ fontSize:12.5, color:C.ink, fontWeight:600 }}>{i+1}. {a.name}</span>
-                  <button onClick={()=>removePlace(i)} style={{ background:"none", border:"none", color:C.coral, cursor:"pointer", fontSize:13 }}>✕</button>
-                </div>
-              ))}
+            {/* All days — draggable plan + timeline + recommendations */}
+            <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+              {manualDays.map((d, dayIdx) => {
+                const acts = d.activities;
+                const optimizedOrder = acts.length>2 ? optimizeDayOrder(acts) : acts;
+                const currentMin = routeTotalMinutes(acts);
+                const optimizedMin = routeTotalMinutes(optimizedOrder);
+                const savings = currentMin - optimizedMin;
+                const timeline = dayTimelines[dayIdx];
+                const hotelRec = manualHotels[dayIdx];
+                const restRec = manualRestaurants[dayIdx];
+                const loadingRecs = manualLoadingRecs[dayIdx];
+
+                return (
+                  <div key={dayIdx} style={{ background:"#fff", border:`1.5px solid ${manualActiveDay===dayIdx?C.teal:C.border}`, borderRadius:16, padding:"1.1rem", transition:"border-color .2s" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                      <h4 style={{ fontSize:14, fontWeight:700, color:C.ink }}>Day {dayIdx+1} {d.location && <span style={{ color:C.inkSoft, fontWeight:400 }}>· {d.location}</span>}</h4>
+                      {acts.length>0 && !loadingRecs && !hotelRec && (
+                        <button onClick={()=>fetchDayRecommendations(dayIdx)} style={{ fontSize:11, fontWeight:600, color:C.teal, background:"none", border:`1px solid ${C.teal}`, borderRadius:8, padding:"4px 10px", cursor:"pointer", fontFamily:sans }}>🏨 Suggest stay & food</button>
+                      )}
+                      {loadingRecs && <span style={{ fontSize:11, color:C.inkSoft }}>Finding nearby places…</span>}
+                    </div>
+
+                    {acts.length===0 && <p style={{ fontSize:12, color:C.inkSoft }}>No places yet — add some from the left while this day is selected.</p>}
+
+                    {/* Draggable activity list */}
+                    {acts.map((a,i)=>(
+                      <div key={i}
+                        draggable
+                        onDragStart={()=>onDragStart(dayIdx,i)}
+                        onDragOver={(e)=>onDragOverItem(dayIdx,i,e)}
+                        onDrop={()=>onDropItem(dayIdx,i)}
+                        onDragEnd={onDragEnd}
+                        style={{
+                          display:"flex", alignItems:"center", gap:8, padding:"8px 6px",
+                          borderTop: dragOverInfo?.day===dayIdx && dragOverInfo?.idx===i ? `2px solid ${C.teal}` : "2px solid transparent",
+                          opacity: dragInfo?.fromDay===dayIdx && dragInfo?.fromIdx===i ? 0.35 : 1,
+                          cursor:"grab", transition:"opacity .15s, border-color .15s",
+                        }}>
+                        <span style={{ color:C.inkSoft, fontSize:13, flexShrink:0 }}>⠿</span>
+                        <span style={{ fontSize:12.5, color:C.ink, fontWeight:600, flex:1 }}>{i+1}. {a.name}</span>
+                        <button onClick={()=>removePlace(dayIdx,i)} style={{ background:"none", border:"none", color:C.coral, cursor:"pointer", fontSize:13, flexShrink:0 }}>✕</button>
+                      </div>
+                    ))}
+                    {/* Drop zone at the end of the list, for dragging into an empty or shorter day */}
+                    {acts.length>0 && (
+                      <div onDragOver={(e)=>onDragOverItem(dayIdx,acts.length,e)} onDrop={()=>onDropItem(dayIdx,acts.length)}
+                        style={{ height:10, borderTop: dragOverInfo?.day===dayIdx && dragOverInfo?.idx===acts.length ? `2px solid ${C.teal}` : "2px solid transparent" }}/>
+                    )}
+                    {acts.length===0 && (
+                      <div onDragOver={(e)=>onDragOverItem(dayIdx,0,e)} onDrop={()=>onDropItem(dayIdx,0)}
+                        style={{ height:24, border:`1.5px dashed ${dragOverInfo?.day===dayIdx?C.teal:C.border}`, borderRadius:8, marginTop:4 }}/>
+                    )}
+
+                    {/* Route optimization suggestion */}
+                    {acts.length>2 && savings>=15 && (
+                      <div style={{ marginTop:10, background:C.tealPale, border:`1px solid #B9CFC5`, borderRadius:10, padding:"9px 12px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                        <span style={{ fontSize:11.5, color:C.teal, fontWeight:600 }}>💡 Optimize your route to save ~{Math.floor(savings/60)>0?`${Math.floor(savings/60)}h `:""}{savings%60}m</span>
+                        <button onClick={()=>optimizeDay(dayIdx)} style={{ fontSize:11, fontWeight:700, color:"#fff", background:C.teal, border:"none", borderRadius:7, padding:"5px 10px", cursor:"pointer", fontFamily:sans }}>Optimize route</button>
+                      </div>
+                    )}
+
+                    {/* Timeline */}
+                    {timeline && timeline.blocks.length>0 && (
+                      <div style={{ marginTop:12, borderTop:`1px solid ${C.border}`, paddingTop:10 }}>
+                        {timeline.blocks.map((b,i)=>(
+                          <div key={i} style={{ display:"flex", gap:8, alignItems:"flex-start", marginBottom:6 }}>
+                            <span style={{ fontSize:10.5, color:C.inkSoft, width:64, flexShrink:0, paddingTop:1 }}>{b.time}</span>
+                            <span style={{ fontSize:11.5, color: b.type==="travel"?C.inkSoft:C.ink, fontWeight:b.type==="activity"?600:400 }}>
+                              {b.type==="activity" ? `📍 ${b.label}` : b.label}
+                              {b.type==="activity" && <span style={{ color:C.inkSoft, fontWeight:400 }}> · ~{b.duration}min</span>}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Hotel recommendation */}
+                    {hotelRec?.place && (
+                      <div style={{ marginTop:12, borderTop:`1px solid ${C.border}`, paddingTop:12 }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.6, marginBottom:8 }}>🏨 Suggested stay</div>
+                        <PlaceRecCard place={hotelRec.place} kind="hotel"/>
+                        {hotelRec.alternatives.length>0 && (
+                          <div style={{ display:"flex", gap:6, overflowX:"auto", marginTop:8 }}>
+                            {hotelRec.alternatives.slice(0,3).map(alt=>(
+                              <button key={alt.place_id} onClick={()=>swapHotel(dayIdx,alt)} style={{ flexShrink:0, fontSize:10.5, fontWeight:600, color:C.teal, background:C.tealLight, border:"none", borderRadius:7, padding:"5px 9px", cursor:"pointer", fontFamily:sans }}>↔ {alt.name.length>18?alt.name.slice(0,18)+"…":alt.name}</button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Restaurant recommendations */}
+                    {restRec && (
+                      <div style={{ marginTop:12, borderTop:`1px solid ${C.border}`, paddingTop:12 }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.6, marginBottom:8 }}>🍽️ Suggested food</div>
+                        {["lunch","dinner"].map(meal => restRec[meal]?.place && (
+                          <div key={meal} style={{ marginBottom:10 }}>
+                            <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, marginBottom:5, textTransform:"capitalize" }}>{meal}</div>
+                            <PlaceRecCard place={restRec[meal].place} kind="restaurant"/>
+                            {restRec[meal].alternatives.length>0 && (
+                              <div style={{ display:"flex", gap:6, overflowX:"auto", marginTop:6 }}>
+                                {restRec[meal].alternatives.slice(0,3).map(alt=>(
+                                  <button key={alt.place_id} onClick={()=>swapRestaurant(dayIdx,meal,alt)} style={{ flexShrink:0, fontSize:10.5, fontWeight:600, color:C.teal, background:C.tealLight, border:"none", borderRadius:7, padding:"5px 9px", cursor:"pointer", fontFamily:sans }}>↔ {alt.name.length>18?alt.name.slice(0,18)+"…":alt.name}</button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
