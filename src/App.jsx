@@ -20,12 +20,17 @@ const LANGUAGES = [
   { code:"fr", label:"Français", flag:"🇫🇷" },
   { code:"zh", label:"中文",      flag:"🇨🇳" },
 ];
+// Full language names, used to instruct the AI to write itinerary content
+// (title, tagline, activity descriptions, etc.) directly in the selected
+// language — no separate translation call needed, the same generation
+// request just asks for the target language.
+const LANG_NAMES = { en:"English", si:"Sinhala", ta:"Tamil", de:"German", fr:"French", zh:"Chinese" };
 
 // Translations cover the highest-traffic surface: nav, home page hero/services,
 // the journey wizard, common buttons, and footer. Deeper content (destination
-// descriptions, AI-generated itineraries, guide bios) stays in English since
-// that content is dynamic/AI-generated and translating it live would need a
-// separate translation API call per item.
+// descriptions, guide bios) stays in English since that's mostly static
+// reference copy. AI-generated itineraries are localized by asking the model
+// to write directly in the selected language (see generate() in JourneyPage).
 const TRANSLATIONS = {
   en: {
     nav_home:"Home", nav_destinations:"Destinations", nav_map:"Sri Lanka Map", nav_plan:"Plan a trip",
@@ -47,6 +52,10 @@ const TRANSLATIONS = {
     wiz_back:"← Back", wiz_next:"Next →", wiz_generate:"✨ Generate my itinerary",
     q_start:"Where and when does your trip start?", q_travel:"What kind of travel excites you?", q_activities:"What activities do you enjoy?", q_food:"What food do you enjoy?", q_groupbudget:"Who's going & what's your budget?", q_transport:"How do you want to get around?", q_pace:"What pace do you prefer?", q_hotelstyle:"How do you want to handle hotels?", q_places:"Any specific places you want to visit?",
     btn_planmytripshere:"✨ Plan a trip here",
+    res_eyebrow:"Your AI itinerary", res_pdf:"📄 Download PDF", res_share:"🔗 Share itinerary",
+    res_save_idle:"💾 Save for later", res_save_saving:"Saving…", res_save_saved:"✅ Saved!", res_save_error:"⚠️ Try again",
+    res_openmaps:"🗺️ Open full route in Google Maps", res_taphint:"💡 Tap any activity row to see photo, hours & map",
+    res_tripstarts:"Trip starts", res_tripends:"Trip ends", res_return:"Return journey", res_endtrip:"End of trip",
   },
   si: {
     nav_home:"මුල් පිටුව", nav_destinations:"ගමනාන්ත", nav_map:"ශ්‍රී ලංකා සිතියම", nav_plan:"සැලැස්මක් කරන්න",
@@ -68,6 +77,10 @@ const TRANSLATIONS = {
     wiz_back:"← ආපසු", wiz_next:"ඊළඟ →", wiz_generate:"✨ මගේ සැලැස්ම සාදන්න",
     q_start:"ඔබේ ගමන ආරම්භ වන්නේ කොතැනින් සහ කවදාද?", q_travel:"ඔබව සිත්ගන්නා සංචාර වර්ගය කුමක්ද?", q_activities:"ඔබ රසවිඳින ක්‍රියාකාරකම් මොනවාද?", q_food:"ඔබ රසවිඳින ආහාර මොනවාද?", q_groupbudget:"යන්නේ කවුද සහ ඔබේ අයවැය කීයද?", q_transport:"ඔබ සැරිසැරීමට කැමති ආකාරය කුමක්ද?", q_pace:"ඔබ කැමති වේගය කුමක්ද?", q_hotelstyle:"හෝටල් කළමනාකරණය කරන්නේ කෙසේද?", q_places:"ඔබ බැලීමට කැමති විශේෂිත ස්ථාන තිබේද?",
     btn_planmytripshere:"✨ මෙහි ගමනක් සැලසුම් කරන්න",
+    res_eyebrow:"ඔබේ AI සංචාර සැලැස්ම", res_pdf:"📄 PDF බාගන්න", res_share:"🔗 සැලැස්ම බෙදාගන්න",
+    res_save_idle:"💾 පසුව සඳහා සුරකින්න", res_save_saving:"සුරකිමින්…", res_save_saved:"✅ සුරැකිණි!", res_save_error:"⚠️ නැවත උත්සාහ කරන්න",
+    res_openmaps:"🗺️ Google සිතියමේ සම්පූර්ණ මාර්ගය විවෘත කරන්න", res_taphint:"💡 ඡායාරූප, වේලාවන් සහ සිතියම බැලීමට ඕනෑම ක්‍රියාකාරකමක් ස්පර්ශ කරන්න",
+    res_tripstarts:"සංචාරය ආරම්භය", res_tripends:"සංචාරය අවසානය", res_return:"ආපසු ගමන", res_endtrip:"සංචාරයේ අවසානය",
   },
   ta: {
     nav_home:"முகப்பு", nav_destinations:"இடங்கள்", nav_map:"இலங்கை வரைபடம்", nav_plan:"பயணம் திட்டமிடுங்கள்",
@@ -89,6 +102,10 @@ const TRANSLATIONS = {
     wiz_back:"← பின்", wiz_next:"அடுத்து →", wiz_generate:"✨ எனது திட்டத்தை உருவாக்கு",
     q_start:"உங்கள் பயணம் எங்கே, எப்போது தொடங்குகிறது?", q_travel:"எந்த வகை பயணம் உங்களை கவர்கிறது?", q_activities:"நீங்கள் எந்த செயல்பாடுகளை விரும்புகிறீர்கள்?", q_food:"நீங்கள் எந்த உணவை விரும்புகிறீர்கள்?", q_groupbudget:"யார் வருகிறார்கள் & உங்கள் பட்ஜெட் என்ன?", q_transport:"நீங்கள் எவ்வாறு சுற்றி வர விரும்புகிறீர்கள்?", q_pace:"நீங்கள் விரும்பும் வேகம் என்ன?", q_hotelstyle:"ஹோட்டல்களை எவ்வாறு கையாள விரும்புகிறீர்கள்?", q_places:"நீங்கள் பார்க்க விரும்பும் குறிப்பிட்ட இடங்கள் உள்ளனவா?",
     btn_planmytripshere:"✨ இங்கே ஒரு பயணத்தைத் திட்டமிடுங்கள்",
+    res_eyebrow:"உங்கள் AI பயணத் திட்டம்", res_pdf:"📄 PDF பதிவிறக்கு", res_share:"🔗 திட்டத்தைப் பகிரவும்",
+    res_save_idle:"💾 பின்னர் சேமிக்க", res_save_saving:"சேமிக்கிறது…", res_save_saved:"✅ சேமிக்கப்பட்டது!", res_save_error:"⚠️ மீண்டும் முயற்சிக்கவும்",
+    res_openmaps:"🗺️ Google வரைபடத்தில் முழு பாதையையும் திறக்கவும்", res_taphint:"💡 புகைப்படம், நேரம் & வரைபடத்தைக் காண எந்த செயல்பாட்டு வரிசையையும் தட்டவும்",
+    res_tripstarts:"பயணம் தொடக்கம்", res_tripends:"பயணம் முடிவு", res_return:"திரும்பும் பயணம்", res_endtrip:"பயணத்தின் முடிவு",
   },
   de: {
     nav_home:"Startseite", nav_destinations:"Reiseziele", nav_map:"Sri-Lanka-Karte", nav_plan:"Reise planen",
@@ -110,6 +127,10 @@ const TRANSLATIONS = {
     wiz_back:"← Zurück", wiz_next:"Weiter →", wiz_generate:"✨ Meinen Reiseplan erstellen",
     q_start:"Wo und wann beginnt deine Reise?", q_travel:"Welche Art von Reise begeistert dich?", q_activities:"Welche Aktivitäten magst du?", q_food:"Welches Essen magst du?", q_groupbudget:"Wer reist mit & wie ist dein Budget?", q_transport:"Wie möchtest du dich fortbewegen?", q_pace:"Welches Tempo bevorzugst du?", q_hotelstyle:"Wie möchtest du mit Hotels umgehen?", q_places:"Gibt es bestimmte Orte, die du besuchen möchtest?",
     btn_planmytripshere:"✨ Hier eine Reise planen",
+    res_eyebrow:"Dein KI-Reiseplan", res_pdf:"📄 PDF herunterladen", res_share:"🔗 Reiseplan teilen",
+    res_save_idle:"💾 Für später speichern", res_save_saving:"Speichern…", res_save_saved:"✅ Gespeichert!", res_save_error:"⚠️ Erneut versuchen",
+    res_openmaps:"🗺️ Vollständige Route in Google Maps öffnen", res_taphint:"💡 Tippe auf eine Aktivität für Foto, Öffnungszeiten & Karte",
+    res_tripstarts:"Reisebeginn", res_tripends:"Reiseende", res_return:"Rückreise", res_endtrip:"Ende der Reise",
   },
   fr: {
     nav_home:"Accueil", nav_destinations:"Destinations", nav_map:"Carte du Sri Lanka", nav_plan:"Planifier un voyage",
@@ -131,6 +152,10 @@ const TRANSLATIONS = {
     wiz_back:"← Retour", wiz_next:"Suivant →", wiz_generate:"✨ Générer mon itinéraire",
     q_start:"Où et quand commence votre voyage ?", q_travel:"Quel type de voyage vous passionne ?", q_activities:"Quelles activités aimez-vous ?", q_food:"Quelle cuisine aimez-vous ?", q_groupbudget:"Qui voyage & quel est votre budget ?", q_transport:"Comment souhaitez-vous vous déplacer ?", q_pace:"Quel rythme préférez-vous ?", q_hotelstyle:"Comment souhaitez-vous gérer les hôtels ?", q_places:"Des lieux spécifiques que vous souhaitez visiter ?",
     btn_planmytripshere:"✨ Planifier un voyage ici",
+    res_eyebrow:"Votre itinéraire IA", res_pdf:"📄 Télécharger le PDF", res_share:"🔗 Partager l'itinéraire",
+    res_save_idle:"💾 Enregistrer pour plus tard", res_save_saving:"Enregistrement…", res_save_saved:"✅ Enregistré !", res_save_error:"⚠️ Réessayer",
+    res_openmaps:"🗺️ Ouvrir l'itinéraire complet dans Google Maps", res_taphint:"💡 Touchez une activité pour voir photo, horaires et carte",
+    res_tripstarts:"Début du voyage", res_tripends:"Fin du voyage", res_return:"Voyage retour", res_endtrip:"Fin du voyage",
   },
   zh: {
     nav_home:"首页", nav_destinations:"目的地", nav_map:"斯里兰卡地图", nav_plan:"规划行程",
@@ -152,6 +177,10 @@ const TRANSLATIONS = {
     wiz_back:"← 返回", wiz_next:"下一步 →", wiz_generate:"✨ 生成我的行程",
     q_start:"您的行程从哪里、何时开始？", q_travel:"什么样的旅行让您兴奋？", q_activities:"您喜欢什么活动？", q_food:"您喜欢什么美食？", q_groupbudget:"谁同行，您的预算是多少？", q_transport:"您想如何出行？", q_pace:"您喜欢什么节奏？", q_hotelstyle:"您想如何安排酒店？", q_places:"有什么特定地点想去吗？",
     btn_planmytripshere:"✨ 在此规划行程",
+    res_eyebrow:"您的 AI 行程", res_pdf:"📄 下载 PDF", res_share:"🔗 分享行程",
+    res_save_idle:"💾 保存以便稍后查看", res_save_saving:"保存中…", res_save_saved:"✅ 已保存！", res_save_error:"⚠️ 请重试",
+    res_openmaps:"🗺️ 在 Google 地图中打开完整路线", res_taphint:"💡 点击任意活动可查看照片、营业时间和地图",
+    res_tripstarts:"行程开始", res_tripends:"行程结束", res_return:"返程", res_endtrip:"行程结束",
   },
 };
 
@@ -2852,7 +2881,7 @@ function ItineraryLoadingAnimation() {
 }
 
 function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLoginNeeded, premium }) {
-  const { t, ot } = useLang();
+  const { t, ot, lang } = useLang();
   const [step, setStep]    = useState(()=>{
     // Restore step from any previous session (refresh, login redirect, accidental close)
     const saved = localStorage.getItem("ct_wizard_step");
@@ -3079,6 +3108,8 @@ LOCATION RULES (CRITICAL — DISTANCE FROM STARTING POINT MATTERS):
 
 ${busNote}
 
+${lang !== "en" ? `LANGUAGE (CRITICAL): Write all human-readable narrative text in ${LANG_NAMES[lang] || "English"} — this means title, tagline, hotel.why, day theme, and every activity's "text" and "why" field must be written in ${LANG_NAMES[lang] || "English"}. Keep "place", "area", "mapQuery", "hours" and "price" in their original form (real names/numbers) so they still work with Google Maps and stay accurate — do NOT translate proper nouns or numbers, only the descriptive sentences around them.` : ""}
+
 MANDATORY FIELDS — every activity must have ALL of these:
 - time: realistic clock time (e.g. "08:30")
 - type: breakfast|lunch|dinner|cafe|sightseeing|hike|safari|beach|transport|checkin|sunset|activity|rural|hotel
@@ -3223,7 +3254,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       <div style={{ minHeight:"100vh", background:C.surface }}>
         <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"3rem 2rem" }}>
           <div style={{ maxWidth:820, margin:"0 auto" }}>
-            <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Your AI itinerary</div>
+            <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>{t("res_eyebrow")}</div>
             <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:10 }}>🗺️ {itin.title}</h1>
             <p style={{ fontSize:15, color:"rgba(255,255,255,.75)", marginBottom:16 }}>{itin.tagline}</p>
             <p style={{ fontSize:13, color:"rgba(255,255,255,.65)", marginBottom:16 }}>📅 {ans.days} days · {ans.nights} nights · {ans.group||"solo"} · {ans.budget||"mid-range"} budget · Starting: {startLabel}</p>
@@ -3241,7 +3272,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
               </div>
             )}
             <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
-              <button onClick={downloadPDF} style={{ padding:"10px 20px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>📄 Download PDF</button>
+              <button onClick={downloadPDF} style={{ padding:"10px 20px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{t("res_pdf")}</button>
               <button onClick={async()=>{
                 setShareModal({ url:null, loading:true });
                 try {
@@ -3250,7 +3281,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                   const url = `${window.location.origin}${window.location.pathname}?share=${shareId}`;
                   setShareModal({ url, loading:false });
                 } catch(e) { setShareModal({ url:null, loading:false, error:e.message }); }
-              }} style={{ padding:"10px 20px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>🔗 Share itinerary</button>
+              }} style={{ padding:"10px 20px", background:"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{t("res_share")}</button>
               <button onClick={async()=>{
                 if (!user) { onLoginNeeded(); return; }
                 setSaveStatus("saving");
@@ -3261,7 +3292,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                   setTimeout(()=>setSaveStatus(null), 2500);
                 } catch(e) { setSaveStatus("error"); setTimeout(()=>setSaveStatus(null), 3000); }
               }} disabled={saveStatus==="saving"} style={{ padding:"10px 20px", background: saveStatus==="saved"?"#16A34A":"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:saveStatus==="saving"?"wait":"pointer", fontFamily:sans }}>
-                {saveStatus==="saving"?"Saving…":saveStatus==="saved"?"✅ Saved!":saveStatus==="error"?"⚠️ Try again":"💾 Save for later"}
+                {saveStatus==="saving"?t("res_save_saving"):saveStatus==="saved"?t("res_save_saved"):saveStatus==="error"?t("res_save_error"):t("res_save_idle")}
               </button>
               {/* Google Maps multi-waypoint route */}
               <button onClick={()=>{
@@ -3281,9 +3312,9 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                 const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}${waypoints?`&waypoints=${waypoints}`:""}&travelmode=${mode}`;
                 window.open(url,"_blank");
               }} style={{ padding:"10px 20px", background:"#4285F4", color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, display:"flex", alignItems:"center", gap:6 }}>
-                🗺️ Open full route in Google Maps
+                {t("res_openmaps")}
               </button>
-              <p style={{ fontSize:12, color:"rgba(255,255,255,.5)", margin:0 }}>💡 Tap any activity row to see photo, hours & map</p>
+              <p style={{ fontSize:12, color:"rgba(255,255,255,.5)", margin:0 }}>{t("res_taphint")}</p>
             </div>
           </div>
         </div>
@@ -3291,7 +3322,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
           {/* Start → End journey banner with full date/time/location */}
           <div className="trip-banner" style={{ display:"flex", alignItems:"center", gap:12, background:"#fff", border:`1.5px solid ${C.border}`, borderRadius:14, padding:"16px 18px", marginBottom:20, flexWrap:"wrap" }}>
             <div style={{ textAlign:"center", flex:1, minWidth:140 }}>
-              <div style={{ fontSize:10, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:3 }}>Trip starts</div>
+              <div style={{ fontSize:10, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:3 }}>{t("res_tripstarts")}</div>
               <div style={{ fontSize:14, fontWeight:700, color:C.teal }}>📍 {startLabel}</div>
               {ans.startDate && <div style={{ fontSize:11, color:C.inkSoft, marginTop:2 }}>{new Date(ans.startDate).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}</div>}
               <div style={{ fontSize:11, color:C.inkSoft }}>🕐 {ans.startTime||"09:00"}</div>
@@ -3302,10 +3333,10 @@ Return ONLY valid raw JSON — no markdown, no backticks:
               <div style={{ width:60, height:2, background:`linear-gradient(90deg,${C.teal},${C.amber})`, borderRadius:2 }}/>
             </div>
             <div style={{ textAlign:"center", flex:1, minWidth:140 }}>
-              <div style={{ fontSize:10, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:3 }}>Trip ends</div>
+              <div style={{ fontSize:10, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:3 }}>{t("res_tripends")}</div>
               <div style={{ fontSize:14, fontWeight:700, color:C.amber }}>🏁 {ans.roundTrip ? startLabel : ((itinDays||itin.days).slice(-1)[0]?.location || startLabel)}</div>
               {ans.endDate && <div style={{ fontSize:11, color:C.inkSoft, marginTop:2 }}>{new Date(ans.endDate).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}</div>}
-              <div style={{ fontSize:11, color:C.inkSoft }}>{ans.roundTrip ? "Return journey" : "End of trip"}</div>
+              <div style={{ fontSize:11, color:C.inkSoft }}>{ans.roundTrip ? t("res_return") : t("res_endtrip")}</div>
             </div>
           </div>
 
@@ -3324,7 +3355,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, marginBottom:20 }}>Share this itinerary with one of our SLTDA-certified guides and receive a personalised price quote within 24 hours.</p>
             <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
               <Btn variant="amber" onClick={onGuideOpen}>Find a guide & request bid →</Btn>
-              <Btn variant="outline" onClick={downloadPDF}>📄 Download PDF</Btn>
+              <Btn variant="outline" onClick={downloadPDF}>{t("res_pdf")}</Btn>
               <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true }); }}>↺ New itinerary</Btn>
             </div>
           </div>
@@ -3679,20 +3710,24 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 // Visual stepper shown to both tourist and guide so either side can see exactly
 // where a booking stands: paid & confirmed → trip taking place → both sides
 // confirmed it happened → remaining balance released to the guide.
-function TripProgressBar({ status, tripEnded, iConfirmed, theyConfirmed }) {
+function TripProgressBar({ status, iConfirmedUnderway, theyConfirmedUnderway, iConfirmed, theyConfirmed }) {
+  const bothUnderway = iConfirmedUnderway && theyConfirmedUnderway;
   const bothConfirmed = iConfirmed && theyConfirmed;
   const isDisputed = status === "disputed";
-  const isCompleted = status === "completed" || bothConfirmed;
+  const isUnderway = status === "underway" || status === "completed";
+  const isCompleted = status === "completed";
 
   // Determine how far along the 4-stage journey we are (0-3)
   let activeIdx = 0; // 0: booked & paid
-  if (tripEnded) activeIdx = 1; // 1: trip underway / ended, awaiting confirmation
-  if (iConfirmed || theyConfirmed) activeIdx = 2; // 2: at least one side confirmed
+  if (isUnderway) activeIdx = 1; // 1: both confirmed the trip started
+  if (isUnderway && (iConfirmed || theyConfirmed)) activeIdx = 2; // 2: at least one side confirmed completion
   if (isCompleted) activeIdx = 3; // 3: both confirmed, payment released
 
+  const stage1Label = status==="confirmed" && (iConfirmedUnderway || theyConfirmedUnderway) && !bothUnderway
+    ? "Confirming underway…" : "Trip underway";
   const steps = [
     { label:"Booked & paid" },
-    { label:"Trip underway" },
+    { label: stage1Label },
     { label: bothConfirmed ? "Both confirmed" : "Awaiting confirmation" },
     { label:"Balance released" },
   ];
@@ -3731,20 +3766,25 @@ function TripProgressBar({ status, tripEnded, iConfirmed, theyConfirmed }) {
   );
 }
 
-function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, guidePhone }) {
+function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, onAddToTrips, guidePhone }) {
   const [showChat, setShowChat]   = useState(false);
   const [messages, setMessages]   = useState([]);
   const [msgInput, setMsgInput]   = useState("");
   const [loadingMsgs, setLM]      = useState(false);
+  const [confirmingUnderway, setConfirmingUnderway] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [showNoShow, setShowNoShow] = useState(false);
   const [noShowReason, setNoShowReason] = useState("");
+
+  const myUnderwayField    = role==="tourist" ? "touristConfirmedUnderway" : "guideConfirmedUnderway";
+  const theirUnderwayField = role==="tourist" ? "guideConfirmedUnderway" : "touristConfirmedUnderway";
+  const iConfirmedUnderway    = !!req[myUnderwayField];
+  const theyConfirmedUnderway = !!req[theirUnderwayField];
 
   const myConfirmField   = role==="tourist" ? "touristConfirmedComplete" : "guideConfirmedComplete";
   const theirConfirmField= role==="tourist" ? "guideConfirmedComplete" : "touristConfirmedComplete";
   const iConfirmed    = !!req[myConfirmField];
   const theyConfirmed = !!req[theirConfirmField];
-  const tripEnded = req.tripEndDate && new Date(req.tripEndDate) < new Date();
   const otherPartyName = role==="tourist" ? req.guideName : (req.touristName||req.touristEmail);
 
   const loadChat = async () => {
@@ -3763,6 +3803,16 @@ function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, guid
       await sendBookingMessage(req.id, role, role==="tourist"?(user?.displayName||user?.email):req.guideName, text);
       setMessages(m=>[...m, { fromRole:role, text, sentAt:new Date().toISOString() }]);
     } catch(e) { alert("Could not send message: " + e.message); }
+  };
+
+  const handleConfirmUnderway = async () => {
+    if (!window.confirm("Confirm that this trip has started / is underway?")) return;
+    setConfirmingUnderway(true);
+    try {
+      const bothNow = await confirmTripUnderway(req.id, role);
+      onUpdate({ [myUnderwayField]: true, status: bothNow ? "underway" : req.status });
+    } catch(e) { alert("Could not confirm: " + e.message); }
+    setConfirmingUnderway(false);
   };
 
   const handleConfirmComplete = async () => {
@@ -3787,18 +3837,22 @@ function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, guid
   return (
     <div style={{ background: req.status==="disputed"?"#FEF2F2":req.status==="completed"?C.tealPale:C.tealPale, border:`1px solid ${req.status==="disputed"?"#FECACA":"#9FE1CB"}`, borderRadius:10, padding:"12px 14px" }}>
       <div style={{ fontSize:12, color: req.status==="disputed"?"#DC2626":C.teal, marginBottom:10 }}>
-        {req.status==="completed" ? "✅ Trip completed · Full payment released" :
+        {req.status==="completed" ? "✅ Trip completed" :
+         req.status==="underway"  ? "🚗 Trip underway" :
          req.status==="disputed"  ? "⚠️ Under review by CeylonTrails admin" :
          "✅ Booking confirmed"} · Paid ${req.payment.total}
       </div>
 
-      <TripProgressBar status={req.status} tripEnded={tripEnded} iConfirmed={iConfirmed} theyConfirmed={theyConfirmed}/>
+      <TripProgressBar status={req.status} iConfirmedUnderway={iConfirmedUnderway} theyConfirmedUnderway={theyConfirmedUnderway} iConfirmed={iConfirmed} theyConfirmed={theyConfirmed}/>
 
-      {req.status!=="disputed" && (
+      {/* Payment split — guide only. Showing the tourist that part of "their" guide's
+          money is being held isn't something they need to see; they've simply paid
+          the agreed total and the platform handles the mechanics behind the scenes. */}
+      {req.status!=="disputed" && role==="guide" && (
         <div style={{ background:"rgba(255,255,255,.7)", borderRadius:8, padding:"8px 10px", fontSize:11, color:C.ink, marginBottom:10 }}>
-          <div style={{ display:"flex", justifyContent:"space-between" }}><span>Paid to guide now (30%)</span><strong>${req.payment.guideInstantShare ?? Math.round(req.payment.guideAmount*0.3*100)/100}</strong></div>
+          <div style={{ display:"flex", justifyContent:"space-between" }}><span>Paid to you now (30%)</span><strong>${req.payment.guideInstantShare ?? Math.round(req.payment.guideAmount*0.3*100)/100}</strong></div>
           <div style={{ display:"flex", justifyContent:"space-between" }}>
-            <span>{req.payment.heldReleased ? "Released to guide (70%)" : "🔒 Held until both confirm (70%)"}</span>
+            <span>{req.payment.heldReleased ? "Released to you (70%)" : "🔒 Held until both confirm (70%)"}</span>
             <strong>${req.payment.guideHeldShare ?? Math.round(req.payment.guideAmount*0.7*100)/100}</strong>
           </div>
         </div>
@@ -3850,19 +3904,19 @@ function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, guid
         </div>
       )}
 
-      {/* Completion confirmation */}
-      {req.status==="confirmed" && tripEnded && (
+      {/* Stage 1: mutual "trip underway" confirmation */}
+      {req.status==="confirmed" && (
         <div style={{ marginBottom:8 }}>
-          {!iConfirmed ? (
-            <button onClick={handleConfirmComplete} disabled={confirming} style={{ width:"100%", padding:"9px", background:C.teal, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:confirming?.6:1 }}>
-              {confirming?"Confirming…":"✅ Confirm this trip happened"}
+          {!iConfirmedUnderway ? (
+            <button onClick={handleConfirmUnderway} disabled={confirmingUnderway} style={{ width:"100%", padding:"9px", background:C.teal, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:confirmingUnderway?.6:1 }}>
+              {confirmingUnderway?"Confirming…":"🚗 Mark trip as underway"}
             </button>
           ) : (
             <div style={{ fontSize:11, color:C.teal, textAlign:"center", padding:"6px 0" }}>
-              ✓ You confirmed · {theyConfirmed ? "Both sides confirmed — payment released!" : `Waiting for ${otherPartyName} to confirm too`}
+              ✓ You confirmed the trip is underway · {theyConfirmedUnderway ? "Both sides confirmed!" : `Waiting for ${otherPartyName} to confirm too`}
             </div>
           )}
-          {role==="tourist" && !iConfirmed && (
+          {role==="tourist" && !iConfirmedUnderway && (
             <button onClick={()=>setShowNoShow(true)} style={{ width:"100%", marginTop:6, padding:"7px", background:"none", border:"none", color:C.coral, fontSize:11, cursor:"pointer", fontFamily:sans, textDecoration:"underline" }}>
               The guide didn't show up — report this
             </button>
@@ -3870,9 +3924,31 @@ function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, guid
         </div>
       )}
 
+      {/* Stage 2: mutual "trip completed" confirmation — only once both sides have
+          already confirmed the trip started */}
+      {req.status==="underway" && (
+        <div style={{ marginBottom:8 }}>
+          {!iConfirmed ? (
+            <button onClick={handleConfirmComplete} disabled={confirming} style={{ width:"100%", padding:"9px", background:C.teal, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:confirming?.6:1 }}>
+              {confirming?"Confirming…":"✅ Confirm trip completed"}
+            </button>
+          ) : (
+            <div style={{ fontSize:11, color:C.teal, textAlign:"center", padding:"6px 0" }}>
+              ✓ You confirmed · {theyConfirmed ? "Both sides confirmed — payment released!" : `Waiting for ${otherPartyName} to confirm too`}
+            </div>
+          )}
+        </div>
+      )}
+
       {req.status==="completed" && role==="tourist" && (
         <button onClick={()=>onReviewGuide?.({ guideName:req.guideName, tripRef:req.id })} style={{ width:"100%", padding:"9px", background:C.amber, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:sans }}>
           ⭐ Leave a review for {req.guideName}
+        </button>
+      )}
+
+      {req.status==="completed" && role==="guide" && (
+        <button onClick={()=>onAddToTrips?.(req)} style={{ width:"100%", padding:"9px", background:C.amber, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:sans }}>
+          ➕ Add this trip to my profile
         </button>
       )}
 
@@ -3909,10 +3985,23 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
   const [paying,    setPaying]   = useState(false);
   const [payStep,   setPayStep]  = useState("confirm");
   const [payTermsOk, setPayTermsOk] = useState(false);
+  const [approvedReviews, setApprovedReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   useEffect(()=>{
     if(open){ setScreen("terms"); setTermsOk(false); setSelected(null); setShowReqs(false); }
   },[open]);
+
+  // Load admin-approved reviews for whichever guide's portfolio is open —
+  // this is where reviews the admin has moderated actually become visible
+  // to other tourists.
+  useEffect(()=>{
+    if (screen==="portfolio" && selected) {
+      const guideName = selected.fullName || selected.name;
+      setLoadingReviews(true);
+      loadApprovedReviewsForGuide(guideName).then(rs=>{ setApprovedReviews(rs); setLoadingReviews(false); });
+    }
+  },[screen, selected]);
 
   const loadGuides = async () => {
     setLoadingG(true);
@@ -4069,12 +4158,23 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                         <div style={{ fontSize:14, fontWeight:700, color:C.ink }}>{req.guideName}</div>
                         <div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>{req.itinTitle} · {req.itinDays} days</div>
                       </div>
-                      <span style={{ fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20,
-                        background:req.status==="completed"?C.tealLight:req.status==="confirmed"?C.tealLight:req.status==="disputed"?"#FEF9C3":req.status==="guide_declined"?"#FEE2E2":req.status==="declined"?"#F1F5F9":req.bid?C.amberLight:C.surface,
-                        color:req.status==="completed"?C.teal:req.status==="confirmed"?C.teal:req.status==="disputed"?"#CA8A04":req.status==="guide_declined"?"#DC2626":req.status==="declined"?"#64748B":req.bid?C.amber:C.inkSoft,
-                        border:`1px solid ${req.status==="completed"||req.status==="confirmed"?"#9FE1CB":req.status==="disputed"?"#FDE047":req.status==="guide_declined"?"#FECACA":req.status==="declined"?"#E2E8F0":req.bid?"#F0D48A":C.border}` }}>
-                        {req.status==="completed"?"✅ Trip completed":req.status==="confirmed"?"✅ Confirmed":req.status==="disputed"?"⚠️ Under review":req.status==="guide_declined"?"🚫 Guide unavailable":req.status==="declined"?"❌ You declined":req.bid?"💬 Bid received":"⏳ Awaiting bid"}
-                      </span>
+                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                        <span style={{ fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20,
+                          background:req.status==="completed"?C.tealLight:req.status==="confirmed"||req.status==="underway"?C.tealLight:req.status==="disputed"?"#FEF9C3":req.status==="guide_declined"?"#FEE2E2":req.status==="declined"?"#F1F5F9":req.bid?C.amberLight:C.surface,
+                          color:req.status==="completed"?C.teal:req.status==="confirmed"||req.status==="underway"?C.teal:req.status==="disputed"?"#CA8A04":req.status==="guide_declined"?"#DC2626":req.status==="declined"?"#64748B":req.bid?C.amber:C.inkSoft,
+                          border:`1px solid ${req.status==="completed"||req.status==="confirmed"||req.status==="underway"?"#9FE1CB":req.status==="disputed"?"#FDE047":req.status==="guide_declined"?"#FECACA":req.status==="declined"?"#E2E8F0":req.bid?"#F0D48A":C.border}` }}>
+                          {req.status==="completed"?"✅ Trip completed":req.status==="underway"?"🚗 Trip underway":req.status==="confirmed"?"✅ Confirmed":req.status==="disputed"?"⚠️ Under review":req.status==="guide_declined"?"🚫 Guide unavailable":req.status==="declined"?"❌ You declined":req.bid?"💬 Bid received":"⏳ Awaiting bid"}
+                        </span>
+                        {req.status!=="confirmed" && req.status!=="underway" && (
+                          <button onClick={async()=>{
+                            if (!window.confirm("Remove this request from your list? The guide will still have a record of it.")) return;
+                            try {
+                              await removeTripRequestForTourist(req.id);
+                              setMyRequests(rs=>rs.filter(r=>r.id!==req.id));
+                            } catch(e) { alert("Could not remove: " + e.message); }
+                          }} title="Remove from my list" style={{ width:24, height:24, borderRadius:"50%", border:`1px solid ${C.border}`, background:"#fff", color:C.inkSoft, fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>🗑</button>
+                        )}
+                      </div>
                     </div>
                     {req.status==="guide_declined" && (
                       <div style={{ background:"#FEF2F2", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#DC2626" }}>
@@ -4216,6 +4316,24 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                   <div key={l} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 12px" }}>
                     <div style={{ fontSize:10, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:4, fontWeight:600 }}>{l}</div>
                     <div style={{ fontSize:12, fontWeight:600, color:C.ink, lineHeight:1.4 }}>{v||"—"}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Admin-approved reviews — this is the only place tourist reviews
+                  become publicly visible, after CeylonTrails moderation. */}
+              <div style={{ marginBottom:14 }}>
+                <p style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.8, marginBottom:8 }}>Reviews</p>
+                {loadingReviews && <p style={{ fontSize:12, color:C.inkSoft }}>Loading reviews…</p>}
+                {!loadingReviews && approvedReviews.length===0 && <p style={{ fontSize:12, color:C.inkSoft }}>No published reviews yet.</p>}
+                {!loadingReviews && approvedReviews.slice(0,5).map(r=>(
+                  <div key={r.id} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 12px", marginBottom:8 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                      <span style={{ fontSize:12, fontWeight:700, color:C.ink }}>{r.touristName}</span>
+                      <span style={{ fontSize:12, color:C.amber }}>{"★".repeat(r.rating||5)}</span>
+                    </div>
+                    <div style={{ fontSize:12, fontWeight:600, color:C.ink, marginBottom:2 }}>{r.title}</div>
+                    <div style={{ fontSize:12, color:C.inkSoft, lineHeight:1.6 }}>{r.body}</div>
                   </div>
                 ))}
               </div>
@@ -5186,10 +5304,22 @@ function PremiumLock({ itinId, onUnlock }) {
   const [show,   setShow]  = useState(false);
   const [paying, setPaying]= useState(false);
   const [step,   setStep]  = useState("lock");
+  const { user } = useAuth();
 
   const handleDemoPayment = () => {
     setPaying(true);
-    setTimeout(()=>{ setPaying(false); setStep("success"); }, 2000);
+    setTimeout(async ()=>{
+      // Log this as platform income so it shows up in the admin revenue
+      // dashboard — this is 100% CeylonTrails revenue, no guide involved.
+      try {
+        if (!window.firebase?.firestore) await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+        await window.firebase.firestore().collection("premiumPayments").add({
+          itinId: itinId||null, uid: user?.uid||null, userEmail: user?.email||null,
+          amount: UNLOCK_PRICE, paidAt: new Date().toISOString(), method: "PayPal (demo)",
+        });
+      } catch(e) { console.warn("Could not log premium payment:", e.message); }
+      setPaying(false); setStep("success");
+    }, 2000);
   };
 
   return (
@@ -5337,10 +5467,18 @@ async function loadTouristRequests(touristUid) {
   try {
     const snap = await window.firebase.firestore().collection("tripRequests")
       .where("touristUid","==",touristUid).limit(50).get();
-    const reqs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    // Hide requests the tourist has removed from their own view — the record
+    // stays in Firestore (removedByTourist:true) so the guide/admin still see it.
+    const reqs = snap.docs.map(d=>({id:d.id,...d.data()})).filter(r=>!r.removedByTourist);
     reqs.sort((a,b)=> new Date(b.createdAt||0) - new Date(a.createdAt||0));
     return reqs;
   } catch(e) { console.error("loadTouristRequests FAILED:", e.message); return []; }
+}
+async function removeTripRequestForTourist(requestId) {
+  if (!window.firebase?.firestore) return;
+  await window.firebase.firestore().collection("tripRequests").doc(requestId).update({
+    removedByTourist: true, removedByTouristAt: new Date().toISOString(),
+  });
 }
 
 // ─── ESCROW PAYMENT MODEL ─────────────────────────────────────────────────────
@@ -5370,6 +5508,8 @@ async function payFullAndEscrow(requestId, bidAmount, guideId) {
       heldReleased: false, method: "PayPal",
     },
     confirmedAt: new Date().toISOString(),
+    touristConfirmedUnderway: false,
+    guideConfirmedUnderway: false,
     touristConfirmedComplete: false,
     guideConfirmedComplete: false,
   });
@@ -5388,8 +5528,27 @@ async function payFullAndEscrow(requestId, bidAmount, guideId) {
   }
 }
 
+// Called when either side ticks "the trip has started". Requires BOTH to
+// confirm before the booking moves from "confirmed" (paid, not yet begun) to
+// "underway" — this is a status checkpoint, not a payment event.
+async function confirmTripUnderway(requestId, who) {
+  if (!window.firebase?.firestore) return false;
+  const ref = window.firebase.firestore().collection("tripRequests").doc(requestId);
+  const field = who === "tourist" ? "touristConfirmedUnderway" : "guideConfirmedUnderway";
+  await ref.update({ [field]: true, [`${field}At`]: new Date().toISOString() });
+
+  const doc = await ref.get();
+  const data = doc.data();
+  const bothConfirmed = data.touristConfirmedUnderway && data.guideConfirmedUnderway;
+  if (bothConfirmed && data.status === "confirmed") {
+    await ref.update({ status: "underway" });
+  }
+  return bothConfirmed;
+}
+
 // Called when either side ticks "this trip happened". Requires BOTH to confirm
 // before the held 70% releases — no auto-release on a single confirmation.
+// Only meaningful once the trip has already been mutually marked underway.
 async function confirmTripCompletion(requestId, who, guideId) {
   if (!window.firebase?.firestore) return false;
   const ref = window.firebase.firestore().collection("tripRequests").doc(requestId);
@@ -5937,6 +6096,21 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
     setAddTour(false);
   };
 
+  // Pre-fills the "add tour" form from a completed booking's details so the
+  // guide just has to review & save rather than retype everything, then jumps
+  // them to the Tours tab where the form lives.
+  const handleAddToTripsFromReq = (req) => {
+    setNewTour({
+      title: req.itinTitle || "",
+      location: req.tripEndLocation || req.tripStartLocation || "",
+      date: req.tripEndDate || req.tripStartDate || "",
+      rating: 5,
+      notes: `Guided ${req.touristName || req.touristEmail || "a tourist"} · ${req.itinDays || "?"} days`,
+    });
+    setAddTour(true);
+    setTab("tours");
+  };
+
   const TABS = [
     { id:"requests",   label:"📩 Trip Requests", badge:requests.filter(r=>!r.bid).length },
     { id:"profile",    label:"👤 My Profile" },
@@ -6159,7 +6333,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                   </div>
                 )}
                 {(req.status==="confirmed"||req.status==="completed"||req.status==="disputed") && req.payment && (
-                  <BookingManagementPanel req={req} role="guide" user={user} guidePhone={profile?.phone} onUpdate={(updated)=>setRequests(rs=>rs.map(r=>r.id===req.id?{...r,...updated}:r))}/>
+                  <BookingManagementPanel req={req} role="guide" user={user} guidePhone={profile?.phone} onUpdate={(updated)=>setRequests(rs=>rs.map(r=>r.id===req.id?{...r,...updated}:r))} onAddToTrips={handleAddToTripsFromReq}/>
                 )}
                 {!req.bid && req.status==="pending" && (
                   <div style={{ display:"flex", gap:8 }}>
@@ -6341,6 +6515,18 @@ async function submitGuideReview(review) {
     createdAt: new Date().toISOString(),
   });
 }
+// Reviews a tourist will actually see on a guide's public portfolio — only
+// ones an admin has moderated and approved, matched by guide name.
+async function loadApprovedReviewsForGuide(guideName) {
+  if (!window.firebase?.firestore || !guideName) return [];
+  try {
+    const snap = await window.firebase.firestore().collection("guideReviews")
+      .where("guideName","==",guideName).where("status","==","approved").limit(30).get();
+    const items = snap.docs.map(d=>({id:d.id,...d.data()}));
+    items.sort((a,b)=> new Date(b.createdAt||0) - new Date(a.createdAt||0));
+    return items;
+  } catch(e) { console.error("loadApprovedReviewsForGuide FAILED:", e.message); return []; }
+}
 async function loadGuideReviews(status="pending") {
   if (!window.firebase?.firestore) return [];
   try {
@@ -6497,6 +6683,7 @@ function AdminAnalyticsDashboard({ analytics, loading, onRefresh }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:12, marginBottom:24 }}>
         <StatCard icon="💰" label="Total revenue" value={`$${analytics.totalRevenue.toFixed(0)}`} color="#16A34A"/>
         <StatCard icon="🏛️" label="CeylonTrails commission" value={`$${analytics.totalCommission.toFixed(0)}`} color="#2D4A6A"/>
+        <StatCard icon="🔓" label="Premium unlock revenue" value={`$${(analytics.totalPremiumRevenue||0).toFixed(0)}`} color="#B45309"/>
         <StatCard icon="🧭" label="Guide earnings paid" value={`$${analytics.totalGuideEarnings.toFixed(0)}`} color="#C27A0E"/>
         <StatCard icon="✅" label="Confirmed bookings" value={analytics.totalBookings} sub={`${analytics.conversionRate}% conversion`}/>
         <StatCard icon="📩" label="Total trip requests" value={analytics.totalRequests}/>
@@ -6578,18 +6765,25 @@ function AdminPanel({ onClose }) {
     setLoadingAnalytics(true);
     try {
       if (!window.firebase?.firestore) await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
-      const [reqSnap, guideSnap] = await Promise.all([
+      const [reqSnap, guideSnap, premiumSnap] = await Promise.all([
         window.firebase.firestore().collection("tripRequests").limit(500).get(),
         window.firebase.firestore().collection("guides").limit(200).get(),
+        window.firebase.firestore().collection("premiumPayments").limit(1000).get(),
       ]);
       const requests = reqSnap.docs.map(d=>d.data());
       const allGuides = guideSnap.docs.map(d=>({id:d.id,...d.data()}));
+      const premiumPayments = premiumSnap.docs.map(d=>d.data());
 
-      const accepted = requests.filter(r=>(r.status==="confirmed"||r.status==="completed") && r.payment);
+      const accepted = requests.filter(r=>(r.status==="confirmed"||r.status==="underway"||r.status==="completed") && r.payment);
       const disputed = requests.filter(r=>r.status==="disputed");
-      const totalRevenue    = accepted.reduce((s,r)=>s+(r.payment.total||0), 0);
-      const totalCommission = accepted.reduce((s,r)=>s+(r.payment.commission||0), 0);
+      const bookingRevenue  = accepted.reduce((s,r)=>s+(r.payment.total||0), 0);
+      const bookingCommission = accepted.reduce((s,r)=>s+(r.payment.commission||0), 0);
       const totalGuideEarnings = accepted.reduce((s,r)=>s+(r.payment.guideAmount||0), 0);
+      // Itinerary premium unlocks — pure platform income, no guide split, so it
+      // counts toward both total revenue and CeylonTrails' own commission line.
+      const totalPremiumRevenue = premiumPayments.reduce((s,p)=>s+(p.amount||0), 0);
+      const totalRevenue    = bookingRevenue + totalPremiumRevenue;
+      const totalCommission = bookingCommission + totalPremiumRevenue;
 
       // Bookings by month (last 6 months) for the trend chart
       const monthBuckets = {};
@@ -6626,7 +6820,7 @@ function AdminPanel({ onClose }) {
       setAnalytics({
         totalBookings: accepted.length,
         totalRequests: requests.length,
-        totalRevenue, totalCommission, totalGuideEarnings,
+        totalRevenue, totalCommission, totalGuideEarnings, totalPremiumRevenue,
         conversionRate: requests.length ? Math.round((accepted.length/requests.length)*100) : 0,
         totalGuides: allGuides.length,
         approvedGuides: allGuides.filter(g=>g.status==="approved").length,
