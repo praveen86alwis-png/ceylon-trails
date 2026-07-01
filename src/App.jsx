@@ -1,12 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
+// Refined palette: a single deep emerald as the brand anchor, a muted brass
+// (not bright gold) reserved for genuine highlights, and a quiet clay tone
+// for the rare warm accent — instead of three competing saturated hues
+// fighting for attention across every badge and button.
 const C = {
-  teal:"#0B6B52", tealMid:"#1D9E75", tealLight:"#E0F5EE", tealPale:"#F0FAF6",
-  amber:"#C27A0E", amberMid:"#E8A825", amberLight:"#FDF3DC",
-  coral:"#C45230", coralLight:"#FAECE7",
-  ink:"#1A1A1A", inkMid:"#3D3D3D", inkSoft:"#6B6B6B",
-  border:"#E4E4E4", surface:"#F7F7F5", white:"#FFFFFF",
+  teal:"#0E4A3D", tealMid:"#1F7A5C", tealLight:"#E6EEEA", tealPale:"#F5F8F6",
+  amber:"#8A6A34", amberMid:"#A9895A", amberLight:"#F1ECE0",
+  coral:"#8B4B3B", coralLight:"#F1E5E0",
+  ink:"#1A1A1A", inkMid:"#3D3D3D", inkSoft:"#68686A",
+  border:"#E6E4DF", surface:"#FAF9F6", white:"#FFFFFF",
+  error:"#A83A32", errorLight:"#F5E7E4",
+  info:"#3C4E5C", infoLight:"#EBEEF0",
 };
 const serif = "'Playfair Display','Georgia',serif";
 const sans  = "'Inter',system-ui,sans-serif";
@@ -467,10 +473,10 @@ const MISMATCH_SUGGESTIONS = {
 // ─── DESTINATION DATA ────────────────────────────────────────────────────────
 const DEST_CATS = [
   { id:"beaches",   label:"🏖️ Beaches",       color:[C.tealMid,"#0A8060"] },
-  { id:"hills",     label:"⛰️ Hill Country",   color:["#2A6040","#1A3A2A"] },
-  { id:"cultural",  label:"🏛️ Cultural",       color:["#B87318","#7A4A0A"] },
-  { id:"wildlife",  label:"🐘 Wildlife",        color:["#145840","#0A2A20"] },
-  { id:"adventure", label:"🧗 Adventure",       color:["#C45230","#7A2010"] },
+  { id:"hills",     label:"⛰️ Hill Country",   color:["#2E5844","#1A3A2A"] },
+  { id:"cultural",  label:"🏛️ Cultural",       color:["#8A6A34","#6B4A26"] },
+  { id:"wildlife",  label:"🐘 Wildlife",        color:["#0B3A30","#0A2A20"] },
+  { id:"adventure", label:"🧗 Adventure",       color:["#8B4B3B","#7A2010"] },
   { id:"rural",     label:"🌾 Rural",           color:["#7A6010","#4A3A08"] },
   { id:"hidden",    label:"💎 Hidden Gems",     color:["#5B3A8E","#3A1F5E"] },
 ];
@@ -650,7 +656,7 @@ function findBestMatchingDay(itin, placeName, placeLatLng) {
 
 // ─── GUIDE DATA ──────────────────────────────────────────────────────────────
 const GUIDES = [
-  { id:1, initials:"CP", g1:"#9FE1CB", g2:"#1D9E75", gtxt:"#04342C",
+  { id:1, initials:"CP", g1:"#B9CFC5", g2:"#1F7A5C", gtxt:"#04342C",
     name:"Chaminda Perera", specialty:"Beach & Coastal Expert",
     areas:"Southern Coast · East Coast · Trincomalee", langs:"English · Sinhala · German",
     exp:8, rating:4.9, reviews:47, ministry:true,
@@ -659,7 +665,7 @@ const GUIDES = [
     rev1:{ who:"James T. — United Kingdom", stars:5, text:"Chaminda took us to a secret snorkelling bay not in any guidebook. His passion for Sri Lanka is infectious." },
     rev2:{ who:"Lisa K. — Germany", stars:5, text:"Sehr freundlich und professionell! Wir empfehlen ihn wärmstens weiter — best guide we've ever had." },
   },
-  { id:2, initials:"NF", g1:"#FAC775", g2:"#C27A0E", gtxt:"#2C1800",
+  { id:2, initials:"NF", g1:"#C9AD7C", g2:"#8A6A34", gtxt:"#2C1800",
     name:"Nalini Fernando", specialty:"Hill Country & Tea Trails",
     areas:"Kandy · Nuwara Eliya · Ella · Haputale", langs:"English · Tamil · French",
     exp:6, rating:4.8, reviews:32, ministry:true,
@@ -668,7 +674,7 @@ const GUIDES = [
     rev1:{ who:"Sophie M. — France", stars:5, text:"Nalini est une guide extraordinaire. Elle nous a fait découvrir des endroits magnifiques loin des sentiers battus." },
     rev2:{ who:"Aarav S. — India", stars:5, text:"Our Ella trip was perfect. Nalini timed the train ride perfectly and knew every viewpoint." },
   },
-  { id:3, initials:"RJ", g1:"#F5C4B3", g2:"#C45230", gtxt:"#3A1208",
+  { id:3, initials:"RJ", g1:"#F5C4B3", g2:"#8B4B3B", gtxt:"#3A1208",
     name:"Ruwan Jayasinghe", specialty:"Ancient Cities & Cultural Triangle",
     areas:"Sigiriya · Anuradhapura · Polonnaruwa · Dambulla", langs:"English · Sinhala · Japanese",
     exp:11, rating:5.0, reviews:89, ministry:true,
@@ -699,10 +705,9 @@ function Av({ g, size=52, r=14 }) {
 }
 function Pill({ children, amber, green }) {
   return (
-    <span style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20,
-      background:amber?C.amberLight:green?"#EBF5D8":C.tealLight,
-      color:amber?C.amber:green?"#3A6B10":C.teal,
-      border:`1px solid ${amber?"#F0D48A":green?"#C1DB8E":"#9FE1CB"}` }}>{children}</span>
+    <span style={{ fontSize:11, fontWeight:600, padding:"4px 11px", borderRadius:20, letterSpacing:.2,
+      background:amber?C.amberLight:green?C.tealLight:C.tealLight,
+      color:amber?C.amber:green?C.teal:C.teal }}>{children}</span>
   );
 }
 function Stars({ n }) { return <span style={{color:C.amberMid}}>{"★".repeat(n)}</span>; }
@@ -710,13 +715,13 @@ function Btn({ onClick, children, variant="teal", full, style:xtra={} }) {
   const bg  = variant==="amber"?C.amber:variant==="outline"?"transparent":C.teal;
   const clr = variant==="outline"?C.inkSoft:"#fff";
   const brd = variant==="outline"?`1.5px solid ${C.border}`:"none";
-  const shadow = variant==="outline"?"none":variant==="amber"?"0 2px 10px rgba(194,122,14,.22)":"0 2px 10px rgba(11,107,82,.2)";
+  const shadow = variant==="outline"?"none":"0 2px 10px rgba(20,20,18,.14)";
   return (
     <button onClick={onClick} style={{ padding:"11px 26px", background:bg, color:clr, border:brd,
-      borderRadius:11, fontSize:14, fontWeight:600, cursor:"pointer", width:full?"100%":undefined,
+      borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer", width:full?"100%":undefined,
       fontFamily:sans, letterSpacing:"0.1px", boxShadow:shadow,
       transition:"transform .15s ease, box-shadow .15s ease, opacity .15s ease", ...xtra }}
-      onMouseEnter={e=>{ e.currentTarget.style.opacity="0.92"; e.currentTarget.style.transform="translateY(-1px)"; if(variant!=="outline") e.currentTarget.style.boxShadow=variant==="amber"?"0 4px 16px rgba(194,122,14,.3)":"0 4px 16px rgba(11,107,82,.28)"; }}
+      onMouseEnter={e=>{ e.currentTarget.style.opacity="0.92"; e.currentTarget.style.transform="translateY(-1px)"; if(variant!=="outline") e.currentTarget.style.boxShadow="0 4px 18px rgba(20,20,18,.2)"; }}
       onMouseLeave={e=>{ e.currentTarget.style.opacity="1"; e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow=shadow; }}>{children}</button>
   );
 }
@@ -890,8 +895,8 @@ function useWikiImages(title, count=6) {
 function PlaceCard({ p, catColor, onGallery, onPlanTrip }) {
   const { thumb } = useWikiImages(p.wiki, 1);
   const crowdColor  = { Low:"#3A6B10", Moderate:C.amber, High:C.coral };
-  const crowdBg     = { Low:"#EBF5D8", Moderate:C.amberLight, High:C.coralLight };
-  const crowdBorder = { Low:"#C1DB8E", Moderate:"#F0D48A", High:"#EFBAA8" };
+  const crowdBg     = { Low:"#E6EEEA", Moderate:C.amberLight, High:C.coralLight };
+  const crowdBorder = { Low:"#B9CFC5", Moderate:"#DFCBA0", High:"#DCC5BC" };
 
   return (
     <div style={{ border:`1.5px solid ${C.border}`, borderRadius:20, overflow:"hidden", background:C.white, transition:"box-shadow .2s,transform .2s", cursor:"pointer" }}
@@ -1355,32 +1360,32 @@ function HeroArt() {
   return (
     <div style={{ position:"absolute", inset:0, pointerEvents:"none", overflow:"hidden" }}>
       <svg style={{ position:"absolute", right:"6%", top:"8%", width:150, opacity:.18 }} viewBox="0 0 160 220" fill="none">
-        <rect x="55" y="80" width="50" height="130" rx="4" fill="#FAC775"/><polygon points="55,80 80,20 105,80" fill="#E8A825"/>
-        <rect x="68" y="110" width="10" height="14" rx="2" fill="#0B6B52"/><rect x="82" y="110" width="10" height="14" rx="2" fill="#0B6B52"/>
-        <ellipse cx="30" cy="190" rx="18" ry="22" fill="#1D9E75"/><ellipse cx="130" cy="188" rx="16" ry="20" fill="#1D9E75"/>
+        <rect x="55" y="80" width="50" height="130" rx="4" fill="#C9AD7C"/><polygon points="55,80 80,20 105,80" fill="#A9895A"/>
+        <rect x="68" y="110" width="10" height="14" rx="2" fill="#0E4A3D"/><rect x="82" y="110" width="10" height="14" rx="2" fill="#0E4A3D"/>
+        <ellipse cx="30" cy="190" rx="18" ry="22" fill="#1F7A5C"/><ellipse cx="130" cy="188" rx="16" ry="20" fill="#1F7A5C"/>
       </svg>
       <svg style={{ position:"absolute", left:"4%", bottom:"22%", width:110, opacity:.18 }} viewBox="0 0 120 100" fill="none">
-        <ellipse cx="65" cy="60" rx="40" ry="28" fill="#FAC775"/><ellipse cx="30" cy="55" rx="18" ry="14" fill="#FAC775"/>
-        <path d="M18 62 Q8 75 12 85 Q14 90 18 88" stroke="#E8A825" strokeWidth="5" fill="none" strokeLinecap="round"/>
-        <ellipse cx="22" cy="50" rx="10" ry="12" fill="#E8A825"/><circle cx="24" cy="53" r="2.5" fill="#0B6B52"/>
-        <rect x="42" y="82" width="12" height="18" rx="4" fill="#E8A825"/><rect x="58" y="82" width="12" height="18" rx="4" fill="#E8A825"/>
-        <rect x="74" y="82" width="12" height="18" rx="4" fill="#E8A825"/><rect x="88" y="82" width="12" height="18" rx="4" fill="#E8A825"/>
+        <ellipse cx="65" cy="60" rx="40" ry="28" fill="#C9AD7C"/><ellipse cx="30" cy="55" rx="18" ry="14" fill="#C9AD7C"/>
+        <path d="M18 62 Q8 75 12 85 Q14 90 18 88" stroke="#A9895A" strokeWidth="5" fill="none" strokeLinecap="round"/>
+        <ellipse cx="22" cy="50" rx="10" ry="12" fill="#A9895A"/><circle cx="24" cy="53" r="2.5" fill="#0E4A3D"/>
+        <rect x="42" y="82" width="12" height="18" rx="4" fill="#A9895A"/><rect x="58" y="82" width="12" height="18" rx="4" fill="#A9895A"/>
+        <rect x="74" y="82" width="12" height="18" rx="4" fill="#A9895A"/><rect x="88" y="82" width="12" height="18" rx="4" fill="#A9895A"/>
       </svg>
       <svg style={{ position:"absolute", left:"13%", top:"7%", width:86, opacity:.17 }} viewBox="0 0 100 150" fill="none">
-        <ellipse cx="50" cy="80" rx="36" ry="44" fill="#FAC775"/><rect x="28" y="110" width="44" height="18" rx="2" fill="#E8A825"/>
-        <rect x="20" y="128" width="60" height="10" rx="2" fill="#E8A825"/><rect x="46" y="20" width="8" height="60" rx="2" fill="#E8A825"/>
-        <polygon points="42,30 50,8 58,30" fill="#FAC775"/>
+        <ellipse cx="50" cy="80" rx="36" ry="44" fill="#C9AD7C"/><rect x="28" y="110" width="44" height="18" rx="2" fill="#A9895A"/>
+        <rect x="20" y="128" width="60" height="10" rx="2" fill="#A9895A"/><rect x="46" y="20" width="8" height="60" rx="2" fill="#A9895A"/>
+        <polygon points="42,30 50,8 58,30" fill="#C9AD7C"/>
       </svg>
       <svg style={{ position:"absolute", right:"2%", bottom:"10%", width:78, opacity:.17 }} viewBox="0 0 90 160" fill="none">
-        <rect x="40" y="60" width="10" height="100" rx="3" fill="#E8A825"/>
-        <path d="M45,60 Q20,40 5,50" stroke="#1D9E75" strokeWidth="6" fill="none" strokeLinecap="round"/>
-        <path d="M45,60 Q70,38 82,44" stroke="#1D9E75" strokeWidth="6" fill="none" strokeLinecap="round"/>
-        <path d="M45,60 Q30,30 35,15" stroke="#1D9E75" strokeWidth="6" fill="none" strokeLinecap="round"/>
-        <path d="M45,60 Q60,30 55,15" stroke="#1D9E75" strokeWidth="6" fill="none" strokeLinecap="round"/>
+        <rect x="40" y="60" width="10" height="100" rx="3" fill="#A9895A"/>
+        <path d="M45,60 Q20,40 5,50" stroke="#1F7A5C" strokeWidth="6" fill="none" strokeLinecap="round"/>
+        <path d="M45,60 Q70,38 82,44" stroke="#1F7A5C" strokeWidth="6" fill="none" strokeLinecap="round"/>
+        <path d="M45,60 Q30,30 35,15" stroke="#1F7A5C" strokeWidth="6" fill="none" strokeLinecap="round"/>
+        <path d="M45,60 Q60,30 55,15" stroke="#1F7A5C" strokeWidth="6" fill="none" strokeLinecap="round"/>
       </svg>
       <svg style={{ position:"absolute", left:0, bottom:0, width:"55%", height:"30%", opacity:.1 }} viewBox="0 0 500 200" preserveAspectRatio="none" fill="none">
-        <path d="M0,200 Q50,100 120,130 Q180,80 260,110 Q320,60 400,90 Q450,70 500,100 L500,200 Z" fill="#1D9E75"/>
-        <path d="M0,200 Q80,140 150,160 Q220,110 300,140 Q370,100 440,130 L500,140 L500,200 Z" fill="#0B6B52"/>
+        <path d="M0,200 Q50,100 120,130 Q180,80 260,110 Q320,60 400,90 Q450,70 500,100 L500,200 Z" fill="#1F7A5C"/>
+        <path d="M0,200 Q80,140 150,160 Q220,110 300,140 Q370,100 440,130 L500,140 L500,200 Z" fill="#0E4A3D"/>
       </svg>
       <svg style={{ position:"absolute", inset:0, width:"100%", height:"100%", opacity:.04 }}>
         <defs><pattern id="dots" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="white"/></pattern></defs>
@@ -1393,14 +1398,14 @@ function HeroArt() {
 // ─── HOME PAGE ───────────────────────────────────────────────────────────────
 // ─── SRI LANKA SLIDESHOW (home page) ─────────────────────────────────────────
 const SLIDESHOW_SLIDES = [
-  { name:"Sigiriya",       category:"Cultural",  title:"The Lion Rock Fortress", desc:"Climb a 5th-century citadel rising 200m above the jungle canopy — ancient frescoes, a mirror wall, and views that stretch for miles.", color:["#B87318","#7A4A0A"] },
+  { name:"Sigiriya",       category:"Cultural",  title:"The Lion Rock Fortress", desc:"Climb a 5th-century citadel rising 200m above the jungle canopy — ancient frescoes, a mirror wall, and views that stretch for miles.", color:["#8A6A34","#6B4A26"] },
   { name:"Mirissa",        category:"Beaches",   title:"Where Whales Surface at Dawn", desc:"Golden sand fringed with palms, and some of the best blue-whale watching anywhere on Earth between November and April.", color:[C.tealMid,"#0A8060"] },
-  { name:"Ella",           category:"Hill Country", title:"Misty Tea Country in the Clouds", desc:"Walk emerald tea ridges to the Nine Arch Bridge, catch the iconic blue train winding through the highlands.", color:["#2A6040","#1A3A2A"] },
-  { name:"Yala National Park", category:"Wildlife", title:"The World's Densest Leopard Territory", desc:"Track leopards, elephants and sloth bears across golden grasslands in Sri Lanka's most thrilling national park.", color:["#145840","#0A2A20"] },
-  { name:"Galle Fort",     category:"Cultural",  title:"A Living Dutch Colonial Town", desc:"Cobbled ramparts, boutique cafés and centuries of history meet the Indian Ocean at this UNESCO World Heritage fort.", color:["#7A4A0A","#4A2A05"] },
-  { name:"Nine Arch Bridge", category:"Adventure", title:"Sri Lanka's Most Photographed Bridge", desc:"Watch the blue train thread through a colonial-era stone viaduct, framed by tea estates and morning mist.", color:["#C45230","#7A2010"] },
-  { name:"Nuwara Eliya",   category:"Hill Country", title:"Little England in the Clouds", desc:"Colonial bungalows, rose gardens, and manicured tea estates at 1,868m — Sri Lanka's coolest, quietest corner.", color:["#0B6B52","#063D2E"] },
-  { name:"Trincomalee",    category:"Beaches",   title:"Untouched Coral & Deep Harbours", desc:"Crystal waters, Pigeon Island's coral reef, and whale watching on Sri Lanka's least crowded coastline.", color:["#185FA5","#0D3A66"] },
+  { name:"Ella",           category:"Hill Country", title:"Misty Tea Country in the Clouds", desc:"Walk emerald tea ridges to the Nine Arch Bridge, catch the iconic blue train winding through the highlands.", color:["#2E5844","#1A3A2A"] },
+  { name:"Yala National Park", category:"Wildlife", title:"The World's Densest Leopard Territory", desc:"Track leopards, elephants and sloth bears across golden grasslands in Sri Lanka's most thrilling national park.", color:["#0B3A30","#0A2A20"] },
+  { name:"Galle Fort",     category:"Cultural",  title:"A Living Dutch Colonial Town", desc:"Cobbled ramparts, boutique cafés and centuries of history meet the Indian Ocean at this UNESCO World Heritage fort.", color:["#6B4A26","#4A2A05"] },
+  { name:"Nine Arch Bridge", category:"Adventure", title:"Sri Lanka's Most Photographed Bridge", desc:"Watch the blue train thread through a colonial-era stone viaduct, framed by tea estates and morning mist.", color:["#8B4B3B","#7A2010"] },
+  { name:"Nuwara Eliya",   category:"Hill Country", title:"Little England in the Clouds", desc:"Colonial bungalows, rose gardens, and manicured tea estates at 1,868m — Sri Lanka's coolest, quietest corner.", color:["#0E4A3D","#063D2E"] },
+  { name:"Trincomalee",    category:"Beaches",   title:"Untouched Coral & Deep Harbours", desc:"Crystal waters, Pigeon Island's coral reef, and whale watching on Sri Lanka's least crowded coastline.", color:["#3C4E5C","#0D3A66"] },
 ];
 
 function SriLankaSlideshow({ setPage }) {
@@ -1446,7 +1451,7 @@ function SriLankaSlideshow({ setPage }) {
         <h2 style={{ fontFamily:serif, fontSize:"clamp(28px,5vw,48px)", fontWeight:700, color:"#fff", marginBottom:12, maxWidth:600, lineHeight:1.15 }}>{slide.title}</h2>
         <p style={{ fontSize:15, color:"rgba(255,255,255,.85)", maxWidth:520, lineHeight:1.7, marginBottom:24 }}>{slide.desc}</p>
         <div style={{ display:"flex", gap:12, alignItems:"center", flexWrap:"wrap" }}>
-          <button onClick={()=>setPage("destinations")} style={{ padding:"12px 26px", background:C.amberMid, color:"#2C1800", fontSize:14, fontWeight:700, border:"none", borderRadius:12, cursor:"pointer", fontFamily:sans, boxShadow:"0 4px 20px rgba(232,168,37,.35)" }}>
+          <button onClick={()=>setPage("destinations")} style={{ padding:"12px 26px", background:C.amberMid, color:"#2C1800", fontSize:14, fontWeight:700, border:"none", borderRadius:12, cursor:"pointer", fontFamily:sans, boxShadow:"0 4px 20px rgba(169,137,90,.35)" }}>
             Explore {slide.name} →
           </button>
           <button onClick={()=>setPage("journey")} style={{ padding:"12px 22px", background:"rgba(255,255,255,.12)", color:"#fff", fontSize:13, fontWeight:600, border:"1px solid rgba(255,255,255,.3)", borderRadius:12, cursor:"pointer", fontFamily:sans, backdropFilter:"blur(6px)" }}>
@@ -1476,7 +1481,7 @@ function HomePage({ setPage, onGuideOpen }) {
   const { t, ot } = useLang();
   return (
     <div>
-      <section style={{ position:"relative", minHeight:"92vh", background:"linear-gradient(160deg,#04322A 0%,#0B6B52 38%,#147856 60%,#9C6A10 100%)", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", padding:"6rem 2rem 5rem" }}>
+      <section style={{ position:"relative", minHeight:"92vh", background:"linear-gradient(160deg,#0A2620 0%,#0E4A3D 38%,#0B3A30 60%,#9C6A10 100%)", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", padding:"6rem 2rem 5rem" }}>
         <HeroArt />
         <div style={{ position:"relative", zIndex:2, textAlign:"center", maxWidth:720 }}>
           <div style={{ display:"inline-flex", alignItems:"center", gap:6, background:"rgba(255,255,255,.12)", border:"1px solid rgba(255,255,255,.22)", borderRadius:40, padding:"6px 16px", fontSize:12, fontWeight:500, color:"rgba(255,255,255,.9)", letterSpacing:"0.5px", textTransform:"uppercase", marginBottom:28 }}>
@@ -1489,7 +1494,7 @@ function HomePage({ setPage, onGuideOpen }) {
             {t("hero_sub")}
           </p>
           <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap" }}>
-            <button onClick={()=>setPage("journey")} style={{ padding:"14px 32px", background:C.amberMid, color:"#2C1800", fontSize:15, fontWeight:600, border:"none", borderRadius:12, cursor:"pointer", boxShadow:"0 4px 20px rgba(232,168,37,.4)", fontFamily:sans }}>{t("hero_cta1")}</button>
+            <button onClick={()=>setPage("journey")} style={{ padding:"14px 32px", background:C.amberMid, color:"#2C1800", fontSize:15, fontWeight:600, border:"none", borderRadius:12, cursor:"pointer", boxShadow:"0 4px 20px rgba(169,137,90,.4)", fontFamily:sans }}>{t("hero_cta1")}</button>
             <button onClick={onGuideOpen} style={{ padding:"14px 32px", background:"rgba(255,255,255,.1)", color:"#fff", fontSize:15, fontWeight:500, border:"1px solid rgba(255,255,255,.35)", borderRadius:12, cursor:"pointer", backdropFilter:"blur(8px)", fontFamily:sans }}>{t("hero_cta2")}</button>
           </div>
           <div className="hero-stats" style={{ display:"flex", justifyContent:"center", gap:"3rem", marginTop:"4rem", paddingTop:"2.5rem", borderTop:"1px solid rgba(255,255,255,.12)" }}>
@@ -1513,16 +1518,16 @@ function HomePage({ setPage, onGuideOpen }) {
           <div onClick={()=>setPage("journey")} style={{ borderRadius:24, padding:"3rem 2.5rem", cursor:"pointer", background:"linear-gradient(145deg,#E6F8F2,#C8EFE2)", border:"1px solid #B2E5D0", transition:"transform .2s,box-shadow .2s" }}
             onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.boxShadow="0 12px 40px rgba(0,0,0,.12)"; }}
             onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
-            <div style={{ width:64, height:64, borderRadius:18, background:"rgba(29,158,117,.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:30, marginBottom:20 }}>🗺️</div>
+            <div style={{ width:64, height:64, borderRadius:18, background:"rgba(31,122,92,.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:30, marginBottom:20 }}>🗺️</div>
             <div style={{ display:"flex", gap:6, marginBottom:14 }}><Pill>AI-powered</Pill><Pill>Personalised</Pill></div>
             <h3 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:10 }}>{t("svc1_title")}</h3>
             <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, marginBottom:24 }}>{t("svc1_desc")}</p>
             <Btn onClick={e=>{ e.stopPropagation(); setPage("journey"); }}>{t("svc1_cta")}</Btn>
           </div>
-          <div onClick={onGuideOpen} style={{ borderRadius:24, padding:"3rem 2.5rem", cursor:"pointer", background:"linear-gradient(145deg,#FDF5E0,#FAE8BA)", border:"1px solid #F0D48A", transition:"transform .2s,box-shadow .2s" }}
+          <div onClick={onGuideOpen} style={{ borderRadius:24, padding:"3rem 2.5rem", cursor:"pointer", background:"linear-gradient(145deg,#F1ECE0,#FAE8BA)", border:"1px solid #DFCBA0", transition:"transform .2s,box-shadow .2s" }}
             onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.boxShadow="0 12px 40px rgba(0,0,0,.12)"; }}
             onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
-            <div style={{ width:64, height:64, borderRadius:18, background:"rgba(194,122,14,.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:30, marginBottom:20 }}>🧭</div>
+            <div style={{ width:64, height:64, borderRadius:18, background:"rgba(138,106,52,.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:30, marginBottom:20 }}>🧭</div>
             <div style={{ display:"flex", gap:6, marginBottom:14 }}><Pill amber>Ministry verified</Pill><Pill amber>Bid system</Pill></div>
             <h3 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:10 }}>{t("svc2_title")}</h3>
             <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, marginBottom:24 }}>{t("svc2_desc")}</p>
@@ -1636,7 +1641,7 @@ function WishlistPanel({ wishlist, savedItin, setSavedItin }) {
               </div>
             ) : wishlist.items.map(p=>(
               <div key={p.place_id} style={{ display:"flex", gap:10, padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
-                <div style={{ width:56, height:56, borderRadius:10, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#147856)` }}>
+                <div style={{ width:56, height:56, borderRadius:10, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#0B3A30)` }}>
                   {p.photos?.[0] && <img src={`${import.meta.env.PROD?"/api/places":"http://localhost:3001/api/places"}/photo?ref=${encodeURIComponent(p.photos[0].photo_reference)}&maxwidth=120`} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
                 </div>
                 <div style={{ flex:1, minWidth:0 }}>
@@ -1722,10 +1727,10 @@ const PROVINCE_MAP = {
 // Regions grouped under "Places to Visit"
 const PLACES_REGIONS = [
   { id:"beaches",  label:"🏖️ Beaches",         province:"Southern & Eastern", color:[C.tealMid,"#0A8060"] },
-  { id:"hills",    label:"⛰️ Hill Country",     province:"Central & Uva",      color:["#2A6040","#1A3A2A"] },
-  { id:"cultural", label:"🏛️ Cultural Sites",   province:"North Central",      color:["#B87318","#7A4A0A"] },
-  { id:"wildlife", label:"🐘 Wildlife & Nature", province:"Southern & NW",      color:["#145840","#0A2A20"] },
-  { id:"adventure",label:"🧗 Adventure",         province:"Central & Sabara.",  color:["#C45230","#7A2010"] },
+  { id:"hills",    label:"⛰️ Hill Country",     province:"Central & Uva",      color:["#2E5844","#1A3A2A"] },
+  { id:"cultural", label:"🏛️ Cultural Sites",   province:"North Central",      color:["#8A6A34","#6B4A26"] },
+  { id:"wildlife", label:"🐘 Wildlife & Nature", province:"Southern & NW",      color:["#0B3A30","#0A2A20"] },
+  { id:"adventure",label:"🧗 Adventure",         province:"Central & Sabara.",  color:["#8B4B3B","#7A2010"] },
   { id:"rural",    label:"🌾 Rural Sri Lanka",   province:"All provinces",      color:["#7A6010","#4A3A08"] },
   { id:"hidden",   label:"💎 Hidden Gems",       province:"Off the beaten path", color:["#5B3A8E","#3A1F5E"] },
 ];
@@ -1833,7 +1838,7 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
       )}
 
       {/* Hero */}
-      <div style={{ background:"linear-gradient(160deg,#04322A 0%,#0B6B52 70%,#147856 100%)", padding:"3rem 2rem 2.5rem", position:"relative", overflow:"hidden" }}>
+      <div style={{ background:"linear-gradient(160deg,#0A2620 0%,#0E4A3D 70%,#0B3A30 100%)", padding:"3rem 2rem 2.5rem", position:"relative", overflow:"hidden" }}>
         <HeroArt/>
         <div style={{ position:"relative", zIndex:2, maxWidth:800, margin:"0 auto", textAlign:"center" }}>
           <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Explore Sri Lanka</div>
@@ -1910,7 +1915,7 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
                   onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,.1)"; }}
                   onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
                   {/* Cover image via Pexels */}
-                  <div style={{ height:160, background:`linear-gradient(135deg,${regionCat?.color[0]||C.teal},${regionCat?.color[1]||"#147856"})`, position:"relative", overflow:"hidden" }}>
+                  <div style={{ height:160, background:`linear-gradient(135deg,${regionCat?.color[0]||C.teal},${regionCat?.color[1]||"#0B3A30"})`, position:"relative", overflow:"hidden" }}>
                     <DestImage placeName={p.name} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
                     <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 55%)" }}/>
                     <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 14px" }}>
@@ -1926,9 +1931,9 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
                       <Pill>{p.tag}</Pill>
                       <span style={{ fontSize:11, fontWeight:600, padding:"3px 8px", borderRadius:20,
-                        background:p.crowd==="Low"?"#EBF5D8":p.crowd==="High"?C.coralLight:C.amberLight,
+                        background:p.crowd==="Low"?"#E6EEEA":p.crowd==="High"?C.coralLight:C.amberLight,
                         color:p.crowd==="Low"?"#3A6B10":p.crowd==="High"?C.coral:C.amber,
-                        border:`1px solid ${p.crowd==="Low"?"#C1DB8E":p.crowd==="High"?"#EFBAA8":"#F0D48A"}`,
+                        border:`1px solid ${p.crowd==="Low"?"#B9CFC5":p.crowd==="High"?"#DCC5BC":"#DFCBA0"}`,
                       }}>{p.crowd} crowds</span>
                     </div>
                     <p style={{ fontSize:12, color:C.inkSoft, lineHeight:1.6, marginBottom:10 }}>{p.desc}</p>
@@ -1987,13 +1992,13 @@ function PlacesTabContent({ catId, places, loading, error, tab, wishlist, select
   return (
     <>
       {error==="no_key" && (
-        <div style={{ background:C.amberLight, border:`1.5px solid #F0D48A`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
+        <div style={{ background:C.amberLight, border:`1.5px solid #DFCBA0`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
           <div style={{ fontSize:32, marginBottom:10 }}>🔑</div>
           <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>Google Places API key needed</h3>
           <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, maxWidth:440, margin:"0 auto" }}>Add <code style={{ background:"rgba(0,0,0,.08)", padding:"2px 6px", borderRadius:4 }}>GOOGLE_PLACES_KEY</code> to your proxy <code>.env</code> and Vercel environment variables.</p>
         </div>
       )}
-      {error==="denied" && <div style={{ background:C.coralLight, border:`1.5px solid #EFBAA8`, borderRadius:16, padding:"2rem", textAlign:"center" }}><p style={{ fontSize:14, color:C.coral }}>⚠️ API key rejected — enable <strong>Places API</strong> in Google Cloud Console.</p></div>}
+      {error==="denied" && <div style={{ background:C.coralLight, border:`1.5px solid #DCC5BC`, borderRadius:16, padding:"2rem", textAlign:"center" }}><p style={{ fontSize:14, color:C.coral }}>⚠️ API key rejected — enable <strong>Places API</strong> in Google Cloud Console.</p></div>}
       {error && error!=="no_key" && error!=="denied" && (
         <div style={{ textAlign:"center", padding:"2rem" }}>
           <p style={{ color:C.coral, fontSize:14, marginBottom:12 }}>{error}</p>
@@ -2027,7 +2032,7 @@ function PlacesTabContent({ catId, places, loading, error, tab, wishlist, select
             <div key={p.place_id} onClick={()=>setSelected(p)} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, cursor:"pointer", transition:"transform .2s,box-shadow .2s" }}
               onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,.1)"; }}
               onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
-              <div style={{ height:160, background:`linear-gradient(135deg,${C.teal},#147856)`, overflow:"hidden", position:"relative" }}>
+              <div style={{ height:160, background:`linear-gradient(135deg,${C.teal},#0B3A30)`, overflow:"hidden", position:"relative" }}>
                 {p.photos?.[0]
                   ? <img src={photoUrl(p.photos[0].photo_reference)} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>
                   : <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:40, opacity:.25 }}>{tab.label.split(" ")[0]}</div>
@@ -2095,20 +2100,20 @@ async function callClaude(body) {
   };
 }
 const ACT_TYPE_META = {
-  breakfast:  { emoji:"☕", label:"Breakfast",  color:"#FDF3DC", border:"#F0D48A", text:C.amber },
-  lunch:      { emoji:"🍛", label:"Lunch",       color:"#FDF3DC", border:"#F0D48A", text:C.amber },
-  dinner:     { emoji:"🍽️", label:"Dinner",      color:"#FDF3DC", border:"#F0D48A", text:C.amber },
-  cafe:       { emoji:"☕", label:"Café",        color:"#FDF3DC", border:"#F0D48A", text:C.amber },
-  sightseeing:{ emoji:"🏛️", label:"Sightseeing", color:C.tealLight, border:"#9FE1CB", text:C.teal },
-  hike:       { emoji:"🥾", label:"Hike",        color:C.tealLight, border:"#9FE1CB", text:C.teal },
-  safari:     { emoji:"🐘", label:"Safari",      color:C.tealLight, border:"#9FE1CB", text:C.teal },
-  beach:      { emoji:"🏖️", label:"Beach",       color:C.tealLight, border:"#9FE1CB", text:C.teal },
+  breakfast:  { emoji:"☕", label:"Breakfast",  color:"#F1ECE0", border:"#DFCBA0", text:C.amber },
+  lunch:      { emoji:"🍛", label:"Lunch",       color:"#F1ECE0", border:"#DFCBA0", text:C.amber },
+  dinner:     { emoji:"🍽️", label:"Dinner",      color:"#F1ECE0", border:"#DFCBA0", text:C.amber },
+  cafe:       { emoji:"☕", label:"Café",        color:"#F1ECE0", border:"#DFCBA0", text:C.amber },
+  sightseeing:{ emoji:"🏛️", label:"Sightseeing", color:C.tealLight, border:"#B9CFC5", text:C.teal },
+  hike:       { emoji:"🥾", label:"Hike",        color:C.tealLight, border:"#B9CFC5", text:C.teal },
+  safari:     { emoji:"🐘", label:"Safari",      color:C.tealLight, border:"#B9CFC5", text:C.teal },
+  beach:      { emoji:"🏖️", label:"Beach",       color:C.tealLight, border:"#B9CFC5", text:C.teal },
   transport:  { emoji:"🚂", label:"Travel",      color:"#F3F3F3",   border:C.border,  text:C.inkSoft },
   checkin:    { emoji:"🏨", label:"Check-in",    color:"#F3F3F3",   border:C.border,  text:C.inkSoft },
-  sunset:     { emoji:"🌅", label:"Sunset",      color:"#FDF3DC", border:"#F0D48A", text:C.amber },
-  activity:   { emoji:"🎯", label:"Activity",    color:C.tealLight, border:"#9FE1CB", text:C.teal },
+  sunset:     { emoji:"🌅", label:"Sunset",      color:"#F1ECE0", border:"#DFCBA0", text:C.amber },
+  activity:   { emoji:"🎯", label:"Activity",    color:C.tealLight, border:"#B9CFC5", text:C.teal },
 };
-const fallbackMeta = { emoji:"📍", label:"Stop", color:C.tealLight, border:"#9FE1CB", text:C.teal };
+const fallbackMeta = { emoji:"📍", label:"Stop", color:C.tealLight, border:"#B9CFC5", text:C.teal };
 
 // ─── ACTIVITY ROW ────────────────────────────────────────────────────────────
 function ActivityRow({ act, isLast, hideBorder }) {
@@ -2139,7 +2144,7 @@ function ActivityRow({ act, isLast, hideBorder }) {
         onMouseEnter={e=>e.currentTarget.style.background="#FAFAF8"}
         onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
         {/* Thumbnail always visible */}
-        <div className="act-thumb" style={{ width:44, height:44, borderRadius:8, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#147856)`, position:"relative", marginTop:2 }}>
+        <div className="act-thumb" style={{ width:44, height:44, borderRadius:8, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#0B3A30)`, position:"relative", marginTop:2 }}>
           {thumbUrl && <img src={thumbUrl} alt={act.place||""} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
           <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,.1)" }}/>
         </div>
@@ -2157,7 +2162,7 @@ function ActivityRow({ act, isLast, hideBorder }) {
       </div>
       {open&&(
         <div style={{ marginLeft:0, marginBottom:14, borderRadius:14, border:`1.5px solid ${meta.border}`, background:meta.color, overflow:"hidden" }}>
-          <div style={{ height:180, background:`linear-gradient(135deg,${C.teal},#147856)`, position:"relative", overflow:"hidden" }}>
+          <div style={{ height:180, background:`linear-gradient(135deg,${C.teal},#0B3A30)`, position:"relative", overflow:"hidden" }}>
             {photo && <img src={photo} alt={act.place} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
             {act.place&&<div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 14px", background:"linear-gradient(to top,rgba(0,0,0,.6),transparent)" }}><div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff" }}>{act.place}</div>{act.area&&<div style={{ fontSize:11, color:"rgba(255,255,255,.75)", marginTop:2 }}>📍 {act.area}</div>}</div>}
           </div>
@@ -2177,7 +2182,7 @@ function ActivityRow({ act, isLast, hideBorder }) {
 }
 
 // ─── ANIMATED JOURNEY MAP ────────────────────────────────────────────────────
-const DAY_COLORS = ["#2563EB","#16A34A","#EA580C","#7C3AED","#DC2626","#0891B2","#D97706","#BE185D","#065F46","#1D4ED8"];
+const DAY_COLORS = ["#2563EB","#3D7A52","#EA580C","#7C3AED","#A83A32","#0891B2","#D97706","#BE185D","#065F46","#1D4ED8"];
 
 // Pexels-backed image for the journey map stop detail overlay
 function StopDetailImage({ query, alt, onLoaded }) {
@@ -2646,7 +2651,7 @@ function DraggableItinerary({ days, onUpdate, itinId, premium }) {
   return (
     <>
       {swap && <SwapModal act={swap.act} dayLocation={days[swap.dayIdx]?.location||""} onSwap={a=>handleSwapDone(swap.dayIdx, swap.actIdx, a)} onClose={()=>setSwap(null)}/>}
-      <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:12, padding:"10px 14px", marginBottom:16, display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+      <div style={{ background:C.tealPale, border:`1px solid #B9CFC5`, borderRadius:12, padding:"10px 14px", marginBottom:16, display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
         <span style={{ fontSize:16 }}>↕️</span>
         <span style={{ fontSize:12, color:C.teal, fontWeight:500 }}>Drag any activity to reorder. Click 🔄 to swap a place.</span>
         {premium && !premium.isUnlocked(itinId) && <span style={{ fontSize:11, color:C.amber, marginLeft:"auto" }}>🔒 Unlock premium to reorder Days 2+</span>}
@@ -2655,8 +2660,8 @@ function DraggableItinerary({ days, onUpdate, itinId, premium }) {
         const isLocked = premium && !premium.isUnlocked(itinId) && dayIdx > 0;
         return (
           <div key={d.day} style={{ position:"relative", marginBottom:16 }}>
-            <div style={{ border:`1.5px solid ${isLocked?"#E4E4E4":C.border}`, borderRadius:16, overflow:"hidden", background:C.white, boxShadow:"0 2px 12px rgba(0,0,0,.04)", opacity:isLocked?.5:1 }}>
-              <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,${isLocked?"#999":"#0B6B52"},${isLocked?"#bbb":"#147856"})`, display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+            <div style={{ border:`1.5px solid ${isLocked?"#E6E4DF":C.border}`, borderRadius:16, overflow:"hidden", background:C.white, boxShadow:"0 2px 12px rgba(0,0,0,.04)", opacity:isLocked?.5:1 }}>
+              <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,${isLocked?"#999":"#0E4A3D"},${isLocked?"#bbb":"#0B3A30"})`, display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
                 <span style={{ background:"rgba(255,255,255,.2)", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Day {d.day}</span>
                 <span style={{ fontSize:15, fontWeight:700, color:"#fff", fontFamily:serif }}>{d.location}</span>
                 <span style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginLeft:"auto" }}>— {d.theme}</span>
@@ -2799,7 +2804,7 @@ function MismatchWarning({ travel, activities }) {
   });
   if (!warnings.length) return null;
   return (
-    <div style={{ background:"#FFF8E6", border:"1.5px solid #F0D48A", borderRadius:14, padding:"14px 16px", marginTop:16 }}>
+    <div style={{ background:"#FFF8E6", border:"1.5px solid #DFCBA0", borderRadius:14, padding:"14px 16px", marginTop:16 }}>
       <div style={{ fontSize:13, fontWeight:700, color:C.amber, marginBottom:8 }}>⚠️ Activity compatibility note</div>
       {warnings.map((w,i)=>(
         <div key={i} style={{ fontSize:12, color:C.inkMid, lineHeight:1.6, marginBottom:6 }}>
@@ -2817,12 +2822,12 @@ function MismatchWarning({ travel, activities }) {
 // surf) with a gentle bounce/fade — replaces the plain spinner so the wait
 // feels purposeful and on-brand rather than a generic loading state.
 const LOADING_SCENES = [
-  { icon:"🛕", label:"Exploring ancient temples…", color:"#B87318" },
-  { icon:"🏖️", label:"Scouting golden beaches…",    color:"#185FA5" },
-  { icon:"🍃", label:"Wandering tea plantations…",  color:"#0B6B52" },
-  { icon:"🐘", label:"Tracking wildlife trails…",   color:"#7A4A0A" },
-  { icon:"🚂", label:"Riding the highland railway…",color:"#C45230" },
-  { icon:"🍛", label:"Tasting local flavours…",     color:"#E8A825" },
+  { icon:"🛕", label:"Exploring ancient temples…", color:"#8A6A34" },
+  { icon:"🏖️", label:"Scouting golden beaches…",    color:"#3C4E5C" },
+  { icon:"🍃", label:"Wandering tea plantations…",  color:"#0E4A3D" },
+  { icon:"🐘", label:"Tracking wildlife trails…",   color:"#6B4A26" },
+  { icon:"🚂", label:"Riding the highland railway…",color:"#8B4B3B" },
+  { icon:"🍛", label:"Tasting local flavours…",     color:"#A9895A" },
 ];
 
 function ItineraryLoadingAnimation() {
@@ -2928,7 +2933,7 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
     if (!itin) return;
     const printWin = window.open("","_blank");
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${itin.title}</title>
-    <style>body{font-family:Georgia,serif;max-width:750px;margin:40px auto;color:#1A1A1A;line-height:1.6;}h1{font-size:28px;color:#0B6B52;margin-bottom:6px;}.tagline{font-size:15px;color:#6B6B6B;margin-bottom:24px;font-style:italic;}.day{margin-bottom:28px;border:1px solid #E4E4E4;border-radius:12px;overflow:hidden;}.day-head{background:#0B6B52;color:#fff;padding:12px 18px;font-size:15px;font-weight:bold;}.act{display:flex;gap:14px;padding:10px 18px;border-bottom:1px solid #f0f0f0;font-size:13px;font-family:sans-serif;}.act:last-child{border-bottom:none;}.time{color:#6B6B6B;min-width:48px;font-weight:600;font-size:11px;padding-top:2px;}.place{font-weight:700;color:#1A1A1A;margin-bottom:2px;}.why{margin-top:4px;font-size:11px;color:#0B6B52;font-style:italic;}.meta{display:flex;gap:12px;margin-top:4px;font-size:11px;color:#6B6B6B;}.map-link{color:#0B6B52;text-decoration:none;}.footer{margin-top:32px;padding-top:16px;border-top:1px solid #E4E4E4;font-size:11px;color:#aaa;font-family:sans-serif;text-align:center;}</style>
+    <style>body{font-family:Georgia,serif;max-width:750px;margin:40px auto;color:#1A1A1A;line-height:1.6;}h1{font-size:28px;color:#0E4A3D;margin-bottom:6px;}.tagline{font-size:15px;color:#6B6B6B;margin-bottom:24px;font-style:italic;}.day{margin-bottom:28px;border:1px solid #E6E4DF;border-radius:12px;overflow:hidden;}.day-head{background:#0E4A3D;color:#fff;padding:12px 18px;font-size:15px;font-weight:bold;}.act{display:flex;gap:14px;padding:10px 18px;border-bottom:1px solid #f0f0f0;font-size:13px;font-family:sans-serif;}.act:last-child{border-bottom:none;}.time{color:#6B6B6B;min-width:48px;font-weight:600;font-size:11px;padding-top:2px;}.place{font-weight:700;color:#1A1A1A;margin-bottom:2px;}.why{margin-top:4px;font-size:11px;color:#0E4A3D;font-style:italic;}.meta{display:flex;gap:12px;margin-top:4px;font-size:11px;color:#6B6B6B;}.map-link{color:#0E4A3D;text-decoration:none;}.footer{margin-top:32px;padding-top:16px;border-top:1px solid #E6E4DF;font-size:11px;color:#aaa;font-family:sans-serif;text-align:center;}</style>
     </head><body>
     <h1>🗺️ ${itin.title}</h1><div class="tagline">${itin.tagline}</div>
     <p style="font-size:13px;font-family:sans-serif;color:#6B6B6B;margin-bottom:24px;">📅 ${ans.days} days · ${ans.nights} nights · ${ans.group||"solo"} · ${ans.budget||"mid-range"} budget</p>
@@ -3252,7 +3257,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     if (!itin) return null;
     return (
       <div style={{ minHeight:"100vh", background:C.surface }}>
-        <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"3rem 2rem" }}>
+        <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"3rem 2rem" }}>
           <div style={{ maxWidth:820, margin:"0 auto" }}>
             <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>{t("res_eyebrow")}</div>
             <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:10 }}>🗺️ {itin.title}</h1>
@@ -3291,7 +3296,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                   setSaveStatus("saved");
                   setTimeout(()=>setSaveStatus(null), 2500);
                 } catch(e) { setSaveStatus("error"); setTimeout(()=>setSaveStatus(null), 3000); }
-              }} disabled={saveStatus==="saving"} style={{ padding:"10px 20px", background: saveStatus==="saved"?"#16A34A":"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:saveStatus==="saving"?"wait":"pointer", fontFamily:sans }}>
+              }} disabled={saveStatus==="saving"} style={{ padding:"10px 20px", background: saveStatus==="saved"?"#3D7A52":"rgba(255,255,255,.15)", color:"#fff", border:"1px solid rgba(255,255,255,.35)", borderRadius:12, fontSize:13, fontWeight:600, cursor:saveStatus==="saving"?"wait":"pointer", fontFamily:sans }}>
                 {saveStatus==="saving"?t("res_save_saving"):saveStatus==="saved"?t("res_save_saved"):saveStatus==="error"?t("res_save_error"):t("res_save_idle")}
               </button>
               {/* Google Maps multi-waypoint route */}
@@ -3350,7 +3355,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 
           <AnimatedJourneyMap days={itinDays||itin.days} transport={ans.transport} startLabel={startLabel}/>
           <LocalCheatSheet location={itin.days?.[0]?.location||"Sri Lanka"}/>
-          <div style={{ marginTop:"2rem", background:"linear-gradient(135deg,#FDF5E0,#FFF7E6)", border:"1.5px solid #F0D48A", borderRadius:20, padding:"2rem" }}>
+          <div style={{ marginTop:"2rem", background:"linear-gradient(135deg,#F1ECE0,#FFF7E6)", border:"1.5px solid #DFCBA0", borderRadius:20, padding:"2rem" }}>
             <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>📩 Want a local guide for this trip?</h3>
             <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, marginBottom:20 }}>Share this itinerary with one of our SLTDA-certified guides and receive a personalised price quote within 24 hours.</p>
             <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
@@ -3373,7 +3378,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                   <p style={{ fontSize:13, color:C.inkSoft }}>Creating your shareable link…</p>
                 </div>
               )}
-              {shareModal.error && <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#DC2626" }}>Couldn't create link: {shareModal.error}</div>}
+              {shareModal.error && <div style={{ background:"#F5E7E4", border:"1px solid #E3C3BC", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#A83A32" }}>Couldn't create link: {shareModal.error}</div>}
               {shareModal.url && (
                 <>
                   <div style={{ display:"flex", gap:8, marginBottom:14 }}>
@@ -3451,7 +3456,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       </div>
 
       {ans.startDate && ans.endDate && (
-        <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:12, padding:"10px 14px", fontSize:12, color:C.teal, marginBottom:14 }}>
+        <div style={{ background:C.tealPale, border:`1px solid #B9CFC5`, borderRadius:12, padding:"10px 14px", fontSize:12, color:C.teal, marginBottom:14 }}>
           💡 {ans.days} {ans.days===1?"day":"days"}, {ans.nights} {ans.nights===1?"night":"nights"} — {new Date(ans.startDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} to {new Date(ans.endDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}
         </div>
       )}
@@ -3565,7 +3570,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       {ans.customPlaces.length > 0 ? (
         <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
           {ans.customPlaces.map((p,i)=>(
-            <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 14px", background:C.tealLight, border:`1px solid #9FE1CB`, borderRadius:12 }}>
+            <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 14px", background:C.tealLight, border:`1px solid #B9CFC5`, borderRadius:12 }}>
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                 <span style={{ fontSize:16 }}>📍</span>
                 <span style={{ fontSize:13, fontWeight:600, color:C.teal }}>{p}</span>
@@ -3580,7 +3585,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
           <span style={{ fontSize:12, opacity:.7 }}>{t("places_optional")}</span>
         </div>
       )}
-      <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:12, padding:"10px 14px", fontSize:12, color:C.amber, marginTop:16, lineHeight:1.6 }}>
+      <div style={{ background:C.amberLight, border:`1px solid #DFCBA0`, borderRadius:12, padding:"10px 14px", fontSize:12, color:C.amber, marginTop:16, lineHeight:1.6 }}>
         💡 {t("places_tip")}
       </div>
     </>,
@@ -3661,7 +3666,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 
   return (
     <div style={{ minHeight:"100vh", background:C.surface }}>
-      <div style={{ background:"linear-gradient(135deg,#04322A,#0B6B52)", padding:"3rem 2rem 2.5rem", position:"relative", overflow:"hidden" }}>
+      <div style={{ background:"linear-gradient(135deg,#0A2620,#0E4A3D)", padding:"3rem 2rem 2.5rem", position:"relative", overflow:"hidden" }}>
         <HeroArt/>
         <div style={{ position:"relative", zIndex:2, maxWidth:680, margin:"0 auto", textAlign:"center" }}>
           <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Journey Creator</div>
@@ -3742,7 +3747,7 @@ function TripProgressBar({ status, iConfirmedUnderway, theyConfirmedUnderway, iC
                 width:20, height:20, borderRadius:"50%", flexShrink:0,
                 display:"flex", alignItems:"center", justifyContent:"center",
                 fontSize:11, fontWeight:700, color:"#fff",
-                background: isDisputed && i>=2 ? "#DC2626" : i <= activeIdx ? C.teal : "#D8E3DE",
+                background: isDisputed && i>=2 ? "#A83A32" : i <= activeIdx ? C.teal : "#D8E3DE",
               }}>
                 {i < activeIdx || (i===activeIdx && isCompleted) ? "✓" : i+1}
               </div>
@@ -3761,7 +3766,7 @@ function TripProgressBar({ status, iConfirmedUnderway, theyConfirmedUnderway, iC
           </span>
         ))}
       </div>
-      {isDisputed && <div style={{ fontSize:11, color:"#DC2626", marginTop:6 }}>⚠️ Progress paused — this booking is under CeylonTrails admin review.</div>}
+      {isDisputed && <div style={{ fontSize:11, color:"#A83A32", marginTop:6 }}>⚠️ Progress paused — this booking is under CeylonTrails admin review.</div>}
     </div>
   );
 }
@@ -3835,8 +3840,8 @@ function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, onAd
   };
 
   return (
-    <div style={{ background: req.status==="disputed"?"#FEF2F2":req.status==="completed"?C.tealPale:C.tealPale, border:`1px solid ${req.status==="disputed"?"#FECACA":"#9FE1CB"}`, borderRadius:10, padding:"12px 14px" }}>
-      <div style={{ fontSize:12, color: req.status==="disputed"?"#DC2626":C.teal, marginBottom:10 }}>
+    <div style={{ background: req.status==="disputed"?"#F5E7E4":req.status==="completed"?C.tealPale:C.tealPale, border:`1px solid ${req.status==="disputed"?"#E3C3BC":"#B9CFC5"}`, borderRadius:10, padding:"12px 14px" }}>
+      <div style={{ fontSize:12, color: req.status==="disputed"?"#A83A32":C.teal, marginBottom:10 }}>
         {req.status==="completed" ? "✅ Trip completed" :
          req.status==="underway"  ? "🚗 Trip underway" :
          req.status==="disputed"  ? "⚠️ Under review by CeylonTrails admin" :
@@ -4160,9 +4165,9 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                       </div>
                       <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                         <span style={{ fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20,
-                          background:req.status==="completed"?C.tealLight:req.status==="confirmed"||req.status==="underway"?C.tealLight:req.status==="disputed"?"#FEF9C3":req.status==="guide_declined"?"#FEE2E2":req.status==="declined"?"#F1F5F9":req.bid?C.amberLight:C.surface,
-                          color:req.status==="completed"?C.teal:req.status==="confirmed"||req.status==="underway"?C.teal:req.status==="disputed"?"#CA8A04":req.status==="guide_declined"?"#DC2626":req.status==="declined"?"#64748B":req.bid?C.amber:C.inkSoft,
-                          border:`1px solid ${req.status==="completed"||req.status==="confirmed"||req.status==="underway"?"#9FE1CB":req.status==="disputed"?"#FDE047":req.status==="guide_declined"?"#FECACA":req.status==="declined"?"#E2E8F0":req.bid?"#F0D48A":C.border}` }}>
+                          background:req.status==="completed"?C.tealLight:req.status==="confirmed"||req.status==="underway"?C.tealLight:req.status==="disputed"?"#F1ECD8":req.status==="guide_declined"?"#FEE2E2":req.status==="declined"?"#F1F5F9":req.bid?C.amberLight:C.surface,
+                          color:req.status==="completed"?C.teal:req.status==="confirmed"||req.status==="underway"?C.teal:req.status==="disputed"?"#8A6A34":req.status==="guide_declined"?"#A83A32":req.status==="declined"?"#64748B":req.bid?C.amber:C.inkSoft,
+                          border:`1px solid ${req.status==="completed"||req.status==="confirmed"||req.status==="underway"?"#B9CFC5":req.status==="disputed"?"#C9AD7C":req.status==="guide_declined"?"#E3C3BC":req.status==="declined"?"#E2E8F0":req.bid?"#DFCBA0":C.border}` }}>
                           {req.status==="completed"?"✅ Trip completed":req.status==="underway"?"🚗 Trip underway":req.status==="confirmed"?"✅ Confirmed":req.status==="disputed"?"⚠️ Under review":req.status==="guide_declined"?"🚫 Guide unavailable":req.status==="declined"?"❌ You declined":req.bid?"💬 Bid received":"⏳ Awaiting bid"}
                         </span>
                         {req.status!=="confirmed" && req.status!=="underway" && (
@@ -4177,17 +4182,17 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                       </div>
                     </div>
                     {req.status==="guide_declined" && (
-                      <div style={{ background:"#FEF2F2", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#DC2626" }}>
+                      <div style={{ background:"#F5E7E4", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#A83A32" }}>
                         {req.guideName} isn't able to take this trip. Try browsing other guides.
                       </div>
                     )}
                     {req.status==="declined" && (
-                      <div style={{ background:"#F8FAFC", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#64748B" }}>
+                      <div style={{ background:"#FAF9F6", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#64748B" }}>
                         You declined this bid from {req.guideName}. Browse other guides to send a new request.
                       </div>
                     )}
                     {req.bid && req.status!=="confirmed" && req.status!=="completed" && req.status!=="disputed" && req.status!=="declined" && req.status!=="guide_declined" && (
-                      <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"12px 14px", marginBottom:12 }}>
+                      <div style={{ background:C.amberLight, border:`1px solid #DFCBA0`, borderRadius:10, padding:"12px 14px", marginBottom:12 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:4 }}>Bid from {req.guideName}</div>
                         <div style={{ fontSize:20, fontWeight:800, color:C.amber, marginBottom:4 }}>${req.bid.price} USD</div>
                         <div style={{ fontSize:11, color:C.inkSoft, marginBottom:6 }}>📅 {req.bid.dates}</div>
@@ -4247,8 +4252,8 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                           {(() => {
                             const av = g.availability || "available";
                             const map = {
-                              available:   { label:"✅ Available",  bg:C.tealLight,   fg:C.teal,   bd:"#9FE1CB" },
-                              "on-trip":   { label: g.freeDate ? `🚗 Free from ${new Date(g.freeDate).toLocaleDateString()}` : "🚗 On a trip", bg:C.amberLight, fg:C.amber, bd:"#F0D48A" },
+                              available:   { label:"✅ Available",  bg:C.tealLight,   fg:C.teal,   bd:"#B9CFC5" },
+                              "on-trip":   { label: g.freeDate ? `🚗 Free from ${new Date(g.freeDate).toLocaleDateString()}` : "🚗 On a trip", bg:C.amberLight, fg:C.amber, bd:"#DFCBA0" },
                               unavailable: { label:"⏸ Unavailable", bg:"#F1F5F9",      fg:"#64748B", bd:"#E2E8F0" },
                             };
                             const m = map[av] || map.available;
@@ -4287,12 +4292,12 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                   <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
                     <Pill green>🛡️ SLTDA Certified</Pill>
                     {g.rating>0&&<Pill amber>★ {g.rating}</Pill>}
-                    <span style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20, background:"#E5F0FC", color:"#185FA5", border:"1px solid #B4D0EF" }}>{g.experience} yrs</span>
+                    <span style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20, background:"#E5F0FC", color:"#3C4E5C", border:"1px solid #B4D0EF" }}>{g.experience} yrs</span>
                     {(() => {
                       const av = g.availability || "available";
                       const map = {
-                        available:   { label:"✅ Available now",  bg:C.tealLight,   fg:C.teal,   bd:"#9FE1CB" },
-                        "on-trip":   { label: g.freeDate ? `🚗 Free from ${new Date(g.freeDate).toLocaleDateString()}` : "🚗 Currently on a trip", bg:C.amberLight, fg:C.amber, bd:"#F0D48A" },
+                        available:   { label:"✅ Available now",  bg:C.tealLight,   fg:C.teal,   bd:"#B9CFC5" },
+                        "on-trip":   { label: g.freeDate ? `🚗 Free from ${new Date(g.freeDate).toLocaleDateString()}` : "🚗 Currently on a trip", bg:C.amberLight, fg:C.amber, bd:"#DFCBA0" },
                         unavailable: { label:"⏸ Unavailable",     bg:"#F1F5F9",      fg:"#64748B", bd:"#E2E8F0" },
                       };
                       const m = map[av] || map.available;
@@ -4346,9 +4351,9 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
               </>}
 
               {/* Request bid box */}
-              <div style={{ background:"linear-gradient(135deg,#FDF5E0,#FFFBF0)", border:"1.5px solid #F0D48A", borderRadius:16, padding:"18px" }}>
+              <div style={{ background:"linear-gradient(135deg,#F1ECE0,#FFFBF0)", border:"1.5px solid #DFCBA0", borderRadius:16, padding:"18px" }}>
                 <h4 style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:C.ink, marginBottom:8 }}>📩 Request a bid from {(g.fullName||g.name)?.split(" ")[0]}</h4>
-                {itin&&<div style={{ background:"rgba(255,255,255,.65)", borderRadius:10, padding:"10px 12px", marginBottom:14, border:"1px solid rgba(194,122,14,.2)", fontSize:12, color:C.inkSoft }}><strong style={{ color:C.ink, fontSize:13, display:"block", marginBottom:3 }}>📋 {itin.title}</strong>{itin.tagline}</div>}
+                {itin&&<div style={{ background:"rgba(255,255,255,.65)", borderRadius:10, padding:"10px 12px", marginBottom:14, border:"1px solid rgba(138,106,52,.2)", fontSize:12, color:C.inkSoft }}><strong style={{ color:C.ink, fontSize:13, display:"block", marginBottom:3 }}>📋 {itin.title}</strong>{itin.tagline}</div>}
                 <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.6, marginBottom:12 }}>Add a personal message to help the guide understand your needs:</p>
                 <textarea value={sendMsg} onChange={e=>setSendMsg(e.target.value)} rows={3} placeholder="e.g. We're a family of 4 visiting in January, interested in cultural sites and local food..."
                   style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box", marginBottom:12 }}/>
@@ -4383,7 +4388,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
           <div className="premium-modal" style={{ background:"#fff", borderRadius:20, width:"100%", maxWidth:400, boxShadow:"0 24px 80px rgba(0,0,0,.3)", overflow:"hidden", maxHeight:"94vh", display:"flex", flexDirection:"column" }}>
             {payStep==="confirm" && (
               <>
-                <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"1.3rem 1.2rem", textAlign:"center", flexShrink:0 }}>
+                <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"1.3rem 1.2rem", textAlign:"center", flexShrink:0 }}>
                   <div style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:"#fff", marginBottom:4 }}>Confirm & Pay</div>
                   <div style={{ fontSize:12.5, color:"rgba(255,255,255,.8)" }}>Booking with {payModal.guideName}</div>
                 </div>
@@ -4400,7 +4405,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                     ))}
                   </div>
 
-                  <div style={{ background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:14, padding:"14px", marginBottom:14 }}>
+                  <div style={{ background:C.tealPale, border:`1px solid #B9CFC5`, borderRadius:14, padding:"14px", marginBottom:14 }}>
                     <div style={{ fontSize:13, fontWeight:600, color:C.teal, marginBottom:10 }}>🛡️ How your payment is protected</div>
                     <div style={{ fontSize:12, color:C.ink, lineHeight:1.7 }}>
                       <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
@@ -4411,7 +4416,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                         <span>🔒 Held until trip is confirmed complete (70%)</span>
                         <strong>${Math.round(Number(payModal.bid?.price)*0.85*0.70*100)/100}</strong>
                       </div>
-                      <div style={{ display:"flex", justifyContent:"space-between", paddingTop:6, borderTop:"1px solid #9FE1CB" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", paddingTop:6, borderTop:"1px solid #B9CFC5" }}>
                         <span>CeylonTrails commission (15%)</span>
                         <strong>${Math.round(Number(payModal.bid?.price)*0.15*100)/100}</strong>
                       </div>
@@ -4423,7 +4428,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
 
                   {/* Payment terms & conditions */}
                   <div style={{ fontSize:12, fontWeight:700, color:C.ink, marginBottom:8 }}>📋 Payment Terms & Conditions</div>
-                  <div style={{ background:"#F8FAFC", border:`1px solid ${C.border}`, borderRadius:10, padding:"12px 14px", maxHeight:160, overflowY:"auto", fontSize:11, color:C.inkSoft, lineHeight:1.7, marginBottom:14 }}>
+                  <div style={{ background:"#FAF9F6", border:`1px solid ${C.border}`, borderRadius:10, padding:"12px 14px", maxHeight:160, overflowY:"auto", fontSize:11, color:C.inkSoft, lineHeight:1.7, marginBottom:14 }}>
                     <p style={{ marginBottom:8 }}><strong style={{ color:C.ink }}>1. Booking confirmation —</strong> Payment confirms your booking with this guide for the agreed dates and price. The guide is notified immediately.</p>
                     <p style={{ marginBottom:8 }}><strong style={{ color:C.ink }}>2. Commission —</strong> CeylonTrails retains 15% of the total as a platform fee; the guide receives 85%.</p>
                     <p style={{ marginBottom:8 }}><strong style={{ color:C.ink }}>3. Cancellation —</strong> Cancelling 48+ hours before the trip start date qualifies for a full refund. Within 48 hours, a 25% cancellation fee may apply.</p>
@@ -4436,7 +4441,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                     I have read and agree to the payment terms and cancellation policy above
                   </label>
 
-                  <button onClick={()=>{ if(!payTermsOk){ alert("Please accept the payment terms to continue."); return; } setPayStep("paypal"); }} style={{ width:"100%", padding:"13px 10px", background:payTermsOk?"#0070BA":"#9CA3AF", color:"#fff", border:"none", borderRadius:11, fontSize:13.5, fontWeight:700, cursor:payTermsOk?"pointer":"not-allowed", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:6, flexWrap:"wrap" }}>
+                  <button onClick={()=>{ if(!payTermsOk){ alert("Please accept the payment terms to continue."); return; } setPayStep("paypal"); }} style={{ width:"100%", padding:"13px 10px", background:payTermsOk?"#3C4E5C":"#9CA3AF", color:"#fff", border:"none", borderRadius:11, fontSize:13.5, fontWeight:700, cursor:payTermsOk?"pointer":"not-allowed", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:6, flexWrap:"wrap" }}>
                     <span style={{ fontWeight:900 }}>Pay</span><span style={{ fontWeight:300, color:"#80CFFF" }}>Pal</span>
                     <span>→ Pay ${payModal.bid?.price}</span>
                   </button>
@@ -4448,13 +4453,13 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
             {payStep==="paypal" && (
               <div style={{ padding:"1.2rem", overflowY:"auto" }}>
                 <div style={{ textAlign:"center", marginBottom:16 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:"#0070BA", marginBottom:4 }}>PayPal Checkout</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#3C4E5C", marginBottom:4 }}>PayPal Checkout</div>
                   <div style={{ fontSize:12, color:C.inkSoft }}>CeylonTrails — Guide Booking · ${payModal.bid?.price}</div>
                 </div>
-                <div style={{ background:"#F5F7FA", borderRadius:10, padding:"12px", marginBottom:14, textAlign:"center", fontSize:15, fontWeight:700 }}>Total: ${payModal.bid?.price} USD</div>
-                <input readOnly value="tourist@email.com" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:8, boxSizing:"border-box" }}/>
-                <input readOnly type="password" value="••••••••" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:14, boxSizing:"border-box" }}/>
-                <button onClick={handleAcceptBid} disabled={paying} style={{ width:"100%", padding:"13px", background:paying?"#aaa":"#0070BA", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:paying?"wait":"pointer", fontFamily:sans, marginBottom:8 }}>
+                <div style={{ background:"#F6F5F2", borderRadius:10, padding:"12px", marginBottom:14, textAlign:"center", fontSize:15, fontWeight:700 }}>Total: ${payModal.bid?.price} USD</div>
+                <input readOnly value="tourist@email.com" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F6F5F2", marginBottom:8, boxSizing:"border-box" }}/>
+                <input readOnly type="password" value="••••••••" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F6F5F2", marginBottom:14, boxSizing:"border-box" }}/>
+                <button onClick={handleAcceptBid} disabled={paying} style={{ width:"100%", padding:"13px", background:paying?"#aaa":"#3C4E5C", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:paying?"wait":"pointer", fontFamily:sans, marginBottom:8 }}>
                   {paying?<span style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}><span style={{ width:16, height:16, border:"2px solid rgba(255,255,255,.4)", borderTopColor:"#fff", borderRadius:"50%", display:"inline-block", animation:"spin .8s linear infinite" }}/> Processing…</span>:`Pay $${payModal.bid?.price}`}
                 </button>
                 <button onClick={()=>setPayStep("confirm")} style={{ width:"100%", padding:"10px", background:"none", border:"none", color:C.inkSoft, fontSize:12, cursor:"pointer", fontFamily:sans }}>← Back</button>
@@ -4600,7 +4605,7 @@ function ExplorePage({ setPage, savedItin, setSavedItin }) {
       )}
 
       {/* Header */}
-      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2.5rem 2rem 2rem" }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"2.5rem 2rem 2rem" }}>
         <div style={{ maxWidth:1100, margin:"0 auto" }}>
           <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>Explore Sri Lanka</div>
           <h1 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:16 }}>{GPLACES_CAT_LABELS[cat]}</h1>
@@ -4617,7 +4622,7 @@ function ExplorePage({ setPage, savedItin, setSavedItin }) {
       <div style={{ maxWidth:1100, margin:"0 auto", padding:"2rem" }}>
         {/* No key */}
         {error==="no_key" && (
-          <div style={{ background:C.amberLight, border:`1.5px solid #F0D48A`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
+          <div style={{ background:C.amberLight, border:`1.5px solid #DFCBA0`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
             <div style={{ fontSize:32, marginBottom:12 }}>🔑</div>
             <h3 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 }}>Google Places API key needed</h3>
             <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7, maxWidth:480, margin:"0 auto 16px" }}>
@@ -4632,7 +4637,7 @@ function ExplorePage({ setPage, savedItin, setSavedItin }) {
 
         {/* API denied */}
         {error==="denied" && (
-          <div style={{ background:C.coralLight, border:`1.5px solid #EFBAA8`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
+          <div style={{ background:C.coralLight, border:`1.5px solid #DCC5BC`, borderRadius:16, padding:"2rem", textAlign:"center" }}>
             <div style={{ fontSize:32, marginBottom:12 }}>⚠️</div>
             <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>API key not authorised</h3>
             <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.7 }}>Your Google key was rejected. Make sure <strong>Places API</strong> is enabled in Google Cloud Console for your project.</p>
@@ -4641,7 +4646,7 @@ function ExplorePage({ setPage, savedItin, setSavedItin }) {
 
         {/* Other error */}
         {error && error!=="no_key" && error!=="denied" && (
-          <div style={{ background:C.coralLight, border:`1.5px solid #EFBAA8`, borderRadius:16, padding:"1.5rem", textAlign:"center" }}>
+          <div style={{ background:C.coralLight, border:`1.5px solid #DCC5BC`, borderRadius:16, padding:"1.5rem", textAlign:"center" }}>
             <p style={{ fontSize:14, color:C.coral }}>Error: {error}</p>
             <button onClick={()=>loadPlaces(cat)} style={{ marginTop:10, padding:"8px 20px", background:C.teal, color:"#fff", border:"none", borderRadius:10, cursor:"pointer", fontSize:13, fontFamily:sans }}>Try again</button>
           </div>
@@ -4662,7 +4667,7 @@ function ExplorePage({ setPage, savedItin, setSavedItin }) {
               <div key={p.place_id} onClick={()=>setSelected(p)} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, cursor:"pointer", transition:"transform .2s,box-shadow .2s" }}
                 onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,.1)"; }}
                 onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
-                <div style={{ height:160, background:`linear-gradient(135deg,${C.teal},#147856)`, overflow:"hidden", position:"relative" }}>
+                <div style={{ height:160, background:`linear-gradient(135deg,${C.teal},#0B3A30)`, overflow:"hidden", position:"relative" }}>
                   {p.photos?.[0]
                     ? <img src={photoUrl(p.photos[0].photo_reference)} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>{ e.target.style.display="none"; }}/>
                     : <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:40, opacity:.3 }}>{NAV_DEST_CATS.find(c=>c.id===cat)?.icon||"📍"}</div>
@@ -4746,7 +4751,7 @@ function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose, category })
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.55)", zIndex:700, display:"flex", justifyContent:"flex-end", backdropFilter:"blur(3px)" }}>
       <div style={{ width:480, maxWidth:"100vw", height:"100%", background:C.white, overflowY:"auto", boxShadow:"-8px 0 48px rgba(0,0,0,.2)" }}>
         {/* Photo gallery */}
-        <div style={{ height:240, background:`linear-gradient(135deg,${C.teal},#147856)`, position:"relative", flexShrink:0 }}>
+        <div style={{ height:240, background:`linear-gradient(135deg,${C.teal},#0B3A30)`, position:"relative", flexShrink:0 }}>
           {photos.length>0 && <img src={photoUrl(photos[photoIdx]?.photo_reference)} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
           <button onClick={onClose} style={{ position:"absolute", top:12, right:12, width:36, height:36, borderRadius:"50%", border:"none", background:"rgba(0,0,0,.45)", color:"#fff", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
           {photos.length>1&&<>
@@ -4776,7 +4781,7 @@ function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose, category })
           {d.formatted_phone_number && <p style={{ fontSize:13, color:C.ink, marginBottom:8, display:"flex", alignItems:"center", gap:8 }}>📞 <a href={`tel:${d.formatted_phone_number}`} style={{ color:C.teal, textDecoration:"none", fontWeight:600 }}>{d.formatted_phone_number}</a></p>}
           {d.website && (
             <a href={d.website} target="_blank" rel="noopener noreferrer"
-              style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 14px", background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:10, fontSize:13, color:C.teal, textDecoration:"none", fontWeight:600, marginBottom:14, wordBreak:"break-all" }}>
+              style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 14px", background:C.tealPale, border:`1px solid #B9CFC5`, borderRadius:10, fontSize:13, color:C.teal, textDecoration:"none", fontWeight:600, marginBottom:14, wordBreak:"break-all" }}>
               🌐 <span style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{d.website.replace(/^https?:\/\/(www\.)?/,"")}</span>
               <span style={{ flexShrink:0, fontSize:11, opacity:.7 }}>↗</span>
             </a>
@@ -4823,7 +4828,7 @@ function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose, category })
               ➕ Add to itinerary
             </button>
             <button onClick={()=>wishlist.has(p.place_id)?wishlist.remove(p.place_id):wishlist.add(p)}
-              style={{ padding:"12px", background:wishlist.has(p.place_id)?C.amberLight:C.surface, color:wishlist.has(p.place_id)?C.amber:C.ink, border:`1.5px solid ${wishlist.has(p.place_id)?"#F0D48A":C.border}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
+              style={{ padding:"12px", background:wishlist.has(p.place_id)?C.amberLight:C.surface, color:wishlist.has(p.place_id)?C.amber:C.ink, border:`1.5px solid ${wishlist.has(p.place_id)?"#DFCBA0":C.border}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
               {wishlist.has(p.place_id) ? "♥ Saved" : "♡ Wishlist"}
             </button>
           </div>
@@ -4840,40 +4845,40 @@ function PlaceDetailPanel({ place:p, wishlist, onAddToItin, onClose, category })
 
 // ─── SRI LANKA MAP PAGE ───────────────────────────────────────────────────────
 const MAP_PINS = [
-  { id:"yala",        lat:6.37,  lng:81.52, emoji:"🐆", name:"Yala National Park",      fact:"Highest leopard density on earth — also home to sloth bears, crocodiles & 200+ bird species.",        color:"#C45230" },
-  { id:"sigiriya",    lat:7.95,  lng:80.76, emoji:"🏰", name:"Sigiriya",                fact:"5th-century Lion Rock fortress rising 200m from the jungle — ancient frescoes and mirror wall.",       color:"#B87318" },
-  { id:"kandy",       lat:7.29,  lng:80.63, emoji:"🌿", name:"Kandy",                   fact:"Cultural heartland — Temple of the Tooth, botanical gardens, traditional Kandyan dance.",              color:"#0B6B52" },
-  { id:"ella",        lat:6.87,  lng:81.05, emoji:"🚂", name:"Ella",                    fact:"Misty mountain village — Nine Arch Bridge, Little Adam's Peak, and the iconic scenic train.",          color:"#0B6B52" },
-  { id:"mirissa",     lat:5.95,  lng:80.46, emoji:"🐋", name:"Mirissa",                 fact:"Blue whale watching capital of Sri Lanka — best sightings November to April.",                        color:"#185FA5" },
+  { id:"yala",        lat:6.37,  lng:81.52, emoji:"🐆", name:"Yala National Park",      fact:"Highest leopard density on earth — also home to sloth bears, crocodiles & 200+ bird species.",        color:"#8B4B3B" },
+  { id:"sigiriya",    lat:7.95,  lng:80.76, emoji:"🏰", name:"Sigiriya",                fact:"5th-century Lion Rock fortress rising 200m from the jungle — ancient frescoes and mirror wall.",       color:"#8A6A34" },
+  { id:"kandy",       lat:7.29,  lng:80.63, emoji:"🌿", name:"Kandy",                   fact:"Cultural heartland — Temple of the Tooth, botanical gardens, traditional Kandyan dance.",              color:"#0E4A3D" },
+  { id:"ella",        lat:6.87,  lng:81.05, emoji:"🚂", name:"Ella",                    fact:"Misty mountain village — Nine Arch Bridge, Little Adam's Peak, and the iconic scenic train.",          color:"#0E4A3D" },
+  { id:"mirissa",     lat:5.95,  lng:80.46, emoji:"🐋", name:"Mirissa",                 fact:"Blue whale watching capital of Sri Lanka — best sightings November to April.",                        color:"#3C4E5C" },
   { id:"colombo",     lat:6.92,  lng:79.86, emoji:"🏙️", name:"Colombo",                 fact:"Commercial capital — Pettah market, Galle Face Green, Ministry of Crab, and the Fort district.",      color:"#3D3D3D" },
-  { id:"galle",       lat:6.05,  lng:80.22, emoji:"🏛️", name:"Galle Fort",              fact:"UNESCO 17th-century Dutch fort — cobbled streets, boutique cafés and the best sunset rampart walk.", color:"#B87318" },
-  { id:"anuradhapura",lat:8.34,  lng:80.38, emoji:"🛕", name:"Anuradhapura",            fact:"Ancient sacred city — 2,300-year-old Sri Maha Bodhi tree, massive stupas, and ancient tanks.",       color:"#B87318" },
-  { id:"trinco",      lat:8.59,  lng:81.23, emoji:"🤿", name:"Trincomalee",             fact:"Natural deep harbour — Pigeon Island coral reef, Nilaveli beach, and whale watching.",               color:"#185FA5" },
-  { id:"udawalawe",   lat:6.47,  lng:80.90, emoji:"🐘", name:"Udawalawe",               fact:"Best place to see wild Asian elephants — herds of 30–50 cross the grasslands at dusk.",              color:"#7A4A0A" },
-  { id:"nuwaraeliya", lat:6.97,  lng:80.78, emoji:"☕", name:"Nuwara Eliya",            fact:"Tea capital at 1868m — colonial bungalows, rose gardens and the Gregory Lake valley in morning mist.", color:"#0B6B52" },
-  { id:"arugambay",   lat:6.84,  lng:81.83, emoji:"🏄", name:"Arugam Bay",              fact:"World-class surf point break on the east coast — dry and warm when the west is wet.",                color:"#185FA5" },
-  { id:"dambulla",    lat:7.87,  lng:80.65, emoji:"🕌", name:"Dambulla Cave Temple",    fact:"Five cave temples painted floor-to-ceiling with Buddhist murals and 153 golden statues.",             color:"#B87318" },
-  { id:"wilpattu",    lat:8.45,  lng:80.03, emoji:"🦁", name:"Wilpattu National Park",  fact:"Sri Lanka's largest park — secretive leopards, sloth bears and natural lakes (villus).",             color:"#C45230" },
-  { id:"kalpitiya",   lat:8.23,  lng:79.76, emoji:"🪁", name:"Kalpitiya",               fact:"Best kite surfing in Asia — 15–25 knot winds for 9 months, plus spinner dolphin watching.",          color:"#185FA5" },
+  { id:"galle",       lat:6.05,  lng:80.22, emoji:"🏛️", name:"Galle Fort",              fact:"UNESCO 17th-century Dutch fort — cobbled streets, boutique cafés and the best sunset rampart walk.", color:"#8A6A34" },
+  { id:"anuradhapura",lat:8.34,  lng:80.38, emoji:"🛕", name:"Anuradhapura",            fact:"Ancient sacred city — 2,300-year-old Sri Maha Bodhi tree, massive stupas, and ancient tanks.",       color:"#8A6A34" },
+  { id:"trinco",      lat:8.59,  lng:81.23, emoji:"🤿", name:"Trincomalee",             fact:"Natural deep harbour — Pigeon Island coral reef, Nilaveli beach, and whale watching.",               color:"#3C4E5C" },
+  { id:"udawalawe",   lat:6.47,  lng:80.90, emoji:"🐘", name:"Udawalawe",               fact:"Best place to see wild Asian elephants — herds of 30–50 cross the grasslands at dusk.",              color:"#6B4A26" },
+  { id:"nuwaraeliya", lat:6.97,  lng:80.78, emoji:"☕", name:"Nuwara Eliya",            fact:"Tea capital at 1868m — colonial bungalows, rose gardens and the Gregory Lake valley in morning mist.", color:"#0E4A3D" },
+  { id:"arugambay",   lat:6.84,  lng:81.83, emoji:"🏄", name:"Arugam Bay",              fact:"World-class surf point break on the east coast — dry and warm when the west is wet.",                color:"#3C4E5C" },
+  { id:"dambulla",    lat:7.87,  lng:80.65, emoji:"🕌", name:"Dambulla Cave Temple",    fact:"Five cave temples painted floor-to-ceiling with Buddhist murals and 153 golden statues.",             color:"#8A6A34" },
+  { id:"wilpattu",    lat:8.45,  lng:80.03, emoji:"🦁", name:"Wilpattu National Park",  fact:"Sri Lanka's largest park — secretive leopards, sloth bears and natural lakes (villus).",             color:"#8B4B3B" },
+  { id:"kalpitiya",   lat:8.23,  lng:79.76, emoji:"🪁", name:"Kalpitiya",               fact:"Best kite surfing in Asia — 15–25 knot winds for 9 months, plus spinner dolphin watching.",          color:"#3C4E5C" },
   // Jaffna & the North — previously missing entirely
-  { id:"jaffna",      lat:9.66,  lng:80.03, emoji:"🛕", name:"Jaffna",                  fact:"Sri Lanka's Tamil heartland — soaring Hindu temple gopurams, fiery cuisine, and a unique island culture.", color:"#B87318" },
-  { id:"nallur",      lat:9.67,  lng:80.02, emoji:"🕉️", name:"Nallur Kandaswamy Temple",fact:"Jaffna's most sacred Hindu temple — golden gopuram tower and a spectacular 25-day annual festival.",  color:"#B87318" },
-  { id:"deltft",      lat:9.50,  lng:79.70, emoji:"🐴", name:"Delft Island",            fact:"A remote coral island off Jaffna with wild ponies, ancient baobab trees, and a ruined Dutch fort.",   color:"#185FA5" },
-  { id:"jaffnafort",  lat:9.66,  lng:80.01, emoji:"🏯", name:"Jaffna Fort",             fact:"One of the largest Dutch-built forts in Asia, overlooking the lagoon — restored after the civil war.", color:"#7A4A0A" },
-  { id:"casuarina",   lat:9.81,  lng:79.97, emoji:"🏖️", name:"Casuarina Beach",         fact:"Shallow, calm turquoise water on Karainagar Island — one of the safest swimming beaches in Sri Lanka.", color:"#185FA5" },
+  { id:"jaffna",      lat:9.66,  lng:80.03, emoji:"🛕", name:"Jaffna",                  fact:"Sri Lanka's Tamil heartland — soaring Hindu temple gopurams, fiery cuisine, and a unique island culture.", color:"#8A6A34" },
+  { id:"nallur",      lat:9.67,  lng:80.02, emoji:"🕉️", name:"Nallur Kandaswamy Temple",fact:"Jaffna's most sacred Hindu temple — golden gopuram tower and a spectacular 25-day annual festival.",  color:"#8A6A34" },
+  { id:"deltft",      lat:9.50,  lng:79.70, emoji:"🐴", name:"Delft Island",            fact:"A remote coral island off Jaffna with wild ponies, ancient baobab trees, and a ruined Dutch fort.",   color:"#3C4E5C" },
+  { id:"jaffnafort",  lat:9.66,  lng:80.01, emoji:"🏯", name:"Jaffna Fort",             fact:"One of the largest Dutch-built forts in Asia, overlooking the lagoon — restored after the civil war.", color:"#6B4A26" },
+  { id:"casuarina",   lat:9.81,  lng:79.97, emoji:"🏖️", name:"Casuarina Beach",         fact:"Shallow, calm turquoise water on Karainagar Island — one of the safest swimming beaches in Sri Lanka.", color:"#3C4E5C" },
   // More major tourism spots filled in across the country
-  { id:"adamspeak",   lat:6.81,  lng:80.50, emoji:"⛰️", name:"Adam's Peak",             fact:"5,243-step night pilgrimage to a sacred summit — watch the triangular shadow fall across the clouds at sunrise.", color:"#7A4A0A" },
-  { id:"polonnaruwa", lat:7.94,  lng:81.02, emoji:"🗿", name:"Polonnaruwa",             fact:"Medieval royal capital — cycle between ruins and the world-famous Gal Vihara rock-carved Buddhas.", color:"#B87318" },
-  { id:"hikkaduwa",   lat:6.14,  lng:80.11, emoji:"🐢", name:"Hikkaduwa",               fact:"Sri Lanka's original surf town — coral reef snorkelling and nightly sea turtle nesting watches.",   color:"#185FA5" },
-  { id:"sinharaja",   lat:6.41,  lng:80.49, emoji:"🌳", name:"Sinharaja Rainforest",    fact:"UNESCO biosphere reserve — Sri Lanka's last major lowland rainforest, home to 26 endemic bird species.", color:"#145840" },
-  { id:"horton",      lat:6.80,  lng:80.80, emoji:"🌫️", name:"Horton Plains",           fact:"High-altitude cloud forest plateau ending at World's End — a sudden 1,000m vertical cliff drop.",   color:"#2A6040" },
-  { id:"minneriya",   lat:8.03,  lng:80.88, emoji:"🐘", name:"Minneriya",               fact:"\"The Gathering\" — up to 300 wild elephants converge on the ancient tank reservoir from July to October.", color:"#7A4A0A" },
-  { id:"weligama",    lat:5.97,  lng:80.43, emoji:"🏄‍♂️", name:"Weligama",               fact:"Sri Lanka's best beginner surf beach, plus the famous stilt fishermen perched just offshore.",     color:"#185FA5" },
-  { id:"haputale",    lat:6.77,  lng:80.96, emoji:"🍵", name:"Haputale",                fact:"A ridge-top tea town where you can see both the Indian Ocean and the central highlands at once.",   color:"#0B6B52" },
-  { id:"negombo",     lat:7.21,  lng:79.84, emoji:"🎣", name:"Negombo",                 fact:"Closest beach town to the airport — Dutch canal network, fish market, and easy first-night base.",   color:"#185FA5" },
-  { id:"batticaloa",  lat:7.72,  lng:81.70, emoji:"🦀", name:"Batticaloa",              fact:"East coast lagoon town famous for its 'singing fish' legend and untouched mangrove waterways.",     color:"#185FA5" },
+  { id:"adamspeak",   lat:6.81,  lng:80.50, emoji:"⛰️", name:"Adam's Peak",             fact:"5,243-step night pilgrimage to a sacred summit — watch the triangular shadow fall across the clouds at sunrise.", color:"#6B4A26" },
+  { id:"polonnaruwa", lat:7.94,  lng:81.02, emoji:"🗿", name:"Polonnaruwa",             fact:"Medieval royal capital — cycle between ruins and the world-famous Gal Vihara rock-carved Buddhas.", color:"#8A6A34" },
+  { id:"hikkaduwa",   lat:6.14,  lng:80.11, emoji:"🐢", name:"Hikkaduwa",               fact:"Sri Lanka's original surf town — coral reef snorkelling and nightly sea turtle nesting watches.",   color:"#3C4E5C" },
+  { id:"sinharaja",   lat:6.41,  lng:80.49, emoji:"🌳", name:"Sinharaja Rainforest",    fact:"UNESCO biosphere reserve — Sri Lanka's last major lowland rainforest, home to 26 endemic bird species.", color:"#0B3A30" },
+  { id:"horton",      lat:6.80,  lng:80.80, emoji:"🌫️", name:"Horton Plains",           fact:"High-altitude cloud forest plateau ending at World's End — a sudden 1,000m vertical cliff drop.",   color:"#2E5844" },
+  { id:"minneriya",   lat:8.03,  lng:80.88, emoji:"🐘", name:"Minneriya",               fact:"\"The Gathering\" — up to 300 wild elephants converge on the ancient tank reservoir from July to October.", color:"#6B4A26" },
+  { id:"weligama",    lat:5.97,  lng:80.43, emoji:"🏄‍♂️", name:"Weligama",               fact:"Sri Lanka's best beginner surf beach, plus the famous stilt fishermen perched just offshore.",     color:"#3C4E5C" },
+  { id:"haputale",    lat:6.77,  lng:80.96, emoji:"🍵", name:"Haputale",                fact:"A ridge-top tea town where you can see both the Indian Ocean and the central highlands at once.",   color:"#0E4A3D" },
+  { id:"negombo",     lat:7.21,  lng:79.84, emoji:"🎣", name:"Negombo",                 fact:"Closest beach town to the airport — Dutch canal network, fish market, and easy first-night base.",   color:"#3C4E5C" },
+  { id:"batticaloa",  lat:7.72,  lng:81.70, emoji:"🦀", name:"Batticaloa",              fact:"East coast lagoon town famous for its 'singing fish' legend and untouched mangrove waterways.",     color:"#3C4E5C" },
   { id:"ritigala",    lat:8.12,  lng:80.65, emoji:"💎", name:"Ritigala",                fact:"Jungle-swallowed 1st-century monastery ruins on a misty mountain — one of Sri Lanka's least visited ancient sites.", color:"#5B3A8E" },
-  { id:"knuckles",    lat:7.45,  lng:80.78, emoji:"🥾", name:"Knuckles Mountain Range", fact:"UNESCO wilderness of 34 waterfalls and 13 peaks — multi-day trekking through cloud forest.",        color:"#2A6040" },
+  { id:"knuckles",    lat:7.45,  lng:80.78, emoji:"🥾", name:"Knuckles Mountain Range", fact:"UNESCO wilderness of 34 waterfalls and 13 peaks — multi-day trekking through cloud forest.",        color:"#2E5844" },
 ];
 
 
@@ -4982,7 +4987,7 @@ function SriLankaMapPage({ setPage, savedItin, setSavedItin }) {
       `}</style>
 
       {/* Header */}
-      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2rem 2rem 1.5rem" }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"2rem 2rem 1.5rem" }}>
         <div style={{ maxWidth:1100, margin:"0 auto" }}>
           <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>Interactive</div>
           <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:6 }}>Sri Lanka Map</h1>
@@ -5057,11 +5062,11 @@ function EmergencyButton() {
       <button onClick={()=>setOpen(o=>!o)} style={{
         position:"fixed", bottom:24, left:24, zIndex:500,
         width:52, height:52, borderRadius:"50%",
-        background: open ? "#C45230" : "#fff",
-        color: open ? "#fff" : "#C45230",
-        border:"2px solid #C45230",
+        background: open ? "#8B4B3B" : "#fff",
+        color: open ? "#fff" : "#8B4B3B",
+        border:"2px solid #8B4B3B",
         fontSize:open?16:18, cursor:"pointer",
-        boxShadow:"0 4px 20px rgba(196,82,48,.3)",
+        boxShadow:"0 4px 20px rgba(139,75,59,.3)",
         display:"flex", alignItems:"center", justifyContent:"center",
         fontWeight:700, fontFamily:sans,
         transition:"all .2s",
@@ -5076,24 +5081,24 @@ function EmergencyButton() {
           width:360, maxWidth:"calc(100vw - 48px)",
           background:"#fff", borderRadius:20,
           boxShadow:"0 12px 48px rgba(0,0,0,.2)",
-          border:"1.5px solid #EFBAA8",
+          border:"1.5px solid #DCC5BC",
           display:"flex", flexDirection:"column",
           maxHeight:"70vh",
         }}>
           {/* Header */}
-          <div style={{ padding:"14px 16px", background:"#C45230", borderRadius:"18px 18px 0 0", flexShrink:0 }}>
+          <div style={{ padding:"14px 16px", background:"#8B4B3B", borderRadius:"18px 18px 0 0", flexShrink:0 }}>
             <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff" }}>🆘 Emergency & Important Numbers</div>
             <div style={{ fontSize:11, color:"rgba(255,255,255,.75)", marginTop:3 }}>Sri Lanka — tap any number to call</div>
           </div>
 
           {/* Category tabs */}
-          <div style={{ display:"flex", overflowX:"auto", borderBottom:"1px solid #E4E4E4", flexShrink:0 }}>
+          <div style={{ display:"flex", overflowX:"auto", borderBottom:"1px solid #E6E4DF", flexShrink:0 }}>
             {EMERGENCY_DATA.map((cat,i)=>(
               <button key={i} onClick={()=>setActiveTab(i)} style={{
                 padding:"10px 12px", border:"none", background:"transparent",
                 fontSize:11, fontWeight:activeTab===i?700:400,
-                color:activeTab===i?"#C45230":C.inkSoft, cursor:"pointer",
-                borderBottom:activeTab===i?"2.5px solid #C45230":"2.5px solid transparent",
+                color:activeTab===i?"#8B4B3B":C.inkSoft, cursor:"pointer",
+                borderBottom:activeTab===i?"2.5px solid #8B4B3B":"2.5px solid transparent",
                 whiteSpace:"nowrap", fontFamily:sans, flexShrink:0,
               }}>{cat.category.split(" ")[0]}</button>
             ))}
@@ -5101,7 +5106,7 @@ function EmergencyButton() {
 
           {/* Items */}
           <div style={{ flex:1, overflowY:"auto", padding:"8px 0" }}>
-            <div style={{ padding:"6px 16px", fontSize:11, fontWeight:700, color:"#C45230", textTransform:"uppercase", letterSpacing:.8 }}>
+            <div style={{ padding:"6px 16px", fontSize:11, fontWeight:700, color:"#8B4B3B", textTransform:"uppercase", letterSpacing:.8 }}>
               {EMERGENCY_DATA[activeTab].category}
             </div>
             {EMERGENCY_DATA[activeTab].items.map((item,i)=>(
@@ -5112,7 +5117,7 @@ function EmergencyButton() {
                 </div>
                 <a href={`tel:${item.number.replace(/\s/g,"")}`} style={{
                   flexShrink:0, padding:"6px 12px",
-                  background:"#C45230", color:"#fff",
+                  background:"#8B4B3B", color:"#fff",
                   borderRadius:10, fontSize:12, fontWeight:700,
                   textDecoration:"none", fontFamily:sans,
                   display:"flex", alignItems:"center", gap:4,
@@ -5219,7 +5224,7 @@ function LoginModal({ onClose, onSuccess }) {
         <style>{`@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
         {/* Header */}
-        <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2rem 2rem 1.5rem", textAlign:"center", position:"relative" }}>
+        <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"2rem 2rem 1.5rem", textAlign:"center", position:"relative" }}>
           <button onClick={onClose} style={{ position:"absolute", top:12, right:12, width:32, height:32, borderRadius:"50%", border:"1px solid rgba(255,255,255,.3)", background:"rgba(255,255,255,.1)", color:"#fff", fontSize:16, cursor:"pointer" }}>✕</button>
           <div style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:"#fff", marginBottom:4 }}>
             Ceylon<span style={{ color:C.amberMid }}>Trails</span>
@@ -5249,7 +5254,7 @@ function LoginModal({ onClose, onSuccess }) {
             style={{ width:"100%", padding:"12px 14px", border:`1.5px solid ${C.border}`, borderRadius:12, fontSize:14, fontFamily:sans, marginBottom:14, outline:"none", boxSizing:"border-box" }}
             onKeyDown={e=>e.key==="Enter"&&handle(mode==="signin"?()=>signInEmail(email,pass):()=>signUpEmail(email,pass))}/>
 
-          {error && <div style={{ background:"#FEF0F0", border:"1px solid #EFBAA8", borderRadius:10, padding:"8px 12px", fontSize:12, color:C.coral, marginBottom:12 }}>{error}</div>}
+          {error && <div style={{ background:"#FEF0F0", border:"1px solid #DCC5BC", borderRadius:10, padding:"8px 12px", fontSize:12, color:C.coral, marginBottom:12 }}>{error}</div>}
 
           <button onClick={()=>handle(mode==="signin"?()=>signInEmail(email,pass):()=>signUpEmail(email,pass))} disabled={loading||!email||!pass}
             style={{ width:"100%", padding:"13px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:loading||!email||!pass?"not-allowed":"pointer", fontFamily:sans, opacity:loading||!email||!pass?.6:1 }}>
@@ -5340,11 +5345,11 @@ function PremiumLock({ itinId, onUnlock }) {
                 <div style={{ fontSize:12.5, color:"rgba(255,255,255,.85)", lineHeight:1.5 }}>Unlock all days, maps, swapping & drag-drop</div>
               </div>
               <div style={{ padding:"1.3rem" }}>
-                <div style={{ background:C.amberLight, border:`1.5px solid #F0D48A`, borderRadius:14, padding:"12px", textAlign:"center", marginBottom:18 }}>
+                <div style={{ background:C.amberLight, border:`1.5px solid #DFCBA0`, borderRadius:14, padding:"12px", textAlign:"center", marginBottom:18 }}>
                   <div style={{ fontSize:24, fontWeight:800, color:C.amber }}>${UNLOCK_PRICE} USD</div>
                   <div style={{ fontSize:11.5, color:C.inkSoft, marginTop:2 }}>One-time payment · Instant access</div>
                 </div>
-                <button onClick={()=>setStep("demo")} style={{ width:"100%", padding:"13px 10px", background:"#0070BA", color:"#fff", border:"none", borderRadius:11, fontSize:13.5, fontWeight:700, cursor:"pointer", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:6, flexWrap:"wrap" }}>
+                <button onClick={()=>setStep("demo")} style={{ width:"100%", padding:"13px 10px", background:"#3C4E5C", color:"#fff", border:"none", borderRadius:11, fontSize:13.5, fontWeight:700, cursor:"pointer", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:6, flexWrap:"wrap" }}>
                   <span style={{ fontWeight:900 }}>Pay</span><span style={{ fontWeight:300, color:"#80CFFF" }}>Pal</span>
                   <span>→ Pay ${UNLOCK_PRICE}.00</span>
                 </button>
@@ -5355,13 +5360,13 @@ function PremiumLock({ itinId, onUnlock }) {
             {step==="demo" && (
               <div style={{ padding:"1.3rem" }}>
                 <div style={{ textAlign:"center", marginBottom:16 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:"#0070BA", marginBottom:4 }}>PayPal Checkout</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#3C4E5C", marginBottom:4 }}>PayPal Checkout</div>
                   <div style={{ fontSize:12, color:C.inkSoft }}>CeylonTrails — Full Itinerary Access</div>
                 </div>
-                <div style={{ background:"#F5F7FA", borderRadius:10, padding:"12px", marginBottom:16, textAlign:"center", fontSize:15, fontWeight:700, color:C.ink }}>Total: ${UNLOCK_PRICE}.00 USD</div>
-                <input readOnly value="demo@paypal.com" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:8, boxSizing:"border-box" }}/>
-                <input readOnly type="password" value="••••••••" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F5F7FA", marginBottom:14, boxSizing:"border-box" }}/>
-                <button onClick={handleDemoPayment} disabled={paying} style={{ width:"100%", padding:"13px", background:paying?"#aaa":"#0070BA", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:paying?"wait":"pointer", fontFamily:sans, marginBottom:8 }}>
+                <div style={{ background:"#F6F5F2", borderRadius:10, padding:"12px", marginBottom:16, textAlign:"center", fontSize:15, fontWeight:700, color:C.ink }}>Total: ${UNLOCK_PRICE}.00 USD</div>
+                <input readOnly value="demo@paypal.com" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F6F5F2", marginBottom:8, boxSizing:"border-box" }}/>
+                <input readOnly type="password" value="••••••••" style={{ width:"100%", padding:"11px 12px", border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, fontFamily:sans, background:"#F6F5F2", marginBottom:14, boxSizing:"border-box" }}/>
+                <button onClick={handleDemoPayment} disabled={paying} style={{ width:"100%", padding:"13px", background:paying?"#aaa":"#3C4E5C", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:paying?"wait":"pointer", fontFamily:sans, marginBottom:8 }}>
                   {paying ? <span style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}><span style={{ width:16, height:16, border:"2px solid rgba(255,255,255,.4)", borderTopColor:"#fff", borderRadius:"50%", display:"inline-block", animation:"spin .8s linear infinite" }}/> Processing…</span> : `Pay $${UNLOCK_PRICE}.00`}
                 </button>
                 <button onClick={()=>setStep("lock")} style={{ width:"100%", padding:"10px", background:"none", border:"none", color:C.inkSoft, fontSize:12, cursor:"pointer", fontFamily:sans }}>← Back</button>
@@ -5984,7 +5989,7 @@ function GuideRegister({ user, onComplete }) {
           </div>
         ))}
       </div>
-      <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"12px 14px", marginTop:12, fontSize:12, color:C.amber, lineHeight:1.6 }}>
+      <div style={{ background:C.amberLight, border:`1px solid #DFCBA0`, borderRadius:10, padding:"12px 14px", marginTop:12, fontSize:12, color:C.amber, lineHeight:1.6 }}>
         ⚠️ By submitting, you confirm all information is accurate and your SLTDA licence is valid.
       </div>
     </>,
@@ -6133,7 +6138,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
       {viewItin && (
         <div onClick={e=>e.target===e.currentTarget&&setViewItin(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.65)", zIndex:950, display:"flex", alignItems:"center", justifyContent:"center", padding:14, backdropFilter:"blur(6px)" }}>
           <div className="premium-modal" style={{ background:"#fff", borderRadius:20, width:"100%", maxWidth:700, maxHeight:"90vh", display:"flex", flexDirection:"column", boxShadow:"0 24px 80px rgba(0,0,0,.3)", overflow:"hidden" }}>
-            <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"1.2rem 1.4rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+            <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"1.2rem 1.4rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
               <div>
                 <div style={{ fontFamily:serif, fontSize:17, fontWeight:700, color:"#fff" }}>{viewItin.title}</div>
                 <div style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginTop:2 }}>{viewItin.tagline}</div>
@@ -6142,7 +6147,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
             </div>
             <div style={{ padding:"1.2rem 1.4rem", overflowY:"auto", flex:1 }}>
               {viewItin.tripMeta && (
-                <div style={{ display:"flex", gap:14, flexWrap:"wrap", background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:10, padding:"10px 14px", marginBottom:16, fontSize:12, color:C.teal }}>
+                <div style={{ display:"flex", gap:14, flexWrap:"wrap", background:C.tealPale, border:`1px solid #B9CFC5`, borderRadius:10, padding:"10px 14px", marginBottom:16, fontSize:12, color:C.teal }}>
                   {viewItin.tripMeta.startDate && <span>📅 {new Date(viewItin.tripMeta.startDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} → {viewItin.tripMeta.endDate?new Date(viewItin.tripMeta.endDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):""}</span>}
                   {viewItin.tripMeta.startLocation && <span>📍 From {viewItin.tripMeta.startLocation}</span>}
                   <span>{viewItin.tripMeta.roundTrip?"🔁 Round trip":"➡️ One-way"}</span>
@@ -6150,7 +6155,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
               )}
               {(viewItin.days||[]).map(d=>(
                 <div key={d.day} style={{ border:`1.5px solid ${C.border}`, borderRadius:14, overflow:"hidden", marginBottom:12 }}>
-                  <div style={{ padding:"10px 16px", background:"#F0F4F8", display:"flex", alignItems:"center", gap:10 }}>
+                  <div style={{ padding:"10px 16px", background:"#F6F5F2", display:"flex", alignItems:"center", gap:10 }}>
                     <span style={{ background:C.teal, color:"#fff", fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20 }}>Day {d.day}</span>
                     <span style={{ fontSize:13, fontWeight:700, color:C.ink }}>{d.location}</span>
                     <span style={{ fontSize:11, color:C.inkSoft, marginLeft:"auto" }}>{d.theme}</span>
@@ -6188,7 +6193,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
             )}
 
             {/* Guide Terms */}
-            <div style={{ background:"#F8FAFC", border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 12px", marginBottom:12, maxHeight:120, overflowY:"auto", fontSize:11, color:C.inkSoft, lineHeight:1.6, flexShrink:0 }}>
+            <div style={{ background:"#FAF9F6", border:`1px solid ${C.border}`, borderRadius:10, padding:"10px 12px", marginBottom:12, maxHeight:120, overflowY:"auto", fontSize:11, color:C.inkSoft, lineHeight:1.6, flexShrink:0 }}>
               <div style={{ fontSize:11, fontWeight:700, color:C.ink, marginBottom:6 }}>📋 CeylonTrails Guide Rules (read before bidding)</div>
               {GUIDE_TERMS.split('\n').filter(l=>l.trim()).map((l,i)=>(
                 <div key={i} style={{ marginBottom:3, color:l.startsWith('CEYLON')||l.match(/^\d+\./)? C.ink:C.inkSoft, fontWeight:l.match(/^\d+\./)?600:400 }}>{l}</div>
@@ -6221,7 +6226,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
       )}
 
       {/* Header */}
-      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2rem 2rem 1.5rem" }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"2rem 2rem 1.5rem" }}>
         <div style={{ maxWidth:900, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
           <div style={{ display:"flex", alignItems:"center", gap:14 }}>
             <div style={{ width:56, height:56, borderRadius:"50%", background:"rgba(255,255,255,.2)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:serif, fontSize:22, fontWeight:700, color:"#fff" }}>
@@ -6295,12 +6300,12 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
             )}
             {requests.map(req=>{
               const statusMeta = {
-                pending:  { label:"⏳ Awaiting your bid", bg:C.amberLight, fg:C.amber, bd:"#F0D48A" },
-                accepted: { label:"✅ Booking confirmed & paid", bg:C.tealLight, fg:C.teal, bd:"#9FE1CB" },
-                declined: { label:"❌ Tourist declined",   bg:"#FEE2E2",   fg:"#DC2626", bd:"#FECACA" },
+                pending:  { label:"⏳ Awaiting your bid", bg:C.amberLight, fg:C.amber, bd:"#DFCBA0" },
+                accepted: { label:"✅ Booking confirmed & paid", bg:C.tealLight, fg:C.teal, bd:"#B9CFC5" },
+                declined: { label:"❌ Tourist declined",   bg:"#FEE2E2",   fg:"#A83A32", bd:"#E3C3BC" },
                 guide_declined: { label:"🚫 You declined", bg:"#F1F5F9", fg:"#64748B", bd:"#E2E8F0" },
               };
-              const sm = req.bid && req.status==="pending" ? { label:"✓ Bid sent — waiting on tourist", bg:C.tealLight, fg:C.teal, bd:"#9FE1CB" } : (statusMeta[req.status] || statusMeta.pending);
+              const sm = req.bid && req.status==="pending" ? { label:"✓ Bid sent — waiting on tourist", bg:C.tealLight, fg:C.teal, bd:"#B9CFC5" } : (statusMeta[req.status] || statusMeta.pending);
               return (
               <div key={req.id} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, padding:"1.2rem", marginBottom:12, background:C.white, opacity:req.status==="declined"?.7:1 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:10, marginBottom:10 }}>
@@ -6323,12 +6328,12 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                 )}
                 {req.message && <div style={{ background:C.surface, borderRadius:8, padding:"8px 12px", fontSize:12, color:C.ink, marginBottom:10, borderLeft:`3px solid ${C.border}` }}>"{req.message}"</div>}
                 {req.itinFull && (
-                  <button onClick={()=>setViewItin(req.itinFull)} style={{ width:"100%", padding:"9px", background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:10, fontSize:12.5, fontWeight:600, color:C.teal, cursor:"pointer", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+                  <button onClick={()=>setViewItin(req.itinFull)} style={{ width:"100%", padding:"9px", background:C.tealPale, border:`1px solid #B9CFC5`, borderRadius:10, fontSize:12.5, fontWeight:600, color:C.teal, cursor:"pointer", fontFamily:sans, marginBottom:10, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
                     🗺️ View full {req.itinDays}-day itinerary before bidding
                   </button>
                 )}
                 {req.bid && (req.status==="pending"||req.status==="declined") && (
-                  <div style={{ background:req.status==="declined"?"#FEF2F2":C.tealPale, borderRadius:8, padding:"8px 12px", fontSize:12, color:req.status==="declined"?"#DC2626":C.teal, marginBottom:req.status==="declined"?10:0 }}>
+                  <div style={{ background:req.status==="declined"?"#F5E7E4":C.tealPale, borderRadius:8, padding:"8px 12px", fontSize:12, color:req.status==="declined"?"#A83A32":C.teal, marginBottom:req.status==="declined"?10:0 }}>
                     Your bid: <strong>${req.bid.price}</strong> · {req.bid.dates}
                   </div>
                 )}
@@ -6365,7 +6370,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
             );})}
             {/* Demo requests if empty */}
             {!loadingReqs && requests.length===0 && (
-              <div style={{ marginTop:16, background:C.tealPale, border:`1px solid #9FE1CB`, borderRadius:12, padding:"12px 16px", fontSize:12, color:C.teal }}>
+              <div style={{ marginTop:16, background:C.tealPale, border:`1px solid #B9CFC5`, borderRadius:12, padding:"12px 16px", fontSize:12, color:C.teal }}>
                 💡 Demo: Trip requests from tourists who choose "Find a Guide" and select you will appear here in real-time.
               </div>
             )}
@@ -6496,7 +6501,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                 </div>
               ))}
             </div>
-            <div style={{ marginTop:24, background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:12, padding:"12px 16px", fontSize:12, color:C.amber, maxWidth:400, margin:"24px auto 0" }}>
+            <div style={{ marginTop:24, background:C.amberLight, border:`1px solid #DFCBA0`, borderRadius:12, padding:"12px 16px", fontSize:12, color:C.amber, maxWidth:400, margin:"24px auto 0" }}>
               💡 This reflects demo PayPal payments processed in-app. Contact support@ceylontrails.lk to set up real bank payouts.
             </div>
           </div>
@@ -6573,7 +6578,7 @@ function GuideReviewModal({ onClose, user, prefill }) {
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16, backdropFilter:"blur(6px)" }}>
       <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:480, boxShadow:"0 20px 60px rgba(0,0,0,.25)", overflow:"hidden", maxHeight:"90vh", display:"flex", flexDirection:"column" }}>
         {/* Header */}
-        <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"1.2rem 1.4rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+        <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"1.2rem 1.4rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
           <div>
             <div style={{ fontFamily:serif, fontSize:17, fontWeight:700, color:"#fff" }}>Review a Guide</div>
             <div style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginTop:2 }}>Your review helps other tourists choose the right guide</div>
@@ -6631,7 +6636,7 @@ function GuideReviewModal({ onClose, user, prefill }) {
               {errors.body && <div style={{ fontSize:11, color:C.coral, marginTop:3 }}>⚠️ {errors.body}</div>}
             </div>
 
-            <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"10px 12px", fontSize:11, color:C.amber, marginBottom:16, lineHeight:1.6 }}>
+            <div style={{ background:C.amberLight, border:`1px solid #DFCBA0`, borderRadius:10, padding:"10px 12px", fontSize:11, color:C.amber, marginBottom:16, lineHeight:1.6 }}>
               ⚠️ Reviews are moderated. Our admin team verifies trip records before publishing. False reviews will be removed.
             </div>
 
@@ -6650,7 +6655,7 @@ function GuideReviewModal({ onClose, user, prefill }) {
 function AdminAnalyticsDashboard({ analytics, loading, onRefresh }) {
   if (loading || !analytics) return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", gap:14, color:"#64748B" }}>
-      <div style={{ width:40, height:40, border:"3px solid #E0E6ED", borderTopColor:"#2D4A6A", borderRadius:"50%", animation:"spin .8s linear infinite" }}/>
+      <div style={{ width:40, height:40, border:"3px solid #E3E1DC", borderTopColor:"#2E3F4E", borderRadius:"50%", animation:"spin .8s linear infinite" }}/>
       <p style={{ fontSize:13 }}>Crunching the numbers…</p>
     </div>
   );
@@ -6658,11 +6663,11 @@ function AdminAnalyticsDashboard({ analytics, loading, onRefresh }) {
   const maxMonthRevenue = Math.max(1, ...Object.values(analytics.monthBuckets).map(m=>m.revenue));
   const maxDestCount = Math.max(1, ...analytics.popularDest.map(([,c])=>c));
 
-  const StatCard = ({ icon, label, value, sub, color="#2D4A6A" }) => (
-    <div style={{ background:"#fff", border:"1px solid #E0E6ED", borderRadius:14, padding:"16px 18px" }}>
+  const StatCard = ({ icon, label, value, sub, color="#2E3F4E" }) => (
+    <div style={{ background:"#fff", border:"1px solid #E3E1DC", borderRadius:14, padding:"16px 18px" }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
         <span style={{ fontSize:20 }}>{icon}</span>
-        {sub && <span style={{ fontSize:11, color:"#16A34A", fontWeight:600 }}>{sub}</span>}
+        {sub && <span style={{ fontSize:11, color:"#3D7A52", fontWeight:600 }}>{sub}</span>}
       </div>
       <div style={{ fontFamily:serif, fontSize:24, fontWeight:700, color }}>{value}</div>
       <div style={{ fontSize:12, color:"#64748B", marginTop:2 }}>{label}</div>
@@ -6673,32 +6678,32 @@ function AdminAnalyticsDashboard({ analytics, loading, onRefresh }) {
     <div style={{ maxWidth:900 }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:10 }}>
         <div>
-          <h2 style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:"#1A2A3A" }}>📊 Business Analytics</h2>
+          <h2 style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:"#16232B" }}>📊 Business Analytics</h2>
           <p style={{ fontSize:12, color:"#64748B", marginTop:2 }}>Bookings, revenue, and guide performance at a glance</p>
         </div>
-        <button onClick={onRefresh} style={{ padding:"8px 16px", background:"#EEF4FF", color:"#2D4A6A", border:"1px solid #B4D0EF", borderRadius:10, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>↺ Refresh</button>
+        <button onClick={onRefresh} style={{ padding:"8px 16px", background:"#EBEEF0", color:"#2E3F4E", border:"1px solid #B4D0EF", borderRadius:10, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>↺ Refresh</button>
       </div>
 
       {/* Top stat cards */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:12, marginBottom:24 }}>
-        <StatCard icon="💰" label="Total revenue" value={`$${analytics.totalRevenue.toFixed(0)}`} color="#16A34A"/>
-        <StatCard icon="🏛️" label="CeylonTrails commission" value={`$${analytics.totalCommission.toFixed(0)}`} color="#2D4A6A"/>
+        <StatCard icon="💰" label="Total revenue" value={`$${analytics.totalRevenue.toFixed(0)}`} color="#3D7A52"/>
+        <StatCard icon="🏛️" label="CeylonTrails commission" value={`$${analytics.totalCommission.toFixed(0)}`} color="#2E3F4E"/>
         <StatCard icon="🔓" label="Premium unlock revenue" value={`$${(analytics.totalPremiumRevenue||0).toFixed(0)}`} color="#B45309"/>
-        <StatCard icon="🧭" label="Guide earnings paid" value={`$${analytics.totalGuideEarnings.toFixed(0)}`} color="#C27A0E"/>
+        <StatCard icon="🧭" label="Guide earnings paid" value={`$${analytics.totalGuideEarnings.toFixed(0)}`} color="#8A6A34"/>
         <StatCard icon="✅" label="Confirmed bookings" value={analytics.totalBookings} sub={`${analytics.conversionRate}% conversion`}/>
         <StatCard icon="📩" label="Total trip requests" value={analytics.totalRequests}/>
         <StatCard icon="🧑‍🤝‍🧑" label="Approved guides" value={`${analytics.approvedGuides} / ${analytics.totalGuides}`} sub={analytics.pendingGuides>0?`${analytics.pendingGuides} pending`:null}/>
-        <StatCard icon="⚠️" label="Open disputes" value={analytics.disputedCount||0} color={analytics.disputedCount>0?"#DC2626":"#2D4A6A"}/>
+        <StatCard icon="⚠️" label="Open disputes" value={analytics.disputedCount||0} color={analytics.disputedCount>0?"#A83A32":"#2E3F4E"}/>
       </div>
 
       {/* Bookings & revenue trend (last 6 months) */}
-      <div style={{ background:"#fff", border:"1px solid #E0E6ED", borderRadius:16, padding:"18px 20px", marginBottom:20 }}>
-        <h3 style={{ fontSize:14, fontWeight:700, color:"#1A2A3A", marginBottom:16 }}>Revenue trend — last 6 months</h3>
+      <div style={{ background:"#fff", border:"1px solid #E3E1DC", borderRadius:16, padding:"18px 20px", marginBottom:20 }}>
+        <h3 style={{ fontSize:14, fontWeight:700, color:"#16232B", marginBottom:16 }}>Revenue trend — last 6 months</h3>
         <div style={{ display:"flex", alignItems:"flex-end", gap:14, height:140 }}>
           {Object.entries(analytics.monthBuckets).map(([month, data])=>(
             <div key={month} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
               <div style={{ fontSize:10, color:"#64748B", fontWeight:600 }}>{data.revenue>0?`$${data.revenue.toFixed(0)}`:""}</div>
-              <div style={{ width:"100%", maxWidth:36, height:`${Math.max(4, (data.revenue/maxMonthRevenue)*100)}px`, background:"linear-gradient(180deg,#2D4A6A,#1A2A3A)", borderRadius:"6px 6px 0 0", transition:"height .3s" }}/>
+              <div style={{ width:"100%", maxWidth:36, height:`${Math.max(4, (data.revenue/maxMonthRevenue)*100)}px`, background:"linear-gradient(180deg,#2E3F4E,#16232B)", borderRadius:"6px 6px 0 0", transition:"height .3s" }}/>
               <div style={{ fontSize:11, color:"#64748B" }}>{month}</div>
               <div style={{ fontSize:9, color:"#94A3B8" }}>{data.bookings} bkg</div>
             </div>
@@ -6708,34 +6713,34 @@ function AdminAnalyticsDashboard({ analytics, loading, onRefresh }) {
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
         {/* Popular destinations */}
-        <div style={{ background:"#fff", border:"1px solid #E0E6ED", borderRadius:16, padding:"18px 20px" }}>
-          <h3 style={{ fontSize:14, fontWeight:700, color:"#1A2A3A", marginBottom:14 }}>🗺️ Popular trip styles</h3>
+        <div style={{ background:"#fff", border:"1px solid #E3E1DC", borderRadius:16, padding:"18px 20px" }}>
+          <h3 style={{ fontSize:14, fontWeight:700, color:"#16232B", marginBottom:14 }}>🗺️ Popular trip styles</h3>
           {analytics.popularDest.length===0 && <p style={{ fontSize:12, color:"#94A3B8" }}>No trip requests yet</p>}
           {analytics.popularDest.map(([title, count])=>(
             <div key={title} style={{ marginBottom:10 }}>
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4 }}>
-                <span style={{ color:"#1A2A3A", fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:180 }}>{title}</span>
+                <span style={{ color:"#16232B", fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:180 }}>{title}</span>
                 <span style={{ color:"#64748B" }}>{count}</span>
               </div>
               <div style={{ height:6, background:"#F1F5F9", borderRadius:6, overflow:"hidden" }}>
-                <div style={{ height:"100%", width:`${(count/maxDestCount)*100}%`, background:"#2D4A6A", borderRadius:6 }}/>
+                <div style={{ height:"100%", width:`${(count/maxDestCount)*100}%`, background:"#2E3F4E", borderRadius:6 }}/>
               </div>
             </div>
           ))}
         </div>
 
         {/* Top performing guides */}
-        <div style={{ background:"#fff", border:"1px solid #E0E6ED", borderRadius:16, padding:"18px 20px" }}>
-          <h3 style={{ fontSize:14, fontWeight:700, color:"#1A2A3A", marginBottom:14 }}>🏆 Top performing guides</h3>
+        <div style={{ background:"#fff", border:"1px solid #E3E1DC", borderRadius:16, padding:"18px 20px" }}>
+          <h3 style={{ fontSize:14, fontWeight:700, color:"#16232B", marginBottom:14 }}>🏆 Top performing guides</h3>
           {analytics.topGuides.length===0 && <p style={{ fontSize:12, color:"#94A3B8" }}>No completed bookings yet</p>}
           {analytics.topGuides.map((g,i)=>(
             <div key={g.name+i} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:i<analytics.topGuides.length-1?"1px solid #F1F5F9":"none" }}>
-              <span style={{ width:22, height:22, borderRadius:"50%", background:i===0?"#FDE047":i===1?"#E2E8F0":"#FDBA74", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:"#1A2A3A", flexShrink:0 }}>{i+1}</span>
+              <span style={{ width:22, height:22, borderRadius:"50%", background:i===0?"#C9AD7C":i===1?"#E2E8F0":"#FDBA74", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:"#16232B", flexShrink:0 }}>{i+1}</span>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:12, fontWeight:600, color:"#1A2A3A", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{g.name}</div>
+                <div style={{ fontSize:12, fontWeight:600, color:"#16232B", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{g.name}</div>
                 <div style={{ fontSize:11, color:"#64748B" }}>{g.bookings} booking{g.bookings!==1?"s":""}</div>
               </div>
-              <div style={{ fontSize:13, fontWeight:700, color:"#16A34A" }}>${g.earnings.toFixed(0)}</div>
+              <div style={{ fontSize:13, fontWeight:700, color:"#3D7A52" }}>${g.earnings.toFixed(0)}</div>
             </div>
           ))}
         </div>
@@ -6913,9 +6918,9 @@ function AdminPanel({ onClose }) {
   );
 
   return (
-    <div style={{ position:"fixed", inset:0, background:"#F0F4F8", zIndex:1000, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+    <div style={{ position:"fixed", inset:0, background:"#F6F5F2", zIndex:1000, display:"flex", flexDirection:"column", overflow:"hidden" }}>
       {/* Header */}
-      <div style={{ background:`linear-gradient(135deg,#1A2A3A,#2D4A6A)`, padding:"14px 24px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+      <div style={{ background:`linear-gradient(135deg,#16232B,#2E3F4E)`, padding:"14px 24px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <span style={{ fontSize:22 }}>🔐</span>
           <div>
@@ -6931,7 +6936,7 @@ function AdminPanel({ onClose }) {
 
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
         {/* Left: main navigation menu — always visible, replaces the old cramped tab strip */}
-        <div className="admin-nav-sidebar" style={{ width:200, background:"#1A2A3A", display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+        <div className="admin-nav-sidebar" style={{ width:200, background:"#16232B", display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div className="admin-nav-section-title" style={{ padding:"16px 14px 8px", fontSize:10, fontWeight:700, color:"rgba(255,255,255,.4)", textTransform:"uppercase", letterSpacing:1 }}>Main menu</div>
           {[
             { id:"dashboard", icon:"📊", label:"Dashboard" },
@@ -6954,10 +6959,10 @@ function AdminPanel({ onClose }) {
 
         {/* Guide/review list (hidden on dashboard — full width dashboard instead) */}
         {filterTab!=="analytics" && filterTab!=="dashboard" && (
-        <div style={{ width:300, background:"#fff", borderRight:"1px solid #E0E6ED", display:"flex", flexDirection:"column", flexShrink:0 }}>
+        <div style={{ width:300, background:"#fff", borderRight:"1px solid #E3E1DC", display:"flex", flexDirection:"column", flexShrink:0 }}>
           {/* Section title */}
-          <div style={{ padding:"14px 16px", borderBottom:"1px solid #E0E6ED" }}>
-            <div style={{ fontSize:14, fontWeight:700, color:"#1A2A3A", textTransform:"capitalize" }}>
+          <div style={{ padding:"14px 16px", borderBottom:"1px solid #E3E1DC" }}>
+            <div style={{ fontSize:14, fontWeight:700, color:"#16232B", textTransform:"capitalize" }}>
               {filterTab==="reviews"?"📝 Tourist Reviews":`${{pending:"⏳",approved:"✅",rejected:"❌"}[filterTab]||""} ${filterTab} Guides`}
             </div>
           </div>
@@ -6968,11 +6973,11 @@ function AdminPanel({ onClose }) {
 
             {/* Reviews tab */}
             {filterTab==="reviews" && reviews.map(r=>(
-              <div key={r.id} style={{ padding:"12px 14px", borderBottom:"1px solid #F0F4F8", cursor:"pointer", background:selected?.id===r.id?"#EEF4FF":"transparent" }}
+              <div key={r.id} style={{ padding:"12px 14px", borderBottom:"1px solid #F6F5F2", cursor:"pointer", background:selected?.id===r.id?"#EBEEF0":"transparent" }}
                 onClick={()=>setSelected({...r, _isReview:true})}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:"#1A2A3A", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.title||"Review"}</div>
-                  <span style={{ fontSize:10, padding:"2px 8px", borderRadius:20, background:r.status==="approved"?"#DCFCE7":"#FEF9C3", color:r.status==="approved"?"#16A34A":"#CA8A04", fontWeight:700, flexShrink:0, marginLeft:6 }}>{r.status}</span>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#16232B", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.title||"Review"}</div>
+                  <span style={{ fontSize:10, padding:"2px 8px", borderRadius:20, background:r.status==="approved"?"#DCFCE7":"#F1ECD8", color:r.status==="approved"?"#3D7A52":"#8A6A34", fontWeight:700, flexShrink:0, marginLeft:6 }}>{r.status}</span>
                 </div>
                 <div style={{ fontSize:11, color:"#64748B" }}>Guide: {r.guideName} · Trip: {r.tripRef}</div>
                 <div style={{ fontSize:11, color:"#64748B", marginTop:2 }}>By: {r.touristName} · {"⭐".repeat(r.rating)}</div>
@@ -6983,13 +6988,13 @@ function AdminPanel({ onClose }) {
             {/* Guides list */}
             {filterTab!=="reviews" && !loading && filtered.length===0 && <div style={{ padding:"2rem", textAlign:"center", color:"#64748B", fontSize:13 }}>No {filterTab} guides</div>}
             {filterTab!=="reviews" && filtered.map(g=>(
-              <div key={g.uid} onClick={()=>setSelected(g)} style={{ padding:"14px 16px", borderBottom:"1px solid #F0F4F8", cursor:"pointer", background:selected?.uid===g.uid?"#EEF4FF":"transparent", transition:"background .15s" }}>
+              <div key={g.uid} onClick={()=>setSelected(g)} style={{ padding:"14px 16px", borderBottom:"1px solid #F6F5F2", cursor:"pointer", background:selected?.uid===g.uid?"#EBEEF0":"transparent", transition:"background .15s" }}>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                   <div style={{ width:40, height:40, borderRadius:"50%", overflow:"hidden", flexShrink:0, background:"#E2E8F0" }}>
                     {g.photo ? <img src={g.photo} alt={g.fullName} style={{ width:"100%", height:"100%", objectFit:"cover" }}/> : <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>👤</div>}
                   </div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:"#1A2A3A", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{g.fullName}</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#16232B", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{g.fullName}</div>
                     <div style={{ fontSize:11, color:"#64748B", marginTop:1 }}>{g.email}</div>
                     <div style={{ fontSize:10, color:"#64748B", marginTop:2 }}>Registered: {g.registeredAt?new Date(g.registeredAt).toLocaleDateString():"—"}</div>
                   </div>
@@ -7013,33 +7018,33 @@ function AdminPanel({ onClose }) {
             /* ── Review detail ── */
             <div style={{ maxWidth:600 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:10 }}>
-                <h2 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#1A2A3A" }}>{selected.title}</h2>
-                <span style={{ fontSize:12, padding:"5px 14px", borderRadius:20, background:selected.status==="approved"?"#DCFCE7":"#FEF9C3", color:selected.status==="approved"?"#16A34A":"#CA8A04", fontWeight:700, border:`1px solid ${selected.status==="approved"?"#86EFAC":"#FDE047"}` }}>{selected.status}</span>
+                <h2 style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#16232B" }}>{selected.title}</h2>
+                <span style={{ fontSize:12, padding:"5px 14px", borderRadius:20, background:selected.status==="approved"?"#DCFCE7":"#F1ECD8", color:selected.status==="approved"?"#3D7A52":"#8A6A34", fontWeight:700, border:`1px solid ${selected.status==="approved"?"#86EFAC":"#C9AD7C"}` }}>{selected.status}</span>
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
                 {[["Tourist",selected.touristName],["Email",selected.touristEmail],["Guide",selected.guideName],["Trip Ref",selected.tripRef],["Rating","⭐".repeat(selected.rating)],["Submitted",selected.createdAt?new Date(selected.createdAt).toLocaleDateString():"—"]].map(([l,v])=>(
-                  <div key={l} style={{ background:"#fff", borderRadius:10, padding:"10px 14px", border:"1px solid #E0E6ED" }}>
+                  <div key={l} style={{ background:"#fff", borderRadius:10, padding:"10px 14px", border:"1px solid #E3E1DC" }}>
                     <div style={{ fontSize:11, color:"#64748B", marginBottom:3, fontWeight:600 }}>{l}</div>
-                    <div style={{ fontSize:13, fontWeight:600, color:"#1A2A3A" }}>{v||"—"}</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:"#16232B" }}>{v||"—"}</div>
                   </div>
                 ))}
               </div>
-              <div style={{ background:"#fff", borderRadius:12, padding:"14px", border:"1px solid #E0E6ED", marginBottom:20 }}>
+              <div style={{ background:"#fff", borderRadius:12, padding:"14px", border:"1px solid #E3E1DC", marginBottom:20 }}>
                 <div style={{ fontSize:12, fontWeight:600, color:"#64748B", marginBottom:8 }}>Review content</div>
-                <p style={{ fontSize:13, color:"#1A2A3A", lineHeight:1.7 }}>{selected.body}</p>
+                <p style={{ fontSize:13, color:"#16232B", lineHeight:1.7 }}>{selected.body}</p>
               </div>
-              <div style={{ background:"#FEF9C3", border:"1px solid #FDE047", borderRadius:12, padding:"12px 14px", marginBottom:16, fontSize:12, color:"#92400E", lineHeight:1.6 }}>
+              <div style={{ background:"#F1ECD8", border:"1px solid #C9AD7C", borderRadius:12, padding:"12px 14px", marginBottom:16, fontSize:12, color:"#92400E", lineHeight:1.6 }}>
                 ⚠️ <strong>Verify before approving:</strong> Check that trip reference "{selected.tripRef}" matches actual booking records. The guide "{selected.guideName}" should confirm this tour took place.
               </div>
               <div style={{ display:"flex", gap:10 }}>
                 {selected.status!=="approved" && (
                   <button onClick={async()=>{ setActioning(true); await updateReviewStatus(selected.id,"approved"); setReviews(rs=>rs.map(r=>r.id===selected.id?{...r,status:"approved"}:r)); setSelected(s=>({...s,status:"approved"})); setActioning(false); }} disabled={actioning}
-                    style={{ flex:1, padding:"12px", background:"#16A34A", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning?.6:1 }}>
+                    style={{ flex:1, padding:"12px", background:"#3D7A52", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning?.6:1 }}>
                     ✅ Approve & Publish
                   </button>
                 )}
                 <button onClick={async()=>{ if(!window.confirm("Delete this review permanently?")) return; setActioning(true); await window.firebase.firestore().collection("guideReviews").doc(selected.id).delete(); setReviews(rs=>rs.filter(r=>r.id!==selected.id)); setSelected(null); setActioning(false); }} disabled={actioning}
-                  style={{ flex:1, padding:"12px", background:"#DC2626", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning?.6:1 }}>
+                  style={{ flex:1, padding:"12px", background:"#A83A32", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning?.6:1 }}>
                   🗑️ Delete Review
                 </button>
               </div>
@@ -7049,11 +7054,11 @@ function AdminPanel({ onClose }) {
               {/* Status badge */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                  <div style={{ width:64, height:64, borderRadius:"50%", overflow:"hidden", border:"2px solid #E0E6ED", flexShrink:0 }}>
+                  <div style={{ width:64, height:64, borderRadius:"50%", overflow:"hidden", border:"2px solid #E3E1DC", flexShrink:0 }}>
                     {selected.photo ? <img src={selected.photo} alt={selected.fullName} style={{ width:"100%", height:"100%", objectFit:"cover" }}/> : <div style={{ width:"100%", height:"100%", background:"#E2E8F0", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24 }}>👤</div>}
                   </div>
                   <div>
-                    <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#1A2A3A" }}>{selected.fullName}</div>
+                    <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#16232B" }}>{selected.fullName}</div>
                     <div style={{ fontSize:13, color:"#64748B" }}>{selected.email}</div>
                   </div>
                 </div>
@@ -7072,9 +7077,9 @@ function AdminPanel({ onClose }) {
                   ["Experience", `${selected.experience} years`],
                   ["Registered", selected.registeredAt?new Date(selected.registeredAt).toLocaleString():"—"],
                 ].map(([l,v])=>(
-                  <div key={l} style={{ background:"#fff", borderRadius:10, padding:"10px 14px", border:"1px solid #E0E6ED" }}>
+                  <div key={l} style={{ background:"#fff", borderRadius:10, padding:"10px 14px", border:"1px solid #E3E1DC" }}>
                     <div style={{ fontSize:11, color:"#64748B", marginBottom:3, fontWeight:600 }}>{l}</div>
-                    <div style={{ fontSize:13, fontWeight:600, color:"#1A2A3A" }}>{v||"—"}</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:"#16232B" }}>{v||"—"}</div>
                   </div>
                 ))}
               </div>
@@ -7084,7 +7089,7 @@ function AdminPanel({ onClose }) {
                 <div key={l} style={{ marginBottom:14 }}>
                   <div style={{ fontSize:12, fontWeight:600, color:"#64748B", marginBottom:6 }}>{l}</div>
                   <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                    {(arr||[]).map(x=><span key={x} style={{ fontSize:11, padding:"3px 10px", borderRadius:20, background:"#EEF4FF", color:"#2D4A6A", fontWeight:600 }}>{x}</span>)}
+                    {(arr||[]).map(x=><span key={x} style={{ fontSize:11, padding:"3px 10px", borderRadius:20, background:"#EBEEF0", color:"#2E3F4E", fontWeight:600 }}>{x}</span>)}
                   </div>
                 </div>
               ))}
@@ -7093,7 +7098,7 @@ function AdminPanel({ onClose }) {
               {selected.bio && (
                 <div style={{ marginBottom:16 }}>
                   <div style={{ fontSize:12, fontWeight:600, color:"#64748B", marginBottom:6 }}>Bio</div>
-                  <div style={{ background:"#fff", borderRadius:10, padding:"12px 14px", border:"1px solid #E0E6ED", fontSize:13, color:"#1A2A3A", lineHeight:1.65 }}>{selected.bio}</div>
+                  <div style={{ background:"#fff", borderRadius:10, padding:"12px 14px", border:"1px solid #E3E1DC", fontSize:13, color:"#16232B", lineHeight:1.65 }}>{selected.bio}</div>
                 </div>
               )}
 
@@ -7102,26 +7107,26 @@ function AdminPanel({ onClose }) {
                 <div style={{ marginBottom:20 }}>
                   <div style={{ fontSize:12, fontWeight:600, color:"#64748B", marginBottom:6 }}>SLTDA Licence Document</div>
                   {selected.licenceDocName?.endsWith(".pdf")
-                    ? <a href={selected.licenceDoc} download={selected.licenceDocName} style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"10px 16px", background:"#EEF4FF", borderRadius:10, color:"#2D4A6A", textDecoration:"none", fontSize:13, fontWeight:600 }}>📄 {selected.licenceDocName} — Download</a>
-                    : <img src={selected.licenceDoc} alt="SLTDA Licence" style={{ maxWidth:"100%", borderRadius:10, border:"1px solid #E0E6ED", maxHeight:300, objectFit:"contain" }}/>
+                    ? <a href={selected.licenceDoc} download={selected.licenceDocName} style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"10px 16px", background:"#EBEEF0", borderRadius:10, color:"#2E3F4E", textDecoration:"none", fontSize:13, fontWeight:600 }}>📄 {selected.licenceDocName} — Download</a>
+                    : <img src={selected.licenceDoc} alt="SLTDA Licence" style={{ maxWidth:"100%", borderRadius:10, border:"1px solid #E3E1DC", maxHeight:300, objectFit:"contain" }}/>
                   }
                 </div>
               )}
 
               {/* Action buttons */}
               {selected.status==="pending" && (
-                <div style={{ background:"#fff", borderRadius:14, padding:"1.2rem", border:"1px solid #E0E6ED" }}>
-                  <h4 style={{ fontSize:14, fontWeight:700, color:"#1A2A3A", marginBottom:14 }}>Review Decision</h4>
+                <div style={{ background:"#fff", borderRadius:14, padding:"1.2rem", border:"1px solid #E3E1DC" }}>
+                  <h4 style={{ fontSize:14, fontWeight:700, color:"#16232B", marginBottom:14 }}>Review Decision</h4>
                   <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
-                    <button onClick={()=>approve(selected)} disabled={actioning} style={{ flex:1, padding:"12px", background:"#16A34A", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning?.6:1, minWidth:120 }}>
+                    <button onClick={()=>approve(selected)} disabled={actioning} style={{ flex:1, padding:"12px", background:"#3D7A52", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning?.6:1, minWidth:120 }}>
                       ✅ Approve Guide
                     </button>
                   </div>
                   <div>
                     <label style={{ fontSize:12, fontWeight:600, color:"#64748B", display:"block", marginBottom:6 }}>Rejection reason (required to reject)</label>
                     <textarea value={rejMsg} onChange={e=>setRejMsg(e.target.value)} rows={2} placeholder="e.g. SLTDA licence could not be verified. Please reapply with a clearer document."
-                      style={{ width:"100%", padding:"10px 12px", border:"1.5px solid #E0E6ED", borderRadius:8, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box", marginBottom:8 }}/>
-                    <button onClick={()=>reject(selected)} disabled={actioning||!rejMsg.trim()} style={{ width:"100%", padding:"12px", background:"#DC2626", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning||!rejMsg.trim()?.5:1 }}>
+                      style={{ width:"100%", padding:"10px 12px", border:"1.5px solid #E3E1DC", borderRadius:8, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box", marginBottom:8 }}/>
+                    <button onClick={()=>reject(selected)} disabled={actioning||!rejMsg.trim()} style={{ width:"100%", padding:"12px", background:"#A83A32", color:"#fff", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:actioning||!rejMsg.trim()?.5:1 }}>
                       ❌ Reject Application
                     </button>
                   </div>
@@ -7129,16 +7134,16 @@ function AdminPanel({ onClose }) {
               )}
 
               {selected.status==="approved" && (
-                <div style={{ background:"#F0FDF4", border:"1.5px solid #86EFAC", borderRadius:12, padding:"14px", textAlign:"center", fontSize:13, color:"#16A34A", fontWeight:600 }}>
+                <div style={{ background:"#F0FDF4", border:"1.5px solid #86EFAC", borderRadius:12, padding:"14px", textAlign:"center", fontSize:13, color:"#3D7A52", fontWeight:600 }}>
                   ✅ This guide is approved · Active on platform since {selected.approvedAt?new Date(selected.approvedAt).toLocaleDateString():"—"}
                 </div>
               )}
 
               {selected.status==="rejected" && (
-                <div style={{ background:"#FEF2F2", border:"1.5px solid #FECACA", borderRadius:12, padding:"14px" }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:"#DC2626", marginBottom:4 }}>❌ Application Rejected</div>
+                <div style={{ background:"#F5E7E4", border:"1.5px solid #E3C3BC", borderRadius:12, padding:"14px" }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#A83A32", marginBottom:4 }}>❌ Application Rejected</div>
                   <div style={{ fontSize:12, color:"#64748B" }}>Reason: {selected.rejectionReason||"No reason given"}</div>
-                  <button onClick={()=>approve(selected)} style={{ marginTop:10, padding:"8px 16px", background:"#16A34A", color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Override — Approve</button>
+                  <button onClick={()=>approve(selected)} style={{ marginTop:10, padding:"8px 16px", background:"#3D7A52", color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Override — Approve</button>
                 </div>
               )}
             </div>
@@ -7191,7 +7196,7 @@ function GuidePortalPage({ setPage }) {
   if (!user) return (
     <div style={{ minHeight:"80vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", background:C.surface }}>
       <div style={{ background:"#fff", borderRadius:24, width:"100%", maxWidth:420, overflow:"hidden", boxShadow:"0 8px 40px rgba(0,0,0,.12)" }}>
-        <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2rem", textAlign:"center" }}>
+        <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"2rem", textAlign:"center" }}>
           <div style={{ fontSize:36, marginBottom:8 }}>🧭</div>
           <div style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:"#fff", marginBottom:4 }}>Guide Portal</div>
           <div style={{ fontSize:13, color:"rgba(255,255,255,.75)" }}>CeylonTrails — For certified guides</div>
@@ -7206,7 +7211,7 @@ function GuidePortalPage({ setPage }) {
             style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:14, fontFamily:sans, marginBottom:10, outline:"none", boxSizing:"border-box" }}/>
           <input value={pass} onChange={e=>setPass(e.target.value)} placeholder="Password" type="password"
             style={{ width:"100%", padding:"11px 14px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:14, fontFamily:sans, marginBottom:14, outline:"none", boxSizing:"border-box" }}/>
-          {error && <div style={{ background:C.coralLight, border:`1px solid #EFBAA8`, borderRadius:10, padding:"8px 12px", fontSize:12, color:C.coral, marginBottom:12 }}>{error}</div>}
+          {error && <div style={{ background:C.coralLight, border:`1px solid #DCC5BC`, borderRadius:10, padding:"8px 12px", fontSize:12, color:C.coral, marginBottom:12 }}>{error}</div>}
           <button onClick={()=>handleAuth(mode==="signin"?()=>signInEmail(email,pass):()=>signUpEmail(email,pass))} disabled={authLoading||!email||!pass}
             style={{ width:"100%", padding:"13px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:sans, opacity:authLoading?.6:1, marginBottom:12 }}>
             {authLoading?"Please wait…":mode==="signin"?"Sign in to Guide Portal":"Create guide account"}
@@ -7222,7 +7227,7 @@ function GuidePortalPage({ setPage }) {
   // Logged in but no profile — show registration
   if (!guideProfile) return (
     <div style={{ minHeight:"100vh", background:C.surface }}>
-      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2rem", textAlign:"center" }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"2rem", textAlign:"center" }}>
         <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>Guide Registration</div>
         <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,36px)", fontWeight:700, color:"#fff", marginBottom:8 }}>Apply to become a CeylonTrails Guide</h1>
         <p style={{ fontSize:14, color:"rgba(255,255,255,.75)", maxWidth:500, margin:"0 auto" }}>Complete your profile to start receiving trip requests from tourists across the world.</p>
@@ -7370,7 +7375,7 @@ function MyItinerariesPage({ user, setPage, setSavedItin, onLoginNeeded }) {
 
   return (
     <div style={{ minHeight:"100vh", background:C.surface }}>
-      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2.5rem 2rem" }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"2.5rem 2rem" }}>
         <div style={{ maxWidth:900, margin:"0 auto" }}>
           <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>Your trips</div>
           <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,38px)", fontWeight:700, color:"#fff" }}>💾 My Itineraries</h1>
@@ -7459,7 +7464,7 @@ function SharedItineraryPage({ shareId, onGoHome }) {
 
   return (
     <div style={{ minHeight:"100vh", background:C.surface, fontFamily:sans }}>
-      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"1.2rem 1.5rem" }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"1.2rem 1.5rem" }}>
         <div style={{ maxWidth:820, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div onClick={onGoHome} style={{ cursor:"pointer", fontFamily:serif, fontSize:18, fontWeight:700, color:"#fff" }}>
             Ceylon<span style={{ color:C.amberMid }}>Trails</span>
@@ -7468,7 +7473,7 @@ function SharedItineraryPage({ shareId, onGoHome }) {
         </div>
       </div>
 
-      <div style={{ background:`linear-gradient(135deg,${C.teal},#147856)`, padding:"2.5rem 2rem" }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"2.5rem 2rem" }}>
         <div style={{ maxWidth:820, margin:"0 auto" }}>
           <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,38px)", fontWeight:700, color:"#fff", marginBottom:8 }}>🗺️ {itin.title}</h1>
           <p style={{ fontSize:14, color:"rgba(255,255,255,.8)", marginBottom:14 }}>{itin.tagline}</p>
@@ -7494,7 +7499,7 @@ function SharedItineraryPage({ shareId, onGoHome }) {
 
         {(itin.days||[]).map(d=>(
           <div key={d.day} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, marginBottom:16, boxShadow:"0 2px 12px rgba(0,0,0,.04)" }}>
-            <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,#0B6B52,#147856)`, display:"flex", alignItems:"center", gap:12 }}>
+            <div style={{ padding:"14px 20px", background:`linear-gradient(135deg,#0E4A3D,#0B3A30)`, display:"flex", alignItems:"center", gap:12 }}>
               <span style={{ background:"rgba(255,255,255,.2)", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>Day {d.day}</span>
               <span style={{ fontSize:15, fontWeight:700, color:"#fff", fontFamily:serif }}>{d.location}</span>
               <span style={{ fontSize:12, color:"rgba(255,255,255,.75)", marginLeft:"auto" }}>— {d.theme}</span>
@@ -7505,7 +7510,7 @@ function SharedItineraryPage({ shareId, onGoHome }) {
           </div>
         ))}
 
-        <div style={{ marginTop:"2rem", background:"linear-gradient(135deg,#FDF5E0,#FFF7E6)", border:"1.5px solid #F0D48A", borderRadius:20, padding:"2rem", textAlign:"center" }}>
+        <div style={{ marginTop:"2rem", background:"linear-gradient(135deg,#F1ECE0,#FFF7E6)", border:"1.5px solid #DFCBA0", borderRadius:20, padding:"2rem", textAlign:"center" }}>
           <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:8 }}>Want to plan your own Sri Lanka trip?</h3>
           <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Create a free AI-powered itinerary in minutes, just like this one.</p>
           <Btn variant="amber" onClick={onGoHome}>✨ Plan my own trip on CeylonTrails →</Btn>
