@@ -1,6 +1,25 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { MapPin, Compass, Sparkles, ShieldCheck, Users, Star, Calendar, Mail, Phone, Heart,
-  MessageCircle, Lock, ChevronDown, Menu, Clock, Award, Globe2, Route } from "lucide-react";
+
+// ─── INLINE LINE ICONS ────────────────────────────────────────────────────────
+// Hand-drawn instead of pulled from a package — this removes the lucide-react
+// dependency entirely so a deploy can never fail because a new package didn't
+// make it into package-lock.json. Same simple call signature (size prop) as
+// the icon library it replaces, so nothing else in the file needs to change.
+const iconBase = { viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:2, strokeLinecap:"round", strokeLinejoin:"round" };
+function MapPin({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg>; }
+function Compass({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><circle cx="12" cy="12" r="10"/><path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/></svg>; }
+function Sparkles({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><path d="M12 3v4M12 17v4M5 5l2.5 2.5M16.5 16.5L19 19M3 12h4M17 12h4M5 19l2.5-2.5M16.5 7.5L19 5"/></svg>; }
+function ShieldCheck({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>; }
+function Users({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6.2 6.5-6.2s6.5 2.6 6.5 6.2"/><path d="M16.2 4.3a3.2 3.2 0 010 6.2"/><path d="M18 13.9c2.6.5 4.5 2.7 4.5 5.9"/></svg>; }
+function Star({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} fill="currentColor" stroke="none" {...p}><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17.3l-5.9 3.2 1.3-6.6-4.9-4.5 6.6-.8L12 2.5z"/></svg>; }
+function Mail({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M3.5 6.5L12 13l8.5-6.5"/></svg>; }
+function Phone({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><path d="M4.5 3.5h4l1.5 5-2.5 1.7a12 12 0 006 6l1.7-2.5 5 1.5v4a1.5 1.5 0 01-1.6 1.5A17 17 0 013 5.1 1.5 1.5 0 014.5 3.5z"/></svg>; }
+function ChevronDown({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><path d="M5.5 8.5L12 15l6.5-6.5"/></svg>; }
+function Clock({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3.5 2"/></svg>; }
+function Award({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><circle cx="12" cy="8.5" r="5.5"/><path d="M8.3 13.2L7 21l5-2.6 5 2.6-1.3-7.8"/></svg>; }
+function Globe2({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.8 2.6 4.3 6 4.3 9.5s-1.5 6.9-4.3 9.5c-2.8-2.6-4.3-6-4.3-9.5S9.2 5.1 12 2.5z"/></svg>; }
+function Route({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><circle cx="5.5" cy="18.5" r="2.3"/><circle cx="18.5" cy="5.5" r="2.3"/><path d="M7.6 17.2C12 14 12 10 16.4 6.8"/></svg>; }
+function MessageCircle({ size=16, ...p }) { return <svg width={size} height={size} {...iconBase} {...p}><path d="M21 11.5a8.5 8.5 0 01-12.1 7.7L3 21l1.8-5.9A8.5 8.5 0 1121 11.5z"/></svg>; }
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
 // Refined palette: a single deep emerald as the brand anchor, a muted brass
