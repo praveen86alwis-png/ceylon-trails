@@ -960,6 +960,9 @@ function GalleryLightbox({ place, onClose }) {
 // ─── MOBILE CSS INJECTION ────────────────────────────────────────────────────
 const MOBILE_CSS = `
   * { box-sizing: border-box; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  #root { max-width: 100vw; overflow-x: hidden; }
+  img, svg, video, table { max-width: 100%; }
 
   /* Desktop nav hidden on mobile */
   .desktop-nav { display: flex !important; }
@@ -3104,6 +3107,46 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       const clean = raw.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "").trim();
       const parsed = JSON.parse(clean);
       if (!parsed.days || !parsed.days.length) throw new Error("No days returned");
+
+      // ── Correct unrealistic travel-time estimates ──────────────────────────
+      // The AI guesses travelFromPrev as free text, which is often wrong (e.g.
+      // claiming "45 min drive" for two towns that are actually 3 hours apart).
+      // Where we can resolve both the previous and current location to a known
+      // city with real coordinates, replace the guess with a distance-based
+      // estimate using realistic Sri Lankan road speeds.
+      function resolveCityGeo(areaText) {
+        if (!areaText) return null;
+        const cleanText = areaText.split(",")[0].trim().toLowerCase();
+        const key = Object.keys(CITY_GEO).find(k =>
+          cleanText.includes(k.toLowerCase()) || k.toLowerCase().includes(cleanText)
+        );
+        return key ? CITY_GEO[key] : null;
+      }
+      function estimateDriveTime(fromGeo, toGeo) {
+        const km = distKm(fromGeo, toGeo);
+        if (!isFinite(km) || km < 3) return null; // too close/unknown to be meaningful
+        // Sri Lanka realistic average road speeds — hill/winding roads are much
+        // slower than coastal highways, and long hauls average out faster.
+        const avgKmh = km > 80 ? 55 : km > 30 ? 42 : 28;
+        const rawMins = (km / avgKmh) * 60;
+        const mins = rawMins < 60 ? Math.max(10, Math.round(rawMins / 5) * 5) : Math.round(rawMins);
+        const hrs = Math.floor(mins / 60), rem = mins % 60;
+        const label = hrs > 0 ? `${hrs} hr${hrs > 1 ? "s" : ""}${rem > 0 ? ` ${rem} min` : ""} drive` : `${mins} min drive`;
+        return { km: Math.round(km), label };
+      }
+      let prevAreaForTravel = customStart;
+      (parsed.days || []).forEach(day => {
+        (day.activities || []).forEach(act => {
+          if (act.type === "transport") {
+            const fromGeo = resolveCityGeo(prevAreaForTravel);
+            const toGeo   = resolveCityGeo(act.area || day.location);
+            const est = fromGeo && toGeo ? estimateDriveTime(fromGeo, toGeo) : null;
+            if (est) act.travelFromPrev = `${est.label} (~${est.km}km)`;
+          }
+          prevAreaForTravel = act.area || day.location || prevAreaForTravel;
+        });
+      });
+
       // Attach trip meta so it travels with the itinerary into guide requests, PDF, etc.
       parsed.tripMeta = {
         startDate: ans.startDate, endDate: ans.endDate, startTime: ans.startTime,
@@ -3632,6 +3675,62 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 //  - Trip completion confirmation (both must confirm to release held funds)
 //  - No-show reporting (tourist only)
 //  - Optional WhatsApp/phone contact sharing
+// ─── TRIP PROGRESS BAR ────────────────────────────────────────────────────────
+// Visual stepper shown to both tourist and guide so either side can see exactly
+// where a booking stands: paid & confirmed → trip taking place → both sides
+// confirmed it happened → remaining balance released to the guide.
+function TripProgressBar({ status, tripEnded, iConfirmed, theyConfirmed }) {
+  const bothConfirmed = iConfirmed && theyConfirmed;
+  const isDisputed = status === "disputed";
+  const isCompleted = status === "completed" || bothConfirmed;
+
+  // Determine how far along the 4-stage journey we are (0-3)
+  let activeIdx = 0; // 0: booked & paid
+  if (tripEnded) activeIdx = 1; // 1: trip underway / ended, awaiting confirmation
+  if (iConfirmed || theyConfirmed) activeIdx = 2; // 2: at least one side confirmed
+  if (isCompleted) activeIdx = 3; // 3: both confirmed, payment released
+
+  const steps = [
+    { label:"Booked & paid" },
+    { label:"Trip underway" },
+    { label: bothConfirmed ? "Both confirmed" : "Awaiting confirmation" },
+    { label:"Balance released" },
+  ];
+
+  return (
+    <div style={{ marginBottom:12 }}>
+      <div style={{ display:"flex", alignItems:"center" }}>
+        {steps.map((s, i) => (
+          <React.Fragment key={i}>
+            <div style={{ display:"flex", flexDirection:"column", alignItems:"center", flex:"0 0 auto" }}>
+              <div style={{
+                width:20, height:20, borderRadius:"50%", flexShrink:0,
+                display:"flex", alignItems:"center", justifyContent:"center",
+                fontSize:11, fontWeight:700, color:"#fff",
+                background: isDisputed && i>=2 ? "#DC2626" : i <= activeIdx ? C.teal : "#D8E3DE",
+              }}>
+                {i < activeIdx || (i===activeIdx && isCompleted) ? "✓" : i+1}
+              </div>
+            </div>
+            {i < steps.length-1 && (
+              <div style={{ flex:1, height:3, borderRadius:2, margin:"0 2px",
+                background: isDisputed && i>=1 ? "#FCA5A5" : i < activeIdx ? C.teal : "#D8E3DE" }}/>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={{ display:"flex", justifyContent:"space-between", marginTop:6 }}>
+        {steps.map((s,i)=>(
+          <span key={i} style={{ fontSize:9.5, color: i<=activeIdx?C.ink:C.inkSoft, fontWeight:i===activeIdx?700:400, textAlign:i===0?"left":i===steps.length-1?"right":"center", flex:1 }}>
+            {s.label}
+          </span>
+        ))}
+      </div>
+      {isDisputed && <div style={{ fontSize:11, color:"#DC2626", marginTop:6 }}>⚠️ Progress paused — this booking is under CeylonTrails admin review.</div>}
+    </div>
+  );
+}
+
 function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, guidePhone }) {
   const [showChat, setShowChat]   = useState(false);
   const [messages, setMessages]   = useState([]);
@@ -3692,6 +3791,8 @@ function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, guid
          req.status==="disputed"  ? "⚠️ Under review by CeylonTrails admin" :
          "✅ Booking confirmed"} · Paid ${req.payment.total}
       </div>
+
+      <TripProgressBar status={req.status} tripEnded={tripEnded} iConfirmed={iConfirmed} theyConfirmed={theyConfirmed}/>
 
       {req.status!=="disputed" && (
         <div style={{ background:"rgba(255,255,255,.7)", borderRadius:8, padding:"8px 10px", fontSize:11, color:C.ink, marginBottom:10 }}>
@@ -3969,10 +4070,10 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                         <div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>{req.itinTitle} · {req.itinDays} days</div>
                       </div>
                       <span style={{ fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20,
-                        background:req.status==="completed"?C.tealLight:req.status==="confirmed"?C.tealLight:req.status==="disputed"?"#FEF9C3":req.status==="guide_declined"?"#FEE2E2":req.bid?C.amberLight:C.surface,
-                        color:req.status==="completed"?C.teal:req.status==="confirmed"?C.teal:req.status==="disputed"?"#CA8A04":req.status==="guide_declined"?"#DC2626":req.bid?C.amber:C.inkSoft,
-                        border:`1px solid ${req.status==="completed"||req.status==="confirmed"?"#9FE1CB":req.status==="disputed"?"#FDE047":req.status==="guide_declined"?"#FECACA":req.bid?"#F0D48A":C.border}` }}>
-                        {req.status==="completed"?"✅ Trip completed":req.status==="confirmed"?"✅ Confirmed":req.status==="disputed"?"⚠️ Under review":req.status==="guide_declined"?"🚫 Guide unavailable":req.bid?"💬 Bid received":"⏳ Awaiting bid"}
+                        background:req.status==="completed"?C.tealLight:req.status==="confirmed"?C.tealLight:req.status==="disputed"?"#FEF9C3":req.status==="guide_declined"?"#FEE2E2":req.status==="declined"?"#F1F5F9":req.bid?C.amberLight:C.surface,
+                        color:req.status==="completed"?C.teal:req.status==="confirmed"?C.teal:req.status==="disputed"?"#CA8A04":req.status==="guide_declined"?"#DC2626":req.status==="declined"?"#64748B":req.bid?C.amber:C.inkSoft,
+                        border:`1px solid ${req.status==="completed"||req.status==="confirmed"?"#9FE1CB":req.status==="disputed"?"#FDE047":req.status==="guide_declined"?"#FECACA":req.status==="declined"?"#E2E8F0":req.bid?"#F0D48A":C.border}` }}>
+                        {req.status==="completed"?"✅ Trip completed":req.status==="confirmed"?"✅ Confirmed":req.status==="disputed"?"⚠️ Under review":req.status==="guide_declined"?"🚫 Guide unavailable":req.status==="declined"?"❌ You declined":req.bid?"💬 Bid received":"⏳ Awaiting bid"}
                       </span>
                     </div>
                     {req.status==="guide_declined" && (
@@ -3980,7 +4081,12 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                         {req.guideName} isn't able to take this trip. Try browsing other guides.
                       </div>
                     )}
-                    {req.bid && req.status!=="confirmed" && req.status!=="completed" && req.status!=="disputed" && (
+                    {req.status==="declined" && (
+                      <div style={{ background:"#F8FAFC", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#64748B" }}>
+                        You declined this bid from {req.guideName}. Browse other guides to send a new request.
+                      </div>
+                    )}
+                    {req.bid && req.status!=="confirmed" && req.status!=="completed" && req.status!=="disputed" && req.status!=="declined" && req.status!=="guide_declined" && (
                       <div style={{ background:C.amberLight, border:`1px solid #F0D48A`, borderRadius:10, padding:"12px 14px", marginBottom:12 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:4 }}>Bid from {req.guideName}</div>
                         <div style={{ fontSize:20, fontWeight:800, color:C.amber, marginBottom:4 }}>${req.bid.price} USD</div>
@@ -5743,6 +5849,19 @@ function GuideRegister({ user, onComplete }) {
 }
 
 
+// Formats the tourist's already-chosen trip dates for display to a guide.
+// Guides must NOT set/propose their own dates — the tourist already picked
+// these when building the itinerary, so we always read from the request.
+function fmtTripDates(req) {
+  if (!req) return "Dates not set by tourist yet";
+  const { tripStartDate, tripEndDate } = req;
+  if (!tripStartDate || !tripEndDate) return "Dates not set by tourist yet";
+  const opts = { day:"numeric", month:"short", year:"numeric" };
+  const s = new Date(tripStartDate).toLocaleDateString("en-GB", opts);
+  const e = new Date(tripEndDate).toLocaleDateString("en-GB", opts);
+  return `${s} → ${e}`;
+}
+
 // ─── GUIDE DASHBOARD ──────────────────────────────────────────────────────────
 function GuideDashboard({ user, profile, onProfileUpdate }) {
   const [activeTab, setTab]     = useState("requests");
@@ -5752,7 +5871,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
   const [freeDate, setFreeDate] = useState(profile?.freeDate||"");
   const [editProfile, setEditP] = useState(false);
   const [bidModal, setBid]      = useState(null); // {request}
-  const [bidText, setBidText]   = useState({ price:"", message:"", dates:"" });
+  const [bidText, setBidText]   = useState({ price:"", message:"" });
   const [newTour, setNewTour]   = useState({ title:"", location:"", date:"", rating:5, notes:"" });
   const [addingTour, setAddTour]= useState(false);
   const [notifyToast, setNotifyToast] = useState(null); // one-time toast for declined/paid bids
@@ -5784,23 +5903,29 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
     onProfileUpdate({ ...profile, availability:val, freeDate:date||"" });
   };
 
-  // Returns true if the bid dates text-overlaps with another accepted/confirmed booking.
-  // This is a best-effort warning only — dates are free text, so we can't be 100% certain.
-  const checkDateOverlap = (datesText) => {
-    if (!datesText) return null;
-    const confirmed = requests.filter(r => r.status==="accepted" && r.bid?.dates);
-    const overlapping = confirmed.find(r => r.bid.dates.trim().toLowerCase() === datesText.trim().toLowerCase());
-    return overlapping || null;
+  // Returns true if this request's tourist-set dates overlap with another
+  // accepted/confirmed booking's tourist-set dates. Real date-range comparison
+  // now that dates always come from the tourist, not free text from the guide.
+  const checkDateOverlap = (req) => {
+    if (!req?.tripStartDate || !req?.tripEndDate) return null;
+    const s1 = new Date(req.tripStartDate), e1 = new Date(req.tripEndDate);
+    const confirmed = requests.filter(r => (r.status==="accepted"||r.status==="confirmed") && r.id!==req.id && r.tripStartDate && r.tripEndDate);
+    return confirmed.find(r => {
+      const s2 = new Date(r.tripStartDate), e2 = new Date(r.tripEndDate);
+      return s1 <= e2 && s2 <= e1;
+    }) || null;
   };
 
   const submitBidHandler = async () => {
     if (!bidModal || !bidText.price) return;
     if (bidModal.bid && !window.confirm("You already submitted a bid for this request. Submit a new one to replace it?")) return;
-    const overlap = checkDateOverlap(bidText.dates);
-    if (overlap && !window.confirm(`⚠️ Warning: these dates look like they may overlap with an already-confirmed booking ("${overlap.itinTitle}"). Submit anyway?`)) return;
-    await submitBid(bidModal.id, bidText);
-    setRequests(rs=>rs.map(r=>r.id===bidModal.id?{...r,bid:bidText,bidStatus:"submitted"}:r));
-    setBid(null); setBidText({ price:"", message:"", dates:"" });
+    const overlap = checkDateOverlap(bidModal);
+    if (overlap && !window.confirm(`⚠️ Warning: these dates overlap with an already-confirmed booking ("${overlap.itinTitle}"). Submit anyway?`)) return;
+    // Dates always come from the tourist's chosen trip dates — never guide-entered.
+    const finalBid = { ...bidText, dates: fmtTripDates(bidModal) };
+    await submitBid(bidModal.id, finalBid);
+    setRequests(rs=>rs.map(r=>r.id===bidModal.id?{...r,bid:finalBid,bidStatus:"submitted"}:r));
+    setBid(null); setBidText({ price:"", message:"" });
   };
 
   const addCompletedTour = async () => {
@@ -5897,13 +6022,18 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
             </div>
 
             <div style={{ overflowY:"auto", flex:1 }}>
-              {[["Price (USD total)","price","number","e.g. 250"],["Available dates","dates","text","e.g. 15–20 Jan 2026"]].map(([l,k,t,ph])=>(
-              <div key={k} style={{ marginBottom:12 }}>
-                <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>{l}</label>
-                <input type={t} value={bidText[k]} onChange={e=>setBidText(b=>({...b,[k]:e.target.value}))} placeholder={ph}
-                  style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>Trip dates (set by tourist)</label>
+              <div style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, background:C.surface, color:C.ink, boxSizing:"border-box" }}>
+                📅 {fmtTripDates(bidModal)}
               </div>
-            ))}
+              <p style={{ fontSize:11, color:C.inkSoft, marginTop:4 }}>You're bidding to guide on these exact dates — they can't be changed here.</p>
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>Price (USD total)</label>
+              <input type="number" value={bidText.price} onChange={e=>setBidText(b=>({...b,price:e.target.value}))} placeholder="e.g. 250"
+                style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+            </div>
             <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>Message to tourist</label>
             <textarea value={bidText.message} onChange={e=>setBidText(b=>({...b,message:e.target.value}))} rows={3} placeholder="Hello! I would love to guide you through Sri Lanka..."
               style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box", marginBottom:16 }}/>
@@ -6033,7 +6163,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                 )}
                 {!req.bid && req.status==="pending" && (
                   <div style={{ display:"flex", gap:8 }}>
-                    <Btn onClick={()=>{ setBid(req); setBidText({ price:"", message:"", dates:"" }); }} style={{ flex:1 }}>Submit bid →</Btn>
+                    <Btn onClick={()=>{ setBid(req); setBidText({ price:"", message:"" }); }} style={{ flex:1 }}>Submit bid →</Btn>
                     <button onClick={async()=>{
                       if(!req.id){ alert("Error: this request is missing an ID."); return; }
                       if(!window.confirm("Decline this trip request? The tourist will be notified you're not available.")) return;
@@ -6055,7 +6185,7 @@ function GuideDashboard({ user, profile, onProfileUpdate }) {
                   </div>
                 )}
                 {req.status==="declined" && (
-                  <Btn variant="outline" onClick={()=>{ setBid(req); setBidText({ price:"", message:"", dates:"" }); }}>Send a new bid →</Btn>
+                  <Btn variant="outline" onClick={()=>{ setBid(req); setBidText({ price:"", message:"" }); }}>Send a new bid →</Btn>
                 )}
               </div>
             );})}
