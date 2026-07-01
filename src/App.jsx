@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { MapPin, Compass, Sparkles, ShieldCheck, Users, Star, Calendar, Mail, Phone, Heart,
+  MessageCircle, Lock, ChevronDown, Menu, Clock, Award, Globe2, Route } from "lucide-react";
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
 // Refined palette: a single deep emerald as the brand anchor, a muted brass
@@ -1111,13 +1113,16 @@ function MobileStyles() {
 
 // ─── NAV ─────────────────────────────────────────────────────────────────────
 // ─── NAV WITH AUTH ────────────────────────────────────────────────────────────
-function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }) {
+function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onSignInClick, viewMode, setViewMode }) {
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [destHover, setDestHover] = useState(false);
   const [langOpen,  setLangOpen]  = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const hoverTimer = useRef(null);
   const { lang, setLang, t } = useLang();
   const currentLangObj = LANGUAGES.find(l=>l.code===lang) || LANGUAGES[0];
+  const isGuideMode = viewMode === "guide";
 
   const openDest = (catId) => {
     setPage("destinations"); setDestHover(false); setMenuOpen(false);
@@ -1168,7 +1173,10 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
           <span onClick={()=>setPage("srilankamap")} style={{ fontSize:14, color:page==="srilankamap"?C.teal:C.inkSoft, fontWeight:page==="srilankamap"?600:400, cursor:"pointer", borderBottom:page==="srilankamap"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>{t("nav_map")}</span>
           <span onClick={()=>setPage("journey")} style={{ fontSize:14, color:page==="journey"?C.teal:C.inkSoft, fontWeight:page==="journey"?600:400, cursor:"pointer", borderBottom:page==="journey"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>{t("nav_plan")}</span>
           <span onClick={onGuideOpen} style={{ fontSize:14, color:C.inkSoft, cursor:"pointer", paddingBottom:2, whiteSpace:"nowrap" }}>{t("nav_findguide")}</span>
-          <span onClick={()=>setPage("guideportal")} style={{ fontSize:14, color:page==="guideportal"?C.teal:C.inkSoft, fontWeight:page==="guideportal"?600:400, cursor:"pointer", borderBottom:page==="guideportal"?"2px solid "+C.teal:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>{t("nav_guideportal")}</span>
+          <span onClick={()=>setPage("about")} style={{ fontSize:14, color:page==="about"?C.teal:C.inkSoft, fontWeight:page==="about"?600:400, cursor:"pointer", borderBottom:page==="about"?`2px solid ${C.teal}`:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>About</span>
+          {isGuideMode && (
+            <span onClick={()=>setPage("guideportal")} style={{ fontSize:14, color:page==="guideportal"?C.teal:C.inkSoft, fontWeight:page==="guideportal"?600:400, cursor:"pointer", borderBottom:page==="guideportal"?"2px solid "+C.teal:"2px solid transparent", paddingBottom:2, whiteSpace:"nowrap" }}>Guide Dashboard</span>
+          )}
         </div>
 
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -1196,17 +1204,65 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
           </div>
           {/* Auth button */}
           {user ? (
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <div onClick={()=>setPage("myitineraries")} style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer" }} title="My Itineraries">
+            <div style={{ display:"flex", alignItems:"center", gap:8, position:"relative" }}>
+              <div onClick={()=>setAccountOpen(o=>!o)} style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer" }} title="Account">
                 <div style={{ width:32, height:32, borderRadius:"50%", background:C.teal, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700 }}>
                   {displayName?.[0]?.toUpperCase()||"U"}
                 </div>
-                <span style={{ fontSize:13, fontWeight:600, color:page==="myitineraries"?C.teal:C.ink }}>{displayName}</span>
+                <span style={{ fontSize:13, fontWeight:600, color:C.ink }}>{displayName}</span>
+                {isGuideMode && <span style={{ fontSize:9, fontWeight:700, padding:"2px 7px", borderRadius:10, background:C.amberLight, color:C.amber, textTransform:"uppercase", letterSpacing:.4 }}>Guide</span>}
+                <ChevronDown size={13} style={{ color:C.inkSoft }}/>
               </div>
-              <button onClick={signOut} style={{ fontSize:12, color:C.inkSoft, background:"none", border:`1px solid ${C.border}`, borderRadius:8, padding:"4px 10px", cursor:"pointer", fontFamily:sans }}>{t("nav_signout")}</button>
+              {accountOpen && (
+                <>
+                  <div onClick={()=>setAccountOpen(false)} style={{ position:"fixed", inset:0, zIndex:450 }}/>
+                  <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:"#fff", borderRadius:14, boxShadow:"0 8px 30px rgba(0,0,0,.15)", border:`1px solid ${C.border}`, padding:6, width:220, zIndex:500 }}>
+                    <div onClick={()=>{ setPage(isGuideMode?"guideportal":"myitineraries"); setAccountOpen(false); }}
+                      style={{ padding:"10px 12px", borderRadius:9, cursor:"pointer", fontSize:13, fontWeight:600, color:C.ink }}
+                      onMouseEnter={e=>e.currentTarget.style.background=C.surface} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      {isGuideMode ? "🧭 Guide Dashboard" : "🗺️ My Itineraries"}
+                    </div>
+                    <div style={{ height:1, background:C.border, margin:"4px 0" }}/>
+                    <div onClick={()=>{ setViewMode(isGuideMode?"tourist":"guide"); setPage(isGuideMode?"home":"guideportal"); setAccountOpen(false); }}
+                      style={{ padding:"10px 12px", borderRadius:9, cursor:"pointer", fontSize:13, fontWeight:600, color:C.teal }}
+                      onMouseEnter={e=>e.currentTarget.style.background=C.tealPale} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      {isGuideMode ? "Switch to tourist view" : "Switch to guide view"}
+                    </div>
+                    <div style={{ height:1, background:C.border, margin:"4px 0" }}/>
+                    <div onClick={()=>{ signOut(); setViewMode("tourist"); setAccountOpen(false); }}
+                      style={{ padding:"10px 12px", borderRadius:9, cursor:"pointer", fontSize:13, color:C.inkSoft }}
+                      onMouseEnter={e=>e.currentTarget.style.background=C.surface} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      {t("nav_signout")}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
-            <button onClick={onLoginClick} style={{ padding:"8px 18px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{t("nav_signin")}</button>
+            <div style={{ position:"relative" }}>
+              <button onClick={()=>setSignInOpen(o=>!o)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
+                {t("nav_signin")} <ChevronDown size={13}/>
+              </button>
+              {signInOpen && (
+                <>
+                  <div onClick={()=>setSignInOpen(false)} style={{ position:"fixed", inset:0, zIndex:450 }}/>
+                  <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, background:"#fff", borderRadius:14, boxShadow:"0 8px 30px rgba(0,0,0,.15)", border:`1px solid ${C.border}`, padding:6, width:220, zIndex:500 }}>
+                    <div onClick={()=>{ setSignInOpen(false); onSignInClick("tourist"); }}
+                      style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:9, cursor:"pointer" }}
+                      onMouseEnter={e=>e.currentTarget.style.background=C.surface} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      <span style={{ width:30, height:30, borderRadius:9, background:C.tealLight, color:C.teal, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><Users size={15}/></span>
+                      <div><div style={{ fontSize:13, fontWeight:600, color:C.ink }}>Sign in as tourist</div><div style={{ fontSize:11, color:C.inkSoft }}>Plan trips, book guides</div></div>
+                    </div>
+                    <div onClick={()=>{ setSignInOpen(false); onSignInClick("guide"); }}
+                      style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:9, cursor:"pointer" }}
+                      onMouseEnter={e=>e.currentTarget.style.background=C.surface} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      <span style={{ width:30, height:30, borderRadius:9, background:C.amberLight, color:C.amber, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><Compass size={15}/></span>
+                      <div><div style={{ fontSize:13, fontWeight:600, color:C.ink }}>Sign in as guide</div><div style={{ fontSize:11, color:C.inkSoft }}>Manage bids & bookings</div></div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           )}
           <button onClick={()=>setPage("journey")} style={{ padding:"9px 18px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans, whiteSpace:"nowrap" }}>{t("nav_planmytrip")}</button>
           <button onClick={()=>setMenuOpen(o=>!o)} style={{ display:"flex", flexDirection:"column", gap:5, padding:8, background:"none", border:`1px solid ${C.border}`, borderRadius:10, cursor:"pointer" }}>
@@ -1219,9 +1275,9 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
 
       {menuOpen && (
         <div style={{ position:"fixed", top:64, left:0, right:0, zIndex:399, background:"#fff", borderBottom:`1px solid ${C.border}`, boxShadow:"0 8px 24px rgba(0,0,0,.1)", padding:"0.5rem 1.25rem 1.25rem", maxHeight:"85vh", overflowY:"auto" }}>
-          {[["home",t("nav_home"),"🏠"],["destinations",t("nav_destinations"),"🗺️"],["srilankamap",t("nav_map"),"🗾"],["journey",t("nav_plan"),"✨"],["guides",t("nav_findguide"),"🧭"],["guideportal",t("nav_guideportal"),"🧭"]].map(([p,l,icon])=>(
+          {[["home",t("nav_home"),MapPin],["destinations",t("nav_destinations"),Compass],["srilankamap",t("nav_map"),Globe2],["journey",t("nav_plan"),Sparkles],["guides",t("nav_findguide"),Users],["about","About",ShieldCheck],...(isGuideMode?[["guideportal","Guide Dashboard",Award]]:[])].map(([p,l,Icon])=>(
             <div key={p} onClick={()=>{ if(p==="guides") onGuideOpen(); else setPage(p); setMenuOpen(false); }} style={{ padding:"11px 2px", fontSize:14.5, fontWeight:page===p?600:400, color:page===p?C.teal:C.ink, cursor:"pointer", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:10 }}>
-              <span style={{ fontSize:16, width:20, textAlign:"center" }}>{icon}</span>{l}
+              <span style={{ width:20, display:"flex", alignItems:"center", justifyContent:"center", color:page===p?C.teal:C.inkSoft }}><Icon size={16}/></span>{l}
             </div>
           ))}
           {/* Compact language row inside mobile menu */}
@@ -1232,16 +1288,24 @@ function NavWithAuth({ page, setPage, onGuideOpen, user, signOut, onLoginClick }
           </div>
           {user ? (
             <>
-              <div onClick={()=>{ setPage("myitineraries"); setMenuOpen(false); }} style={{ padding:"11px 2px", fontSize:14.5, fontWeight:page==="myitineraries"?600:400, color:page==="myitineraries"?C.teal:C.ink, cursor:"pointer", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:10 }}>
-                <span style={{ fontSize:16, width:20, textAlign:"center" }}>💾</span>My Itineraries
+              <div onClick={()=>{ setPage(isGuideMode?"guideportal":"myitineraries"); setMenuOpen(false); }} style={{ padding:"11px 2px", fontSize:14.5, fontWeight:600, color:C.ink, cursor:"pointer", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:10 }}>
+                <span style={{ width:20, display:"flex", alignItems:"center", justifyContent:"center", color:C.inkSoft }}>{isGuideMode?<Award size={16}/>:<MapPin size={16}/>}</span>{isGuideMode?"Guide Dashboard":"My Itineraries"}
+              </div>
+              <div onClick={()=>{ setViewMode(isGuideMode?"tourist":"guide"); setPage(isGuideMode?"home":"guideportal"); setMenuOpen(false); }}
+                style={{ padding:"11px 2px", fontSize:14.5, fontWeight:600, color:C.teal, cursor:"pointer", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:10 }}>
+                <span style={{ width:20, display:"flex", alignItems:"center", justifyContent:"center" }}><Compass size={16}/></span>
+                {isGuideMode ? "Switch to tourist view" : "Switch to guide view"}
               </div>
               <div style={{ marginTop:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <span style={{ fontSize:13, color:C.ink }}>👤 {displayName}</span>
-                <button onClick={()=>{ signOut(); setMenuOpen(false); }} style={{ fontSize:12, color:C.coral, background:"none", border:`1px solid ${C.coral}`, borderRadius:8, padding:"5px 12px", cursor:"pointer", fontFamily:sans }}>{t("nav_signout")}</button>
+                <span style={{ fontSize:13, color:C.ink, display:"flex", alignItems:"center", gap:6 }}><Users size={14}/> {displayName}{isGuideMode && <span style={{ fontSize:9, fontWeight:700, padding:"2px 7px", borderRadius:10, background:C.amberLight, color:C.amber, textTransform:"uppercase" }}>Guide</span>}</span>
+                <button onClick={()=>{ signOut(); setViewMode("tourist"); setMenuOpen(false); }} style={{ fontSize:12, color:C.coral, background:"none", border:`1px solid ${C.coral}`, borderRadius:8, padding:"5px 12px", cursor:"pointer", fontFamily:sans }}>{t("nav_signout")}</button>
               </div>
             </>
           ) : (
-            <button onClick={()=>{ onLoginClick(); setMenuOpen(false); }} style={{ marginTop:10, width:"100%", padding:"11px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{t("nav_signin")}</button>
+            <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:8 }}>
+              <button onClick={()=>{ onSignInClick("tourist"); setMenuOpen(false); }} style={{ width:"100%", padding:"11px", background:"transparent", color:C.teal, border:`1.5px solid ${C.teal}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Sign in as tourist</button>
+              <button onClick={()=>{ onSignInClick("guide"); setMenuOpen(false); }} style={{ width:"100%", padding:"11px", background:"transparent", color:C.amber, border:`1.5px solid ${C.amber}`, borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>Sign in as guide</button>
+            </div>
           )}
           <button onClick={()=>{ setPage("journey"); setMenuOpen(false); }} style={{ marginTop:8, width:"100%", padding:"11px", background:C.teal, color:"#fff", border:"none", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>{t("hero_cta1")}</button>
         </div>
@@ -1547,11 +1611,11 @@ function HomePage({ setPage, onGuideOpen }) {
             <h2 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,38px)", fontWeight:700, color:C.ink }}>{t("why_title")}</h2>
           </div>
           <div className="why-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1.5rem" }}>
-            {[{i:"🤖",t:t("why1_t"),s:t("why1_s")},{i:"🛡️",t:t("why2_t"),s:t("why2_s")},{i:"💬",t:t("why3_t"),s:t("why3_s")},{i:"🌿",t:t("why4_t"),s:t("why4_s")}].map(w=>(
+            {[{Icon:Sparkles,t:t("why1_t"),s:t("why1_s")},{Icon:ShieldCheck,t:t("why2_t"),s:t("why2_s")},{Icon:MessageCircle,t:t("why3_t"),s:t("why3_s")},{Icon:Compass,t:t("why4_t"),s:t("why4_s")}].map(w=>(
               <div key={w.t} style={{ padding:"1.8rem 1.5rem", border:`1px solid ${C.border}`, borderRadius:20, transition:"border-color .2s" }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor=C.tealMid}
                 onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
-                <div style={{ fontSize:28, marginBottom:14 }}>{w.i}</div>
+                <div style={{ width:46, height:46, borderRadius:14, background:C.tealLight, color:C.teal, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:14 }}><w.Icon size={21}/></div>
                 <h4 style={{ fontSize:15, fontWeight:600, color:C.ink, marginBottom:6 }}>{w.t}</h4>
                 <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.6 }}>{w.s}</p>
               </div>
@@ -1565,16 +1629,19 @@ function HomePage({ setPage, onGuideOpen }) {
           <div>
             <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#fff" }}>Ceylon<span style={{ color:C.tealMid }}>Trails</span></div>
             <p style={{ fontSize:13, color:"rgba(255,255,255,.45)", marginTop:8, maxWidth:240, lineHeight:1.6 }}>Personalised Sri Lanka travel, powered by AI and local expertise.</p>
-            <p style={{ fontSize:12, color:"rgba(255,255,255,.4)", marginTop:10 }}>✉️ {BUSINESS_INFO.email}<br/>📍 {BUSINESS_INFO.address}</p>
+            <p style={{ fontSize:12, color:"rgba(255,255,255,.45)", marginTop:10, display:"flex", flexDirection:"column", gap:4 }}>
+              <span style={{ display:"flex", alignItems:"center", gap:6 }}><Mail size={13}/> {BUSINESS_INFO.email}</span>
+              <span style={{ display:"flex", alignItems:"center", gap:6 }}><MapPin size={13}/> {BUSINESS_INFO.address}</span>
+            </p>
             <div style={{ display:"flex", gap:8, marginTop:14 }}>
               {SOCIAL_LINKS.map(s=>(
                 <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" title={s.label}
-                  style={{ width:32, height:32, borderRadius:"50%", background:"rgba(255,255,255,.08)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, textDecoration:"none", flexShrink:0 }}>{s.icon}</a>
+                  style={{ width:32, height:32, borderRadius:"50%", background:"rgba(255,255,255,.08)", display:"flex", alignItems:"center", justifyContent:"center", color:"rgba(255,255,255,.75)", textDecoration:"none", flexShrink:0 }}><SocialGlyph name={s.label} size={14}/></a>
               ))}
             </div>
           </div>
           <div style={{ display:"flex", gap:"3rem", flexWrap:"wrap" }}>
-            {[["Explore",[["Destinations","destinations"],["Plan a Trip","journey"],["Find a Guide","__guide__"]]],["Company",[["About us","home"],["Contact","contact"]]],["Legal",[["Privacy Policy",null],["Terms of Service",null]]]].map(([h,ls])=>(
+            {[["Explore",[["Destinations","destinations"],["Plan a Trip","journey"],["Find a Guide","__guide__"]]],["Company",[["About us","about"],["Contact","contact"]]],["Legal",[["Privacy Policy","privacy"],["Terms of Service","terms"]]]].map(([h,ls])=>(
               <div key={h}>
                 <h5 style={{ fontSize:12, fontWeight:600, color:"rgba(255,255,255,.5)", textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>{h}</h5>
                 {ls.map(([l,target])=>(
@@ -7175,7 +7242,7 @@ function AdminPanel({ onClose }) {
 }
 
 // ─── GUIDE PORTAL PAGE ────────────────────────────────────────────────────────
-function GuidePortalPage({ setPage }) {
+function GuidePortalPage({ setPage, setViewMode }) {
   const { user, signInEmail, signUpEmail, signInGoogle } = useAuth();
   const [guideProfile, setGuideProfile] = useState(null);
   const [loading, setLoading]           = useState(true);
@@ -7184,6 +7251,11 @@ function GuidePortalPage({ setPage }) {
   const [pass, setPass]                 = useState("");
   const [error, setError]               = useState("");
   const [authLoading, setAL]            = useState(false);
+
+  // Being on this page at all means guide intent — keep nav mode in sync
+  // even if someone landed here by a direct link rather than the sign-in
+  // dropdown (e.g. a bookmark, or a fresh signup right on this page).
+  useEffect(()=>{ if (user && setViewMode) setViewMode("guide"); },[user, setViewMode]);
 
   // Load guide profile if logged in
   useEffect(()=>{
@@ -7293,12 +7365,37 @@ const BUSINESS_INFO = {
   hours: "Mon–Sat, 9:00 AM – 6:00 PM (GMT+5:30)",
   mapQuery: "World Trade Center, Colombo 01, Sri Lanka",
 };
+
+// Real brand marks (simplified single-path monochrome versions, sized to a
+// 24x24 viewBox) instead of emoji — emoji social icons are what made the
+// footer look like a sticker pack rather than a real business.
+function SocialGlyph({ name, size=16 }) {
+  const common = { width:size, height:size, viewBox:"0 0 24 24", fill:"currentColor", xmlns:"http://www.w3.org/2000/svg" };
+  switch(name) {
+    case "Instagram": return (
+      <svg {...common}><path d="M12 2c2.72 0 3.06.01 4.12.06 1.06.05 1.79.22 2.43.47.66.26 1.22.6 1.77 1.15.55.55.9 1.11 1.15 1.77.25.64.42 1.37.47 2.43.05 1.06.06 1.4.06 4.12s-.01 3.06-.06 4.12c-.05 1.06-.22 1.79-.47 2.43a4.9 4.9 0 01-1.15 1.77 4.9 4.9 0 01-1.77 1.15c-.64.25-1.37.42-2.43.47-1.06.05-1.4.06-4.12.06s-3.06-.01-4.12-.06c-1.06-.05-1.79-.22-2.43-.47a4.9 4.9 0 01-1.77-1.15 4.9 4.9 0 01-1.15-1.77c-.25-.64-.42-1.37-.47-2.43C2.01 15.06 2 14.72 2 12s.01-3.06.06-4.12c.05-1.06.22-1.79.47-2.43.26-.66.6-1.22 1.15-1.77A4.9 4.9 0 015.45 2.53c.64-.25 1.37-.42 2.43-.47C8.94 2.01 9.28 2 12 2zm0 1.8c-2.67 0-2.99.01-4.04.06-.87.04-1.34.18-1.65.3-.42.16-.71.35-1.02.66-.31.31-.5.6-.66 1.02-.12.31-.26.78-.3 1.65C4.28 8.51 4 8.83 4 10.2v3.6c0 1.37.01 3.06 1.65.99-.03 1.05-.06 1.37-.06 4.04 0s2.99-.01 4.04-.06c.87-.04 1.34-.18 1.65-.3.42-.16.71-.35 1.02-.66.31-.31.5-.6.66-1.02.12-.31.26-.78.3-1.65.05-1.05.06-1.37.06-4.04s-.01-2.99-.06-4.04c-.04-.87-.18-1.34-.3-1.65a2.7 2.7 0 00-.66-1.02 2.7 2.7 0 00-1.02-.66c-.31-.12-.78-.26-1.65-.3C14.99 3.81 14.67 3.8 12 3.8zm0 3.05a5.15 5.15 0 110 10.3 5.15 5.15 0 010-10.3zm0 1.8a3.35 3.35 0 100 6.7 3.35 3.35 0 000-6.7zm5.35-1.98a1.2 1.2 0 11-2.4 0 1.2 1.2 0 012.4 0z"/></svg>
+    );
+    case "Facebook": return (
+      <svg {...common}><path d="M13.5 22v-8.5h2.85l.43-3.31H13.5V8.05c0-.96.27-1.61 1.64-1.61h1.75V3.48A23.4 23.4 0 0014.6 3.3c-2.5 0-4.21 1.53-4.21 4.32v2.4H7.53v3.31h2.86V22h3.11z"/></svg>
+    );
+    case "X": return (
+      <svg {...common}><path d="M18.24 3h2.87l-6.27 7.17L22.2 21h-5.77l-4.52-5.9L6.72 21H3.85l6.7-7.66L2.7 3h5.92l4.08 5.39L18.24 3zm-1 16.3h1.59L7.85 4.6H6.14l11.1 14.7z"/></svg>
+    );
+    case "TikTok": return (
+      <svg {...common}><path d="M16.6 2h-3.2v13.9a2.9 2.9 0 11-2.05-2.77V9.86a6.15 6.15 0 106.15 6.14V8.4a7.9 7.9 0 004.5 1.4V6.6a4.7 4.7 0 01-3.4-1.37A4.66 4.66 0 0116.6 2z"/></svg>
+    );
+    case "YouTube": return (
+      <svg {...common}><path d="M22.5 12s0-3.28-.42-4.86a2.78 2.78 0 00-1.96-1.97C18.55 4.75 12 4.75 12 4.75s-6.55 0-8.12.42a2.78 2.78 0 00-1.96 1.97C1.5 8.72 1.5 12 1.5 12s0 3.28.42 4.86c.23.86.99 1.55 1.96 1.97 1.57.42 8.12.42 8.12.42s6.55 0 8.12-.42a2.78 2.78 0 001.96-1.97c.42-1.58.42-4.86.42-4.86zM9.9 15.3V8.7l5.7 3.3-5.7 3.3z"/></svg>
+    );
+    default: return null;
+  }
+}
 const SOCIAL_LINKS = [
-  { label:"Instagram", icon:"📷", url:"https://instagram.com/ceylontrails" },
-  { label:"Facebook",  icon:"📘", url:"https://facebook.com/ceylontrails" },
-  { label:"X",         icon:"✕",  url:"https://x.com/ceylontrails" },
-  { label:"TikTok",    icon:"🎵", url:"https://tiktok.com/@ceylontrails" },
-  { label:"YouTube",   icon:"▶️", url:"https://youtube.com/@ceylontrails" },
+  { label:"Instagram", url:"https://instagram.com/ceylontrails" },
+  { label:"Facebook",  url:"https://facebook.com/ceylontrails" },
+  { label:"X",         url:"https://x.com/ceylontrails" },
+  { label:"TikTok",    url:"https://tiktok.com/@ceylontrails" },
+  { label:"YouTube",   url:"https://youtube.com/@ceylontrails" },
 ];
 
 function ContactPage({ setPage }) {
@@ -7340,13 +7437,13 @@ function ContactPage({ setPage }) {
           <div style={{ background:"#fff", borderRadius:20, border:`1px solid ${C.border}`, padding:"1.6rem", boxShadow:"0 4px 24px rgba(0,0,0,.06)" }}>
             <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:16 }}>Reach us directly</h3>
             {[
-              ["✉️", "Email", BUSINESS_INFO.email, `mailto:${BUSINESS_INFO.email}`],
-              ["📞", "Phone", BUSINESS_INFO.phone, `tel:${BUSINESS_INFO.phone.replace(/\s/g,"")}`],
-              ["📍", "Address", BUSINESS_INFO.address, null],
-              ["🕐", "Hours", BUSINESS_INFO.hours, null],
-            ].map(([icon,label,val,href])=>(
+              [Mail, "Email", BUSINESS_INFO.email, `mailto:${BUSINESS_INFO.email}`],
+              [Phone, "Phone", BUSINESS_INFO.phone, `tel:${BUSINESS_INFO.phone.replace(/\s/g,"")}`],
+              [MapPin, "Address", BUSINESS_INFO.address, null],
+              [Clock, "Hours", BUSINESS_INFO.hours, null],
+            ].map(([Icon,label,val,href])=>(
               <div key={label} style={{ display:"flex", gap:12, marginBottom:14 }}>
-                <span style={{ fontSize:18, flexShrink:0 }}>{icon}</span>
+                <span style={{ width:32, height:32, borderRadius:10, background:C.tealLight, color:C.teal, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><Icon size={16}/></span>
                 <div>
                   <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.6, marginBottom:2 }}>{label}</div>
                   {href
@@ -7369,8 +7466,8 @@ function ContactPage({ setPage }) {
             <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
               {SOCIAL_LINKS.map(s=>(
                 <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer"
-                  style={{ width:38, height:38, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, textDecoration:"none", flexShrink:0 }}
-                  title={s.label}>{s.icon}</a>
+                  style={{ width:38, height:38, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", color:C.teal, textDecoration:"none", flexShrink:0 }}
+                  title={s.label}><SocialGlyph name={s.label} size={16}/></a>
               ))}
             </div>
           </div>
@@ -7414,12 +7511,183 @@ function ContactPage({ setPage }) {
   );
 }
 
+// ─── ABOUT US ─────────────────────────────────────────────────────────────────
+const ABOUT_STATS = [
+  { icon:Globe2, label:"Destinations covered", value:"40+" },
+  { icon:Users,  label:"SLTDA-certified guides", value:"50+" },
+  { icon:Route,  label:"AI itineraries generated", value:"10,000+" },
+  { icon:Award,  label:"Avg. traveller rating", value:"4.8/5" },
+];
+const ABOUT_FUNCTIONS = [
+  { icon:Sparkles, title:"AI Journey Creator", desc:"A guided wizard turns your dates, budget, and interests into a real day-by-day Sri Lanka itinerary — named hotels, restaurants, and drive times, generated in seconds." },
+  { icon:Compass,  title:"Certified Guide Marketplace", desc:"Browse SLTDA-verified local guides, share your itinerary, and collect competing price bids — you choose who takes you, with no obligation until you accept." },
+  { icon:ShieldCheck, title:"Secure, Escrow-Style Booking", desc:"Payment is held safely and released to your guide in stages as the trip is mutually confirmed underway and completed — protecting both sides of every booking." },
+  { icon:Star,     title:"Moderated Reviews", desc:"Every review is checked by our team before it's published to a guide's profile, keeping feedback genuine and trustworthy." },
+];
+
+function AboutPage({ setPage }) {
+  return (
+    <div style={{ minHeight:"100vh", background:C.surface }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"3.5rem 2rem 3rem", position:"relative", overflow:"hidden" }}>
+        <HeroArt/>
+        <div style={{ maxWidth:820, margin:"0 auto", position:"relative", zIndex:2, textAlign:"center" }}>
+          <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Our story</div>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:10 }}>About CeylonTrails</h1>
+          <p style={{ fontSize:15, color:"rgba(255,255,255,.75)", maxWidth:560, margin:"0 auto" }}>We built CeylonTrails to make planning a trip to Sri Lanka as thoughtful as the island itself — part AI-crafted itinerary, part real local expertise.</p>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:900, margin:"0 auto", padding:"3rem 1.5rem 4rem" }}>
+        <div style={{ marginBottom:40 }}>
+          <h2 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:14 }}>Our mission</h2>
+          <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.8, marginBottom:12 }}>
+            Sri Lanka rewards travellers who go beyond the postcard stops — but researching real routes, honest drive times, and trustworthy local guides usually takes weeks. CeylonTrails compresses that into a few minutes: answer a short set of questions and our planner builds a realistic, day-by-day route, then connects you directly with SLTDA-certified guides who can bring it to life.
+          </p>
+          <p style={{ fontSize:14, color:C.inkSoft, lineHeight:1.8 }}>
+            We're a small, Colombo-based team of travel planners and engineers who believe technology should make local tourism more accessible for visitors, and more sustainable and fairly paid for the guides and small businesses who depend on it.
+          </p>
+        </div>
+
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:14, marginBottom:44 }}>
+          {ABOUT_STATS.map(s=>(
+            <div key={s.label} style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:16, padding:"1.2rem", textAlign:"center" }}>
+              <div style={{ width:40, height:40, borderRadius:12, background:C.tealLight, color:C.teal, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 10px" }}><s.icon size={19}/></div>
+              <div style={{ fontFamily:serif, fontSize:22, fontWeight:700, color:C.ink }}>{s.value}</div>
+              <div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <h2 style={{ fontFamily:serif, fontSize:24, fontWeight:700, color:C.ink, marginBottom:18 }}>What we do</h2>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:44 }} className="info-2col">
+          {ABOUT_FUNCTIONS.map(f=>(
+            <div key={f.title} style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:16, padding:"1.4rem" }}>
+              <div style={{ width:38, height:38, borderRadius:11, background:C.tealLight, color:C.teal, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:12 }}><f.icon size={18}/></div>
+              <div style={{ fontSize:14, fontWeight:700, color:C.ink, marginBottom:6 }}>{f.title}</div>
+              <div style={{ fontSize:13, color:C.inkSoft, lineHeight:1.7 }}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:16, padding:"1.6rem", marginBottom:32 }}>
+          <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:10 }}>Responsible tourism</h3>
+          <p style={{ fontSize:13, color:C.inkSoft, lineHeight:1.8 }}>We only list guides who hold current SLTDA certification, and guides keep 85% of every booking — CeylonTrails' commission funds the platform, not the other way around. We encourage itineraries that support local restaurants, homestays, and small operators over large chains wherever the trip allows it.</p>
+        </div>
+
+        <div style={{ textAlign:"center" }}>
+          <Btn onClick={()=>setPage("journey")}>✨ Start planning your trip</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── LEGAL PAGES (Privacy Policy / Terms of Service) ─────────────────────────
+const LEGAL_LAST_UPDATED = "1 July 2026";
+
+function LegalPageLayout({ title, setPage, children }) {
+  return (
+    <div style={{ minHeight:"100vh", background:C.surface }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"2.6rem 2rem" }}>
+        <div style={{ maxWidth:780, margin:"0 auto" }}>
+          <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>Legal</div>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(22px,3.4vw,32px)", fontWeight:700, color:"#fff", marginBottom:6 }}>{title}</h1>
+          <p style={{ fontSize:13, color:"rgba(255,255,255,.6)" }}>Last updated: {LEGAL_LAST_UPDATED}</p>
+        </div>
+      </div>
+      <div style={{ maxWidth:780, margin:"0 auto", padding:"2.5rem 1.5rem 4rem" }}>
+        <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:16, padding:"1.8rem 2rem" }}>
+          {children}
+        </div>
+        <div style={{ textAlign:"center", marginTop:24 }}>
+          <button onClick={()=>setPage("home")} style={{ background:"none", border:"none", color:C.teal, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>← Back to home</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LegalSection({ n, title, children }) {
+  return (
+    <div style={{ marginBottom:22 }}>
+      <h3 style={{ fontSize:15, fontWeight:700, color:C.ink, marginBottom:8 }}>{n}. {title}</h3>
+      <div style={{ fontSize:13.5, color:C.inkSoft, lineHeight:1.8 }}>{children}</div>
+    </div>
+  );
+}
+
+function PrivacyPolicyPage({ setPage }) {
+  return (
+    <LegalPageLayout title="Privacy Policy" setPage={setPage}>
+      <p style={{ fontSize:13.5, color:C.inkSoft, lineHeight:1.8, marginBottom:20 }}>
+        CeylonTrails ("we", "us", "our") respects your privacy. This policy explains what information we collect when you use our website and app, how we use it, and the choices you have.
+      </p>
+      <LegalSection n="1" title="Information we collect">
+        Account details you provide (name, email) when you sign in with email or Google; itinerary preferences you enter in the trip planner (dates, budget, activities); booking and payment details when you request or confirm a guide; messages sent through in-app chat; and reviews you submit about guides.
+      </LegalSection>
+      <LegalSection n="2" title="How we use your information">
+        To generate your itinerary, connect you with guides you choose to contact, process bookings and payments, send booking-related notifications, moderate reviews before publishing them, and improve the reliability of our AI trip planner.
+      </LegalSection>
+      <LegalSection n="3" title="Sharing with guides">
+        When you send a trip request to a guide, we share the itinerary details and the contact information necessary for them to respond and, if you proceed, to guide your trip. We do not share your details with any guide you have not contacted.
+      </LegalSection>
+      <LegalSection n="4" title="Payment information">
+        Payments are processed through our payment provider; CeylonTrails does not store your full card details on our servers. Booking amounts and commission splits are recorded to manage escrow-style release of guide payments.
+      </LegalSection>
+      <LegalSection n="5" title="Data retention">
+        We retain booking records for as long as needed for support, dispute resolution, and legal requirements. You may request deletion of your account data by contacting us, subject to records we must keep for bookings already completed.
+      </LegalSection>
+      <LegalSection n="6" title="Your choices">
+        You can update your profile details at any time, remove a trip request from your own view, and control which language and notifications you receive. Contact us to request a copy of the data we hold about you.
+      </LegalSection>
+      <LegalSection n="7" title="Contact">
+        Questions about this policy can be sent to {BUSINESS_INFO.email}.
+      </LegalSection>
+    </LegalPageLayout>
+  );
+}
+
+function TermsPage({ setPage }) {
+  return (
+    <LegalPageLayout title="Terms of Service" setPage={setPage}>
+      <p style={{ fontSize:13.5, color:C.inkSoft, lineHeight:1.8, marginBottom:20 }}>
+        These terms govern your use of CeylonTrails. By creating an account or booking a guide through our platform, you agree to them.
+      </p>
+      <LegalSection n="1" title="Guide verification">
+        All guides listed on CeylonTrails are SLTDA-verified. We review certification documents before approving a guide profile, but CeylonTrails is a booking intermediary, not the guide's employer.
+      </LegalSection>
+      <LegalSection n="2" title="Booking and payment">
+        Payments are processed through CeylonTrails. A 15% commission applies to guide bookings, with no hidden fees charged to tourists. Guides respond to trip requests with bids; there is no obligation to accept any bid you receive.
+      </LegalSection>
+      <LegalSection n="3" title="Escrow release">
+        On acceptance, 30% of the guide's share is released immediately and 70% is held until both the tourist and guide mutually confirm the trip took place. This protects both parties from no-shows or disputes.
+      </LegalSection>
+      <LegalSection n="4" title="Cancellations">
+        Cancellations made 48+ hours before the trip start date receive a full refund. Cancellations within 48 hours may be subject to a 25% fee to compensate the guide's reserved time.
+      </LegalSection>
+      <LegalSection n="5" title="Reviews">
+        Reviews must reflect a genuine completed trip. All reviews are moderated by CeylonTrails before publishing. Fraudulent, defamatory, or fabricated reviews will be removed and may result in account suspension.
+      </LegalSection>
+      <LegalSection n="6" title="Liability">
+        CeylonTrails is an intermediary connecting tourists and independent local guides. Guides are required to carry SLTDA-mandated insurance; CeylonTrails is not liable for the conduct of independent guides beyond the verification and moderation steps described in these terms.
+      </LegalSection>
+      <LegalSection n="7" title="Changes to these terms">
+        We may update these terms from time to time; the "last updated" date at the top of this page will reflect the latest revision. Continued use of CeylonTrails after a change constitutes acceptance of the updated terms.
+      </LegalSection>
+      <LegalSection n="8" title="Contact">
+        Questions about these terms can be sent to {BUSINESS_INFO.email}.
+      </LegalSection>
+    </LegalPageLayout>
+  );
+}
+
 // Maps in-app page names to URL paths and back, so refreshing or sharing a
 // direct link (e.g. /destinations, /journey) lands on the right page instead
 // of always resetting to Home.
 const PAGE_ROUTES = {
   home:"/", destinations:"/destinations", journey:"/journey", srilankamap:"/map",
   guideportal:"/guides/portal", myitineraries:"/my-trips", contact:"/contact",
+  about:"/about", privacy:"/privacy", terms:"/terms",
 };
 const ROUTE_PAGES = Object.fromEntries(Object.entries(PAGE_ROUTES).map(([k,v])=>[v,k]));
 
@@ -7433,10 +7701,21 @@ export default function App() {
   const [guideOpen, setGuide]   = useState(false);
   const [savedItin, setSaved]   = useState(null);
   const [showLogin, setLogin]   = useState(false);
+  const [loginIntent, setLoginIntent] = useState("tourist"); // "tourist" | "guide" — which sign-in flow to show
   const [showWelcome, setWelcome] = useState(false);
   const [welcomeUser, setWelcomeUser] = useState(null);
   const openGuide = useCallback(()=>setGuide(true), []);
   const wishlist  = useWishlist();
+
+  // Same account, switchable view — like Airbnb's "switch to hosting". Not a
+  // permanent account type: any signed-in user can flip between browsing as
+  // a tourist and managing bookings as a guide. Persisted so a refresh
+  // doesn't dump a guide back into tourist-facing nav mid-shift.
+  const [viewMode, _setViewMode] = useState(()=>localStorage.getItem("ct_viewmode") || "tourist");
+  const setViewMode = useCallback((mode) => {
+    _setViewMode(mode);
+    localStorage.setItem("ct_viewmode", mode);
+  }, []);
 
   // Wraps setPage so every in-app navigation also pushes a real URL —
   // enables working back/forward buttons, refresh-stays-on-page, and
@@ -7462,6 +7741,10 @@ export default function App() {
     setLogin(false);
     setWelcomeUser(user);
     setWelcome(true);
+    if (loginIntent === "guide") {
+      setViewMode("guide");
+      setPage("guideportal");
+    }
   };
 
   return (
@@ -7472,6 +7755,8 @@ export default function App() {
           guideOpen={guideOpen} setGuide={setGuide} openGuide={openGuide}
           savedItin={savedItin} setSaved={setSaved}
           showLogin={showLogin} setLogin={setLogin}
+          loginIntent={loginIntent} setLoginIntent={setLoginIntent}
+          viewMode={viewMode} setViewMode={setViewMode}
           showWelcome={showWelcome} setWelcome={setWelcome}
           welcomeUser={welcomeUser} setWelcomeUser={setWelcomeUser}
           handleLoginSuccess={handleLoginSuccess}
@@ -7671,7 +7956,7 @@ function SharedItineraryPage({ shareId, onGoHome }) {
   );
 }
 
-function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, setSaved, showLogin, setLogin, showWelcome, setWelcome, welcomeUser, handleLoginSuccess, wishlist }) {
+function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, setSaved, showLogin, setLogin, loginIntent, setLoginIntent, viewMode, setViewMode, showWelcome, setWelcome, welcomeUser, handleLoginSuccess, wishlist }) {
   const { user, signOut } = useAuth();
   const premium = usePremium();
   const [showAdmin,  setShowAdmin]  = useState(()=>window.location.search.includes("admin"));
@@ -7690,20 +7975,36 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
     return <SharedItineraryPage shareId={shareId} onGoHome={()=>{ window.history.replaceState({},"",window.location.pathname); window.location.reload(); }}/>;
   }
 
+  const openSignIn = (intent) => {
+    if (intent === "guide") {
+      // Guides authenticate through their own embedded form on the Guide
+      // Portal page rather than the generic modal — jumping straight there
+      // is what makes "sign in as guide" feel like a real, direct path.
+      setViewMode("guide");
+      setPage("guideportal");
+    } else {
+      setLoginIntent("tourist");
+      setLogin(true);
+    }
+  };
+
   return (
     <div style={{ fontFamily:sans, color:C.ink, background:C.white, minHeight:"100vh" }}>
       <MobileStyles/>
-      <NavWithAuth page={page} setPage={setPage} onGuideOpen={openGuide} user={user} signOut={signOut} onLoginClick={()=>setLogin(true)}/>
+      <NavWithAuth page={page} setPage={setPage} onGuideOpen={openGuide} user={user} signOut={signOut} onSignInClick={openSignIn} viewMode={viewMode} setViewMode={setViewMode}/>
 
       {page==="home"         && <HomePage         setPage={setPage} onGuideOpen={openGuide}/>}
       {page==="destinations" && <DestinationsPage setPage={setPage} onGuideOpen={openGuide} savedItin={savedItin} setSavedItin={setSaved}/>}
-      {page==="journey"      && <JourneyPage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} onGuideOpen={openGuide} user={user} onLoginNeeded={()=>setLogin(true)} premium={premium}/>}
+      {page==="journey"      && <JourneyPage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} onGuideOpen={openGuide} user={user} onLoginNeeded={()=>openSignIn("tourist")} premium={premium}/>}
       {page==="srilankamap" && <SriLankaMapPage  setPage={setPage} savedItin={savedItin} setSavedItin={setSaved}/>}
-      {page==="guideportal"  && <GuidePortalPage  setPage={setPage}/>}
-      {page==="myitineraries" && <MyItinerariesPage user={user} setPage={setPage} setSavedItin={setSaved} onLoginNeeded={()=>setLogin(true)}/>}
+      {page==="guideportal"  && <GuidePortalPage  setPage={setPage} setViewMode={setViewMode}/>}
+      {page==="myitineraries" && <MyItinerariesPage user={user} setPage={setPage} setSavedItin={setSaved} onLoginNeeded={()=>openSignIn("tourist")}/>}
       {page==="contact"       && <ContactPage setPage={setPage}/>}
+      {page==="about"         && <AboutPage setPage={setPage}/>}
+      {page==="privacy"       && <PrivacyPolicyPage setPage={setPage}/>}
+      {page==="terms"         && <TermsPage setPage={setPage}/>}
 
-      <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin} user={user} onLoginNeeded={()=>setLogin(true)} onReviewGuide={(prefill)=>{ setReviewPrefill(prefill); setShowReview(true); }}/>
+      <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin} user={user} onLoginNeeded={()=>openSignIn("tourist")} onReviewGuide={(prefill)=>{ setReviewPrefill(prefill); setShowReview(true); }}/>
       <WishlistPanel wishlist={wishlist} savedItin={savedItin} setSavedItin={setSaved}/>
       <EmergencyButton/>
 
