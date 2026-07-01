@@ -1331,7 +1331,7 @@ function Nav({ page, setPage, onGuideOpen }) {
 
       {menuOpen && (
         <div style={{ position:"fixed", top:64, left:0, right:0, zIndex:399, background:"#fff", borderBottom:`1px solid ${C.border}`, boxShadow:"0 8px 24px rgba(0,0,0,.1)", padding:"1rem 1.5rem 1.5rem", maxHeight:"80vh", overflowY:"auto" }}>
-          {[["home","🏠 Home"],["destinations","🗺️ Destinations"],["srilankamap","🗺️ Sri Lanka Map"],["journey","✨ Plan a trip"],["guides","🧭 Find a Guide"]].map(([p,l])=>(
+          {[["home","🏠 Home"],["destinations","🗺️ Destinations"],["srilankamap","🗺️ Sri Lanka Map"],["journey","✨ Plan a trip"],["guides","🧭 Find a Guide"],["contact","✉️ Contact us"]].map(([p,l])=>(
             <div key={p} onClick={()=>{ if(p==="guides") onGuideOpen(); else setPage(p); setMenuOpen(false); }}
               style={{ padding:"14px 0", fontSize:16, fontWeight:page===p?600:400, color:page===p?C.teal:C.ink, cursor:"pointer", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:10 }}>
               {l}
@@ -1565,12 +1565,22 @@ function HomePage({ setPage, onGuideOpen }) {
           <div>
             <div style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:"#fff" }}>Ceylon<span style={{ color:C.tealMid }}>Trails</span></div>
             <p style={{ fontSize:13, color:"rgba(255,255,255,.45)", marginTop:8, maxWidth:240, lineHeight:1.6 }}>Personalised Sri Lanka travel, powered by AI and local expertise.</p>
+            <p style={{ fontSize:12, color:"rgba(255,255,255,.4)", marginTop:10 }}>✉️ {BUSINESS_INFO.email}<br/>📍 {BUSINESS_INFO.address}</p>
+            <div style={{ display:"flex", gap:8, marginTop:14 }}>
+              {SOCIAL_LINKS.map(s=>(
+                <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" title={s.label}
+                  style={{ width:32, height:32, borderRadius:"50%", background:"rgba(255,255,255,.08)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, textDecoration:"none", flexShrink:0 }}>{s.icon}</a>
+              ))}
+            </div>
           </div>
           <div style={{ display:"flex", gap:"3rem", flexWrap:"wrap" }}>
-            {[["Explore",["Destinations","Plan a Trip","Find a Guide"]],["Company",["About us","Blog","Contact"]],["Legal",["Privacy Policy","Terms of Service"]]].map(([h,ls])=>(
+            {[["Explore",[["Destinations","destinations"],["Plan a Trip","journey"],["Find a Guide","__guide__"]]],["Company",[["About us","home"],["Contact","contact"]]],["Legal",[["Privacy Policy",null],["Terms of Service",null]]]].map(([h,ls])=>(
               <div key={h}>
                 <h5 style={{ fontSize:12, fontWeight:600, color:"rgba(255,255,255,.5)", textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>{h}</h5>
-                {ls.map(l=><div key={l} style={{ fontSize:13, color:"rgba(255,255,255,.6)", marginBottom:8, cursor:"pointer" }}>{l}</div>)}
+                {ls.map(([l,target])=>(
+                  <div key={l} onClick={()=>{ if(target==="__guide__") onGuideOpen(); else if(target) setPage(target); }}
+                    style={{ fontSize:13, color:"rgba(255,255,255,.6)", marginBottom:8, cursor:target?"pointer":"default" }}>{l}</div>
+                ))}
               </div>
             ))}
           </div>
@@ -5418,6 +5428,16 @@ async function saveTripRequest(request) {
   return ref.id;
 }
 
+// ─── CONTACT US ────────────────────────────────────────────────────────────
+async function saveContactMessage(msg) {
+  if (!window.firebase?.firestore) {
+    await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
+  }
+  await window.firebase.firestore().collection("contactMessages").add({
+    ...msg, createdAt: new Date().toISOString(), status: "new",
+  });
+}
+
 // ─── SHAREABLE ITINERARY LINKS ────────────────────────────────────────────────
 // Anyone with the link can view (no login required) — read-only public copy.
 function generateShareId() {
@@ -7263,12 +7283,143 @@ function GuidePortalPage({ setPage }) {
   return <GuideDashboard user={user} profile={guideProfile} onProfileUpdate={setGuideProfile}/>;
 }
 
+// ─── SOCIAL / BUSINESS INFO ───────────────────────────────────────────────────
+// Centralised so the footer and Contact page always show the same details —
+// edit these once here to update everywhere.
+const BUSINESS_INFO = {
+  email: "hello@ceylontrails.lk",
+  phone: "+94 76 123 4567",
+  address: "World Trade Center, Echelon Square, Colombo 01, Sri Lanka",
+  hours: "Mon–Sat, 9:00 AM – 6:00 PM (GMT+5:30)",
+  mapQuery: "World Trade Center, Colombo 01, Sri Lanka",
+};
+const SOCIAL_LINKS = [
+  { label:"Instagram", icon:"📷", url:"https://instagram.com/ceylontrails" },
+  { label:"Facebook",  icon:"📘", url:"https://facebook.com/ceylontrails" },
+  { label:"X",         icon:"✕",  url:"https://x.com/ceylontrails" },
+  { label:"TikTok",    icon:"🎵", url:"https://tiktok.com/@ceylontrails" },
+  { label:"YouTube",   icon:"▶️", url:"https://youtube.com/@ceylontrails" },
+];
+
+function ContactPage({ setPage }) {
+  const [form, setForm] = useState({ name:"", email:"", subject:"", message:"" });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+  const upd = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  const submit = async () => {
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+      setError("Please fill in your name, email, and message.");
+      return;
+    }
+    setError(""); setSending(true);
+    try {
+      await saveContactMessage(form);
+      setSent(true);
+      setForm({ name:"", email:"", subject:"", message:"" });
+    } catch(e) { setError("Could not send your message: " + e.message); }
+    setSending(false);
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:C.surface }}>
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"3.5rem 2rem 3rem", position:"relative", overflow:"hidden" }}>
+        <HeroArt/>
+        <div style={{ maxWidth:820, margin:"0 auto", position:"relative", zIndex:2, textAlign:"center" }}>
+          <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:10 }}>Get in touch</div>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(26px,4vw,40px)", fontWeight:700, color:"#fff", marginBottom:10 }}>Contact CeylonTrails</h1>
+          <p style={{ fontSize:15, color:"rgba(255,255,255,.75)", maxWidth:520, margin:"0 auto" }}>Questions about a trip, a booking, or partnering with us as a guide — we'd love to hear from you.</p>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:1000, margin:"-2.5rem auto 4rem", padding:"0 1.5rem", position:"relative", zIndex:3 }}>
+        <div className="info-2col" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
+
+          {/* Left: business info + map + social */}
+          <div style={{ background:"#fff", borderRadius:20, border:`1px solid ${C.border}`, padding:"1.6rem", boxShadow:"0 4px 24px rgba(0,0,0,.06)" }}>
+            <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:16 }}>Reach us directly</h3>
+            {[
+              ["✉️", "Email", BUSINESS_INFO.email, `mailto:${BUSINESS_INFO.email}`],
+              ["📞", "Phone", BUSINESS_INFO.phone, `tel:${BUSINESS_INFO.phone.replace(/\s/g,"")}`],
+              ["📍", "Address", BUSINESS_INFO.address, null],
+              ["🕐", "Hours", BUSINESS_INFO.hours, null],
+            ].map(([icon,label,val,href])=>(
+              <div key={label} style={{ display:"flex", gap:12, marginBottom:14 }}>
+                <span style={{ fontSize:18, flexShrink:0 }}>{icon}</span>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.6, marginBottom:2 }}>{label}</div>
+                  {href
+                    ? <a href={href} style={{ fontSize:14, fontWeight:600, color:C.teal, textDecoration:"none" }}>{val}</a>
+                    : <div style={{ fontSize:14, fontWeight:600, color:C.ink }}>{val}</div>}
+                </div>
+              </div>
+            ))}
+
+            {/* Embedded location map — no API key needed for a basic embed */}
+            <div style={{ borderRadius:14, overflow:"hidden", border:`1px solid ${C.border}`, marginTop:6, marginBottom:16 }}>
+              <iframe
+                title="CeylonTrails office location"
+                src={`https://www.google.com/maps?q=${encodeURIComponent(BUSINESS_INFO.mapQuery)}&output=embed`}
+                width="100%" height="220" style={{ border:0, display:"block" }} loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"/>
+            </div>
+
+            <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.6, marginBottom:10 }}>Follow us</div>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              {SOCIAL_LINKS.map(s=>(
+                <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer"
+                  style={{ width:38, height:38, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, textDecoration:"none", flexShrink:0 }}
+                  title={s.label}>{s.icon}</a>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: contact form */}
+          <div style={{ background:"#fff", borderRadius:20, border:`1px solid ${C.border}`, padding:"1.6rem", boxShadow:"0 4px 24px rgba(0,0,0,.06)" }}>
+            <h3 style={{ fontFamily:serif, fontSize:18, fontWeight:700, color:C.ink, marginBottom:16 }}>Send us a message</h3>
+            {sent ? (
+              <div style={{ textAlign:"center", padding:"2rem 0" }}>
+                <div style={{ width:56, height:56, borderRadius:"50%", background:C.tealLight, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 14px", fontSize:24 }}>✅</div>
+                <p style={{ fontSize:14, fontWeight:700, color:C.ink, marginBottom:6 }}>Message sent</p>
+                <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Thanks for reaching out — our team will get back to you within 1–2 business days.</p>
+                <Btn variant="outline" onClick={()=>setSent(false)}>Send another message</Btn>
+              </div>
+            ) : (
+              <>
+                {error && <div style={{ background:C.errorLight, color:C.error, borderRadius:10, padding:"10px 12px", fontSize:12, marginBottom:14 }}>{error}</div>}
+                {[["Your name","name","text"],["Your email","email","email"],["Subject (optional)","subject","text"]].map(([label,key,type])=>(
+                  <div key={key} style={{ marginBottom:12 }}>
+                    <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>{label}</label>
+                    <input type={type} value={form[key]} onChange={e=>upd(key,e.target.value)}
+                      style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", boxSizing:"border-box" }}/>
+                  </div>
+                ))}
+                <div style={{ marginBottom:16 }}>
+                  <label style={{ fontSize:12, fontWeight:600, color:C.ink, display:"block", marginBottom:5 }}>Message</label>
+                  <textarea value={form.message} onChange={e=>upd("message",e.target.value)} rows={5}
+                    style={{ width:"100%", padding:"10px 12px", border:`1.5px solid ${C.border}`, borderRadius:10, fontSize:13, fontFamily:sans, outline:"none", resize:"vertical", boxSizing:"border-box" }}/>
+                </div>
+                <Btn full onClick={submit} style={{ opacity: sending?.7:1 }}>{sending?"Sending…":"Send message"}</Btn>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div style={{ textAlign:"center", marginTop:24 }}>
+          <button onClick={()=>setPage("home")} style={{ background:"none", border:"none", color:C.teal, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:sans }}>← Back to home</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Maps in-app page names to URL paths and back, so refreshing or sharing a
 // direct link (e.g. /destinations, /journey) lands on the right page instead
 // of always resetting to Home.
 const PAGE_ROUTES = {
   home:"/", destinations:"/destinations", journey:"/journey", srilankamap:"/map",
-  guideportal:"/guides/portal", myitineraries:"/my-trips",
+  guideportal:"/guides/portal", myitineraries:"/my-trips", contact:"/contact",
 };
 const ROUTE_PAGES = Object.fromEntries(Object.entries(PAGE_ROUTES).map(([k,v])=>[v,k]));
 
@@ -7550,6 +7701,7 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
       {page==="srilankamap" && <SriLankaMapPage  setPage={setPage} savedItin={savedItin} setSavedItin={setSaved}/>}
       {page==="guideportal"  && <GuidePortalPage  setPage={setPage}/>}
       {page==="myitineraries" && <MyItinerariesPage user={user} setPage={setPage} setSavedItin={setSaved} onLoginNeeded={()=>setLogin(true)}/>}
+      {page==="contact"       && <ContactPage setPage={setPage}/>}
 
       <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin} user={user} onLoginNeeded={()=>setLogin(true)} onReviewGuide={(prefill)=>{ setReviewPrefill(prefill); setShowReview(true); }}/>
       <WishlistPanel wishlist={wishlist} savedItin={savedItin} setSavedItin={setSaved}/>
