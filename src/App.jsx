@@ -3253,6 +3253,7 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   const [manualHotels, setManualHotels] = useState({});       // { [dayIdx]: {place, alternatives:[]} }
   const [manualRestaurants, setManualRestaurants] = useState({}); // { [dayIdx]: {breakfast,lunch,dinner each: {place,alternatives:[]}} }
   const [manualLoadingRecs, setManualLoadingRecs] = useState({}); // { [dayIdx]: true } while fetching
+  const [manualStaleRecs, setManualStaleRecs] = useState({}); // { [dayIdx]: true } — places changed since last fetch, but keep showing the old suggestion rather than silently dropping it
   const [dragInfo, setDragInfo] = useState(null); // { fromDay, fromIdx }
   const [dragOverInfo, setDragOverInfo] = useState(null); // { day, idx }
   const [manualDraftId, setManualDraftId] = useState(null);
@@ -3980,14 +3981,14 @@ Return ONLY valid raw JSON — no markdown, no backticks:
         location: d.location || place.name,
         activities: [...d.activities, { name:place.name, tag:place.tag, desc:place.desc, lat:place.lat, lng:place.lng, category:manualCat }],
       }));
-      // Picks changed — old hotel/restaurant suggestions for this day are stale.
-      setManualHotels(h=>{ const c={...h}; delete c[manualActiveDay]; return c; });
-      setManualRestaurants(r=>{ const c={...r}; delete c[manualActiveDay]; return c; });
+      // Picks changed — mark any existing suggestion stale rather than
+      // deleting it, so a hotel/restaurant already chosen for this day still
+      // makes it into the final itinerary even if you tweak the day afterward.
+      if (manualHotels[manualActiveDay] || manualRestaurants[manualActiveDay]) setManualStaleRecs(s=>({ ...s, [manualActiveDay]:true }));
     };
     const removePlace = (dayIdx, idx) => {
       setManualDays(days => days.map((d,i) => i!==dayIdx ? d : { ...d, activities: d.activities.filter((_,j)=>j!==idx) }));
-      setManualHotels(h=>{ const c={...h}; delete c[dayIdx]; return c; });
-      setManualRestaurants(r=>{ const c={...r}; delete c[dayIdx]; return c; });
+      if (manualHotels[dayIdx] || manualRestaurants[dayIdx]) setManualStaleRecs(s=>({ ...s, [dayIdx]:true }));
     };
     const totalPicked = manualDays.reduce((s,d)=>s+d.activities.length, 0);
 
@@ -4003,7 +4004,14 @@ Return ONLY valid raw JSON — no markdown, no backticks:
         copy[dayIdx].activities.splice(insertAt, 0, moved);
         return copy;
       });
-      if (dragInfo.fromDay!==dayIdx) { setManualHotels(h=>{ const c={...h}; delete c[dayIdx]; delete c[dragInfo.fromDay]; return c; }); setManualRestaurants(r=>{ const c={...r}; delete c[dayIdx]; delete c[dragInfo.fromDay]; return c; }); }
+      if (dragInfo.fromDay!==dayIdx) {
+        setManualStaleRecs(s=>{
+          const c={...s};
+          if (manualHotels[dayIdx]||manualRestaurants[dayIdx]) c[dayIdx]=true;
+          if (manualHotels[dragInfo.fromDay]||manualRestaurants[dragInfo.fromDay]) c[dragInfo.fromDay]=true;
+          return c;
+        });
+      }
       setDragInfo(null); setDragOverInfo(null);
     };
     const onDragEnd = () => { setDragInfo(null); setDragOverInfo(null); };
@@ -4011,8 +4019,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // ── Route optimization ───────────────────────────────────────────────────
     const optimizeDay = (dayIdx) => {
       setManualDays(days => days.map((d,i)=> i!==dayIdx ? d : { ...d, activities: optimizeDayOrder(d.activities) }));
-      setManualHotels(h=>{ const c={...h}; delete c[dayIdx]; return c; });
-      setManualRestaurants(r=>{ const c={...r}; delete c[dayIdx]; return c; });
+      if (manualHotels[dayIdx] || manualRestaurants[dayIdx]) setManualStaleRecs(s=>({ ...s, [dayIdx]:true }));
     };
 
     // ── Hotel & restaurant recommendations via Google Places ────────────────
@@ -4035,6 +4042,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
           lunch:  { place:r[0]||null, alternatives:r.slice(1,5) },
           dinner: { place:r[1]||r[0]||null, alternatives:r.slice(2,6) },
         } }));
+        setManualStaleRecs(s=>{ const c={...s}; delete c[dayIdx]; return c; });
       } catch(e) { console.error("Recommendation fetch failed:", e.message); }
       setManualLoadingRecs(r=>({ ...r, [dayIdx]:false }));
     };
@@ -4189,6 +4197,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                 const hotelRec = manualHotels[dayIdx];
                 const restRec = manualRestaurants[dayIdx];
                 const loadingRecs = manualLoadingRecs[dayIdx];
+                const isStale = manualStaleRecs[dayIdx];
 
                 return (
                   <div key={dayIdx} style={{ background:"#fff", border:`1.5px solid ${manualActiveDay===dayIdx?C.teal:C.border}`, borderRadius:16, padding:"1.1rem", transition:"border-color .2s" }}>
@@ -4196,6 +4205,9 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                       <h4 style={{ fontSize:14, fontWeight:700, color:C.ink }}>Day {dayIdx+1} {d.location && <span style={{ color:C.inkSoft, fontWeight:400 }}>· {d.location}</span>}</h4>
                       {acts.length>0 && !loadingRecs && !hotelRec && (
                         <button onClick={()=>fetchDayRecommendations(dayIdx)} style={{ fontSize:11, fontWeight:600, color:C.teal, background:"none", border:`1px solid ${C.teal}`, borderRadius:8, padding:"4px 10px", cursor:"pointer", fontFamily:sans }}>🏨 Suggest stay & food</button>
+                      )}
+                      {acts.length>0 && !loadingRecs && hotelRec && isStale && (
+                        <button onClick={()=>fetchDayRecommendations(dayIdx)} style={{ fontSize:11, fontWeight:600, color:C.amber, background:C.amberLight, border:"none", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontFamily:sans }}>🔄 Places changed — refresh?</button>
                       )}
                       {loadingRecs && <span style={{ fontSize:11, color:C.inkSoft }}>Finding nearby places…</span>}
                     </div>
@@ -5162,7 +5174,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
                         You declined this bid from {req.guideName}. Browse other guides to send a new request.
                       </div>
                     )}
-                    {req.bid && req.status!=="confirmed" && req.status!=="completed" && req.status!=="disputed" && req.status!=="declined" && req.status!=="guide_declined" && (
+                    {req.bid && req.status!=="confirmed" && req.status!=="underway" && req.status!=="completed" && req.status!=="disputed" && req.status!=="declined" && req.status!=="guide_declined" && (
                       <div style={{ background:C.amberLight, border:`1px solid #DFCBA0`, borderRadius:10, padding:"12px 14px", marginBottom:12 }}>
                         <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:4 }}>Bid from {req.guideName}</div>
                         <div style={{ fontSize:20, fontWeight:800, color:C.amber, marginBottom:4 }}>${req.bid.price} USD</div>
@@ -6168,6 +6180,14 @@ function loadScript(src) {
   return new Promise((resolve,reject)=>{
     if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
     const s = document.createElement("script");
+    // Dynamically-created scripts default to executing as soon as they finish
+    // downloading, in whatever order that happens to be — NOT the order they
+    // were appended. That's fine for one-off scripts, but firebase-auth-compat
+    // depends on firebase-app-compat having run first; loading both with
+    // Promise.all could silently execute them out of order and break auth
+    // state restoration intermittently (e.g. staying logged out after a
+    // refresh). Setting async=false forces in-document-order execution.
+    s.async = false;
     s.src = src; s.onload = resolve; s.onerror = reject;
     document.head.appendChild(s);
   });
@@ -6383,9 +6403,12 @@ async function loadApprovedGuides() {
 
 async function saveTripRequest(request) {
   if (!window.firebase?.firestore) return null;
-  const ref = await window.firebase.firestore().collection("tripRequests").add({
-    ...request, createdAt:new Date().toISOString(), status:"pending"
-  });
+  // Same Firestore gotcha as saveUserItinerary: any `undefined` field
+  // anywhere in the object (easy to end up with from an itinerary that has
+  // lots of optional fields) makes the whole write fail with "addDoc()
+  // called with invalid data — Unsupported field value: undefined".
+  const clean = JSON.parse(JSON.stringify({ ...request, createdAt:new Date().toISOString(), status:"pending" }));
+  const ref = await window.firebase.firestore().collection("tripRequests").add(clean);
   return ref.id;
 }
 
@@ -7756,14 +7779,22 @@ function AdminPanel({ onClose }) {
     setLoadingAnalytics(true);
     try {
       if (!window.firebase?.firestore) await loadScript("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js");
-      const [reqSnap, guideSnap, premiumSnap] = await Promise.all([
+      const [reqSnap, guideSnap] = await Promise.all([
         window.firebase.firestore().collection("tripRequests").limit(500).get(),
         window.firebase.firestore().collection("guides").limit(200).get(),
-        window.firebase.firestore().collection("premiumPayments").limit(1000).get(),
       ]);
+      // Fetched separately and defensively: if Firestore security rules
+      // haven't been opened up for this newer collection yet, a permission
+      // error here shouldn't take down the entire analytics dashboard —
+      // premium revenue just shows as $0 instead of blocking everything else.
+      let premiumPayments = [];
+      try {
+        const premiumSnap = await window.firebase.firestore().collection("premiumPayments").limit(1000).get();
+        premiumPayments = premiumSnap.docs.map(d=>d.data());
+      } catch(e) { console.warn("premiumPayments read failed (check Firestore rules for this collection):", e.message); }
+
       const requests = reqSnap.docs.map(d=>d.data());
       const allGuides = guideSnap.docs.map(d=>({id:d.id,...d.data()}));
-      const premiumPayments = premiumSnap.docs.map(d=>d.data());
 
       const accepted = requests.filter(r=>(r.status==="confirmed"||r.status==="underway"||r.status==="completed") && r.payment);
       const disputed = requests.filter(r=>r.status==="disputed");
