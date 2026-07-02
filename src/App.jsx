@@ -3108,6 +3108,65 @@ async function deleteManualDraft(draftId) {
   await window.firebase.firestore().collection("manualTripDrafts").doc(draftId).delete();
 }
 
+// ─── LIVE BUDGET ESTIMATOR ────────────────────────────────────────────────────
+// Works off whatever real numbers we have (Google Places price_level for
+// picked hotels/restaurants) and falls back to clearly-labelled estimates for
+// anything with no real pricing source (fuel, entrance fees, parking) — we
+// never present a fabricated number as a fact.
+const PRICE_LEVEL_HOTEL_USD  = [25, 35, 65, 120, 220];   // per night, by price_level 0-4
+const PRICE_LEVEL_MEAL_USD   = [4, 6, 12, 22, 40];       // per person, by price_level 0-4
+const FUEL_USD_PER_KM        = 0.16;                      // rough SL fuel+vehicle estimate
+const ENTRANCE_FEE_AVG_USD   = 8;                          // rough average attraction ticket
+const PARKING_USD_PER_DAY    = 2;
+
+function estimateTripBudget(days, hotels={}, restaurants={}) {
+  let hotelTotal=0, foodTotal=0, fuelTotal=0, entranceTotal=0, parkingTotal=0;
+  days.forEach((d,i) => {
+    const acts = d.activities || [];
+    entranceTotal += acts.length * ENTRANCE_FEE_AVG_USD;
+    parkingTotal += PARKING_USD_PER_DAY;
+    // driving distance for this day, using whatever coordinates resolve
+    const withGeo = acts.map(a => a.lat!=null ? a : { ...a, ...(PLACE_GEO[a.name||a.place]||{}) });
+    fuelTotal += routeTotalMinutesToKm(withGeo);
+    const hotel = hotels[i]?.place;
+    if (hotel) hotelTotal += hotel.price_level!=null ? PRICE_LEVEL_HOTEL_USD[hotel.price_level] : 65;
+    else if (d.hotel) hotelTotal += 65; // AI-suggested hotel, no price_level available
+    const rest = restaurants[i];
+    ["lunch","dinner"].forEach(meal => {
+      const p = rest?.[meal]?.place;
+      if (p) foodTotal += p.price_level!=null ? PRICE_LEVEL_MEAL_USD[p.price_level] : 10;
+    });
+    foodTotal += 5; // breakfast, small flat estimate (usually included or cheap)
+  });
+  fuelTotal = Math.round(fuelTotal * FUEL_USD_PER_KM);
+  const total = Math.round(hotelTotal+foodTotal+fuelTotal+entranceTotal+parkingTotal);
+  return {
+    hotelTotal:Math.round(hotelTotal), foodTotal:Math.round(foodTotal), fuelTotal,
+    entranceTotal:Math.round(entranceTotal), parkingTotal:Math.round(parkingTotal),
+    total, perDay: days.length ? Math.round(total/days.length) : 0,
+  };
+}
+// Sums real driving km across a day's stops (returns km, not minutes).
+function routeTotalMinutesToKm(activities) {
+  let km = 0;
+  for (let i=1;i<activities.length;i++) { const d = mbDistKm(activities[i-1], activities[i]); if (d!=null && d<9999) km += d; }
+  return km;
+}
+
+// ─── PROGRESS TRACKER ─────────────────────────────────────────────────────────
+function computeTripProgress(manualAns, manualDays, manualHotels, manualRestaurants, built) {
+  const checks = [
+    { label:"Trip info", done: !!(manualAns.startDate && manualAns.endDate && (manualAns.startCity!=="custom"||manualAns.customStart)) },
+    { label:"Destinations", done: manualDays.length>0 && manualDays.every(d=>d.activities.length>0) },
+    { label:"Hotels", done: manualDays.length>0 && manualDays.every((d,i)=>d.activities.length===0 || !!manualHotels[i]?.place) },
+    { label:"Restaurants", done: manualDays.length>0 && manualDays.every((d,i)=>d.activities.length===0 || !!(manualRestaurants[i]?.lunch?.place || manualRestaurants[i]?.dinner?.place)) },
+    { label:"Timeline", done: manualDays.some(d=>d.activities.length>0) },
+    { label:"Review & build", done: !!built },
+  ];
+  const pct = Math.round((checks.filter(c=>c.done).length / checks.length) * 100);
+  return { checks, pct };
+}
+
 // Destination picker card — real photo via the existing Pexels-backed hook.
 function ManualDestCard({ place, alreadyAdded, dayNum, onAdd }) {
   const photo = useDestPhoto(place.name);
@@ -3224,6 +3283,23 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
 
   // Days/nights: nights always = days-1
   const adjDays = delta => setAns(a=>{ const d=Math.max(1,a.days+delta); return {...a, days:d, nights:d-1}; });
+
+  // "Continue editing" — loads a finished AI itinerary into the manual
+  // planner with destinations, hotels, and restaurants pre-filled, so the
+  // two planners feel like one continuous tool instead of separate features.
+  const convertToManualPlanner = () => {
+    const srcDays = itinDays || itin.days;
+    const { days, hotels, restaurants } = deriveManualStateFromAIItin(itin, srcDays);
+    setManualAns({
+      startCity:"custom", customStart: itin.tripMeta?.startLocation || startLabel,
+      startDate: itin.tripMeta?.startDate || ans.startDate || "",
+      endDate: itin.tripMeta?.endDate || ans.endDate || "",
+      roundTrip: itin.tripMeta?.roundTrip ?? true,
+      title: itin.title || "",
+    });
+    setManualDays(days); setManualHotels(hotels); setManualRestaurants(restaurants);
+    setManualActiveDay(0); setPlanMode("manual"); setManualStep(1);
+  };
 
   // PDF download
   const downloadPDF = () => {
@@ -3642,6 +3718,51 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             </div>
           </div>
 
+          {/* Live budget estimate — same estimator the manual planner uses */}
+          {(()=>{
+            const srcDays = itinDays || itin.days;
+            const { days, hotels, restaurants } = deriveManualStateFromAIItin(itin, srcDays);
+            const budget = estimateTripBudget(days, hotels, restaurants);
+            return <BudgetPanel budget={budget} days={days}/>;
+          })()}
+
+          {/* Route intelligence — flags days that could be reordered to drive less.
+              Only offered where every stop in the day resolves to a known
+              coordinate and there's no food/transport entry to disturb, so this
+              never silently reorders something it can't reason about safely. */}
+          {(()=>{
+            const srcDays = itinDays || itin.days;
+            const suggestions = srcDays.map((day,i) => {
+              const acts = day.activities||[];
+              if (acts.length<3 || acts.some(a=>a.type==="food"||a.type==="transport")) return null;
+              const geo = acts.map(a => ({ ...a, ...(PLACE_GEO[a.place]||PLACE_GEO[a.area]||{}) }));
+              if (geo.some(a=>a.lat==null)) return null;
+              const current = routeTotalMinutes(geo);
+              const optimized = routeTotalMinutes(optimizeDayOrder(geo));
+              const savings = current - optimized;
+              return savings>=15 ? { dayIdx:i, savings, optimizedOrder:optimizeDayOrder(geo) } : null;
+            }).filter(Boolean);
+            if (!suggestions.length) return null;
+            return (
+              <div style={{ marginBottom:20 }}>
+                {suggestions.map(s=>(
+                  <div key={s.dayIdx} style={{ background:C.tealPale, border:"1px solid #B9CFC5", borderRadius:12, padding:"10px 14px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:8 }}>
+                    <span style={{ fontSize:12.5, color:C.teal, fontWeight:600 }}>💡 Day {s.dayIdx+1}: optimize your route to save ~{Math.floor(s.savings/60)>0?`${Math.floor(s.savings/60)}h `:""}{s.savings%60}m</span>
+                    <button onClick={()=>{
+                      const srcDays2 = itinDays || itin.days;
+                      const newDays = srcDays2.map((day,i) => {
+                        if (i!==s.dayIdx) return day;
+                        const byName = Object.fromEntries((day.activities||[]).map(a=>[a.place,a]));
+                        return { ...day, activities: s.optimizedOrder.map(o=>byName[o.place]).filter(Boolean) };
+                      });
+                      setItinDays(newDays); setSavedItin({ ...itin, days:newDays });
+                    }} style={{ fontSize:11.5, fontWeight:700, color:"#fff", background:C.teal, border:"none", borderRadius:8, padding:"6px 12px", cursor:"pointer", fontFamily:sans }}>Optimize route</button>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
           {/* Show ALL days with drag/drop and swap — locked ones get premium overlay */}
           <DraggableItinerary
             days={itinDays||itin.days}
@@ -3658,6 +3779,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
               <Btn variant="amber" onClick={onGuideOpen}>Find a guide & request bid →</Btn>
               <Btn variant="outline" onClick={downloadPDF}>{t("res_pdf")}</Btn>
+              <Btn variant="outline" onClick={convertToManualPlanner}>✏️ Continue editing manually</Btn>
               {itin.source!=="manual" && <Btn variant="outline" onClick={generate}>🔄 Regenerate with same details</Btn>}
               <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true }); setPlanMode("choose"); setManualStep(0); setManualDays([]); setManualAns({ startCity:"airport", customStart:"", startDate:"", endDate:"", roundTrip:true, title:"" }); }}>↺ New itinerary</Btn>
             </div>
@@ -4008,6 +4130,18 @@ Return ONLY valid raw JSON — no markdown, no backticks:
         </div>
 
         <div style={{ maxWidth:1200, margin:"0 auto", padding:"1.5rem" }}>
+          {/* Progress + Budget — recomputed live on every itinerary change */}
+          {(()=>{
+            const progress = computeTripProgress(manualAns, manualDays, manualHotels, manualRestaurants, false);
+            const budget = estimateTripBudget(manualDays, manualHotels, manualRestaurants);
+            return (
+              <>
+                <PlanningProgress checks={progress.checks} pct={progress.pct}/>
+                {totalPicked>0 && <BudgetPanel budget={budget} days={manualDays}/>}
+              </>
+            );
+          })()}
+
           {/* Warnings */}
           {manualDays.some(d=>d.activities.length>1) && (()=>{
             const warnings = manualDays.flatMap((d,i)=> d.activities.length>1 ? getDayWarnings(d.activities, dayTimelines[i], i) : []);
@@ -4475,6 +4609,83 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 // Visual stepper shown to both tourist and guide so either side can see exactly
 // where a booking stands: paid & confirmed → trip taking place → both sides
 // confirmed it happened → remaining balance released to the guide.
+// Planning checklist — distinct from TripProgressBar (which tracks a live
+// booking after payment); this one tracks how complete the itinerary itself
+// is while someone is still building it.
+function PlanningProgress({ checks, pct }) {
+  return (
+    <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:14, padding:"12px 14px", marginBottom:16 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+        <span style={{ fontSize:12, fontWeight:700, color:C.ink }}>Trip completeness</span>
+        <span style={{ fontSize:12, fontWeight:700, color:C.teal }}>{pct}%</span>
+      </div>
+      <div style={{ height:6, background:C.surface, borderRadius:4, overflow:"hidden", marginBottom:10 }}>
+        <div style={{ height:"100%", width:`${pct}%`, background:C.teal, borderRadius:4, transition:"width .4s ease" }}/>
+      </div>
+      <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+        {checks.map(c=>(
+          <span key={c.label} style={{ fontSize:11, fontWeight:600, color:c.done?C.teal:C.inkSoft, display:"flex", alignItems:"center", gap:4 }}>
+            {c.done?"✓":"○"} {c.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Live-updating budget summary — real numbers where we have them (hotel/food
+// price_level from Google Places), clearly-labelled estimates elsewhere.
+function BudgetPanel({ budget, days }) {
+  return (
+    <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:14, padding:"14px 16px", marginBottom:16 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:10 }}>
+        <span style={{ fontSize:12, fontWeight:700, color:C.ink }}>💰 Estimated trip budget</span>
+        <span style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.teal }}>${budget.total}</span>
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(90px,1fr))", gap:8, marginBottom:8 }}>
+        {[["🏨 Hotels",budget.hotelTotal],["🍽️ Food",budget.foodTotal],["⛽ Fuel",budget.fuelTotal],["🎟️ Entrance",budget.entranceTotal],["🅿️ Parking",budget.parkingTotal]].map(([l,v])=>(
+          <div key={l} style={{ background:C.surface, borderRadius:9, padding:"7px 9px" }}>
+            <div style={{ fontSize:10, color:C.inkSoft, marginBottom:2 }}>{l}</div>
+            <div style={{ fontSize:13, fontWeight:700, color:C.ink }}>${v}</div>
+          </div>
+        ))}
+      </div>
+      <p style={{ fontSize:10.5, color:C.inkSoft, lineHeight:1.5 }}>Hotel/food costs use real pricing tiers where a place is picked. Fuel, entrance fees, and parking are rough estimates — actual costs vary by vehicle, group size, and specific attractions.</p>
+    </div>
+  );
+}
+
+// Converts an AI-generated itinerary's day/activity shape into the same
+// { location, activities:[{name,tag,desc,lat,lng}] } shape the manual
+// planner uses — plus best-effort hotel/restaurant extraction — so budget
+// estimation and "Continue Editing" can both work off one source of truth.
+function deriveManualStateFromAIItin(itin, srcDays) {
+  const days = srcDays.map(day => {
+    const activities = (day.activities||[]).filter(a=>a.type!=="food" && a.type!=="transport").map(a => {
+      const geo = PLACE_GEO[a.place] || PLACE_GEO[a.area] || null;
+      return { name:a.place, tag:a.why||"", desc:a.text||"", lat:geo?.lat, lng:geo?.lng };
+    });
+    return { location: day.location||"", activities };
+  });
+  const hotels = {};
+  srcDays.forEach((day,i) => {
+    if (day.hotel) hotels[i] = { place:{ name:day.hotel.name, vicinity:day.hotel.area, rating:day.hotel.stars, price_level:null }, alternatives:[] };
+  });
+  if (itin.hotel && Object.keys(hotels).length===0) {
+    srcDays.forEach((_,i)=>{ hotels[i] = { place:{ name:itin.hotel.name, vicinity:itin.hotel.area, rating:itin.hotel.stars, price_level:null }, alternatives:[] }; });
+  }
+  const restaurants = {};
+  srcDays.forEach((day,i) => {
+    const foods = (day.activities||[]).filter(a=>a.type==="food");
+    if (foods.length) {
+      restaurants[i] = {};
+      if (foods[0]) restaurants[i].lunch  = { place:{ name:foods[0].place, vicinity:foods[0].area, rating:null, price_level:null }, alternatives:[] };
+      if (foods[1]) restaurants[i].dinner = { place:{ name:foods[1].place, vicinity:foods[1].area, rating:null, price_level:null }, alternatives:[] };
+    }
+  });
+  return { days, hotels, restaurants };
+}
+
 function TripProgressBar({ status, iConfirmedUnderway, theyConfirmedUnderway, iConfirmed, theyConfirmed }) {
   const bothUnderway = iConfirmedUnderway && theyConfirmedUnderway;
   const bothConfirmed = iConfirmed && theyConfirmed;
