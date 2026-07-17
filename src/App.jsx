@@ -222,7 +222,7 @@ const OPT_T = {
     mixed:{l:"All of Sri Lanka",s:"A bit of everything"},
     solo:{l:"Solo",s:"Just me"}, couple:{l:"Couple",s:"Two travellers"}, family:{l:"Family",s:"With kids"}, friends:{l:"Friends group",s:"3 or more"},
     budget:{l:"Budget",s:"< $50/day"}, mid:{l:"Mid-range",s:"$50–$150/day"}, luxury:{l:"Luxury",s:"$150+/day"},
-    srilankan:"Sri Lankan", seafood:"Seafood", vegetarian:"Vegetarian", vegan:"Vegan", western:"Western", southindian:"South Indian", streetfood:"Street food", finedining:"Fine dining",
+    srilankan:"Sri Lankan", seafood:"Seafood", vegetarian:"Vegetarian", vegan:"Vegan", western:"Western", southindian:"South Indian", streetfood:"Street food", finedining:"Fine dining", hoppers:"Hoppers & Roti", bakery:"Bakery & Short Eats", halal:"Halal", desserts:"Desserts & Sweets",
     relaxation:{l:"Relaxation"}, sightseeing:{l:"Sightseeing"}, "food-tours":{l:"Food tours"}, wellness:{l:"Wellness & Spa"},
     "water-sports":{l:"Water sports"}, "wildlife-safari":{l:"Wildlife safari"}, hiking:{l:"Hiking & Trekking"}, "adventure-act":{l:"Adventure sports"},
     "tuk-tuk":{l:"Tuk-tuk",s:"Authentic & fun, best for short hops"}, "private-car":{l:"Private car",s:"Comfortable & flexible"},
@@ -261,7 +261,7 @@ const OPT_T = {
     mixed:{l:"සම්පූර්ණ ශ්‍රී ලංකාව",s:"සියල්ලෙන්ම ටිකක්"},
     solo:{l:"තනියම",s:"මම පමණයි"}, couple:{l:"යුවළ",s:"සංචාරකයින් දෙදෙනෙක්"}, family:{l:"පවුල",s:"දරුවන් සමඟ"}, friends:{l:"මිතුරු කණ්ඩායම",s:"3 හෝ වැඩි"},
     budget:{l:"අයවැය",s:"< $50/දිනකට"}, mid:{l:"මධ්‍ය පරාසය",s:"$50–$150/දිනකට"}, luxury:{l:"සුඛෝපභෝගී",s:"$150+/දිනකට"},
-    srilankan:"ශ්‍රී ලාංකික", seafood:"මුහුදු ආහාර", vegetarian:"නිර්මාංශ", vegan:"වීගන්", western:"බටහිර", southindian:"දකුණු ඉන්දියානු", streetfood:"වීදි ආහාර", finedining:"උසස් ආහාරපාන",
+    srilankan:"ශ්‍රී ලාංකික", seafood:"මුහුදු ආහාර", vegetarian:"නිර්මාංශ", vegan:"වීගන්", western:"බටහිර", southindian:"දකුණු ඉන්දියානු", streetfood:"වීදි ආහාර", finedining:"උසස් ආහාරපාන", hoppers:"ආප්ප සහ රොටි", bakery:"බේකරි & කෙටි ආහාර", halal:"හලාල්", desserts:"අතුරුපස",
     relaxation:{l:"විවේකය"}, sightseeing:{l:"සංචාරක ස්ථාන"}, "food-tours":{l:"ආහාර සංචාර"}, wellness:{l:"සුවතා සහ ස්පා"},
     "water-sports":{l:"ජල ක්‍රීඩා"}, "wildlife-safari":{l:"වනජීවී සෆාරි"}, hiking:{l:"කඳු නැගීම සහ ට්‍රෙකින්"}, "adventure-act":{l:"සාහසික ක්‍රීඩා"},
     "tuk-tuk":{l:"ටුක්-ටුක්",s:"සැබෑ සහ විනෝදජනක, කෙටි ගමන් සඳහා හොඳම"}, "private-car":{l:"පෞද්ගලික කාර්",s:"සුවපහසු සහ නම්‍යශීලී"},
@@ -300,7 +300,7 @@ const OPT_T = {
     mixed:{l:"முழு இலங்கை",s:"எல்லாவற்றிலும் கொஞ்சம்"},
     solo:{l:"தனியாக",s:"நான் மட்டும்"}, couple:{l:"ஜோடி",s:"இரண்டு பயணிகள்"}, family:{l:"குடும்பம்",s:"குழந்தைகளுடன்"}, friends:{l:"நண்பர்கள் குழு",s:"3 அல்லது அதற்கு மேல்"},
     budget:{l:"பட்ஜெட்",s:"< $50/நாள்"}, mid:{l:"நடுத்தர",s:"$50–$150/நாள்"}, luxury:{l:"ஆடம்பர",s:"$150+/நாள்"},
-    srilankan:"இலங்கை", seafood:"கடல் உணவு", vegetarian:"சைவம்", vegan:"வீகன்", western:"மேற்கத்திய", southindian:"தென்னிந்திய", streetfood:"தெரு உணவு", finedining:"உயர்தர உணவு",
+    srilankan:"இலங்கை", seafood:"கடல் உணவு", vegetarian:"சைவம்", vegan:"வீகன்", western:"மேற்கத்திய", southindian:"தென்னிந்திய", streetfood:"தெரு உணவு", finedining:"உயர்தர உணவு", hoppers:"ஆப்பம் & ரொட்டி", bakery:"பேக்கரி & சிற்றுண்டி", halal:"ஹலால்", desserts:"இனிப்புகள்",
     relaxation:{l:"ஓய்வு"}, sightseeing:{l:"சுற்றுலா இடங்கள்"}, "food-tours":{l:"உணவு சுற்றுலா"}, wellness:{l:"நல்வாழ்வு & ஸ்பா"},
     "water-sports":{l:"நீர் விளையாட்டு"}, "wildlife-safari":{l:"வனவிலங்கு சஃபாரி"}, hiking:{l:"மலையேற்றம் & ட்ரெக்கிங்"}, "adventure-act":{l:"சாகச விளையாட்டு"},
     "tuk-tuk":{l:"டுக்-டுக்",s:"உண்மையான & வேடிக்கையான, குறுகிய தூரத்திற்கு சிறந்தது"}, "private-car":{l:"தனியார் கார்",s:"வசதியான & நெகிழ்வான"},
@@ -339,7 +339,7 @@ const OPT_T = {
     mixed:{l:"Ganz Sri Lanka",s:"Ein bisschen von allem"},
     solo:{l:"Allein",s:"Nur ich"}, couple:{l:"Paar",s:"Zwei Reisende"}, family:{l:"Familie",s:"Mit Kindern"}, friends:{l:"Freundesgruppe",s:"3 oder mehr"},
     budget:{l:"Budget",s:"< $50/Tag"}, mid:{l:"Mittelklasse",s:"$50–$150/Tag"}, luxury:{l:"Luxus",s:"$150+/Tag"},
-    srilankan:"Sri-lankisch", seafood:"Meeresfrüchte", vegetarian:"Vegetarisch", vegan:"Vegan", western:"Westlich", southindian:"Südindisch", streetfood:"Streetfood", finedining:"Gehobene Küche",
+    srilankan:"Sri-lankisch", seafood:"Meeresfrüchte", vegetarian:"Vegetarisch", vegan:"Vegan", western:"Westlich", southindian:"Südindisch", streetfood:"Streetfood", finedining:"Gehobene Küche", hoppers:"Hoppers & Roti", bakery:"Bäckerei & Snacks", halal:"Halal", desserts:"Desserts & Süßes",
     relaxation:{l:"Entspannung"}, sightseeing:{l:"Sightseeing"}, "food-tours":{l:"Food-Touren"}, wellness:{l:"Wellness & Spa"},
     "water-sports":{l:"Wassersport"}, "wildlife-safari":{l:"Tierbeobachtung"}, hiking:{l:"Wandern & Trekking"}, "adventure-act":{l:"Abenteuersport"},
     "tuk-tuk":{l:"Tuk-Tuk",s:"Authentisch & lustig, am besten für kurze Strecken"}, "private-car":{l:"Privatwagen",s:"Komfortabel & flexibel"},
@@ -378,7 +378,7 @@ const OPT_T = {
     mixed:{l:"Tout le Sri Lanka",s:"Un peu de tout"},
     solo:{l:"Solo",s:"Juste moi"}, couple:{l:"Couple",s:"Deux voyageurs"}, family:{l:"Famille",s:"Avec enfants"}, friends:{l:"Groupe d'amis",s:"3 ou plus"},
     budget:{l:"Économique",s:"< 50$/jour"}, mid:{l:"Moyenne gamme",s:"50–150$/jour"}, luxury:{l:"Luxe",s:"150$+/jour"},
-    srilankan:"Sri-lankais", seafood:"Fruits de mer", vegetarian:"Végétarien", vegan:"Végétalien", western:"Occidental", southindian:"Sud-indien", streetfood:"Street food", finedining:"Gastronomie",
+    srilankan:"Sri-lankais", seafood:"Fruits de mer", vegetarian:"Végétarien", vegan:"Végétalien", western:"Occidental", southindian:"Sud-indien", streetfood:"Street food", finedining:"Gastronomie", hoppers:"Hoppers & Roti", bakery:"Boulangerie & En-cas", halal:"Halal", desserts:"Desserts & Sucreries",
     relaxation:{l:"Détente"}, sightseeing:{l:"Visites touristiques"}, "food-tours":{l:"Circuits gastronomiques"}, wellness:{l:"Bien-être & Spa"},
     "water-sports":{l:"Sports nautiques"}, "wildlife-safari":{l:"Safari faune"}, hiking:{l:"Randonnée"}, "adventure-act":{l:"Sports d'aventure"},
     "tuk-tuk":{l:"Tuk-tuk",s:"Authentique & amusant, idéal pour les courts trajets"}, "private-car":{l:"Voiture privée",s:"Confortable & flexible"},
@@ -417,7 +417,7 @@ const OPT_T = {
     mixed:{l:"全斯里兰卡",s:"一点点全部体验"},
     solo:{l:"独自旅行",s:"只有我"}, couple:{l:"情侣",s:"两位旅行者"}, family:{l:"家庭",s:"带孩子"}, friends:{l:"朋友团体",s:"3人或以上"},
     budget:{l:"经济型",s:"< $50/天"}, mid:{l:"中档",s:"$50–$150/天"}, luxury:{l:"豪华型",s:"$150+/天"},
-    srilankan:"斯里兰卡菜", seafood:"海鲜", vegetarian:"素食", vegan:"纯素", western:"西餐", southindian:"南印度菜", streetfood:"街头小吃", finedining:"高级餐饮",
+    srilankan:"斯里兰卡菜", seafood:"海鲜", vegetarian:"素食", vegan:"纯素", western:"西餐", southindian:"南印度菜", streetfood:"街头小吃", finedining:"高级餐饮", hoppers:"薄煎饼与烤饼", bakery:"烘焙与小吃", halal:"清真", desserts:"甜点",
     relaxation:{l:"放松"}, sightseeing:{l:"观光"}, "food-tours":{l:"美食之旅"}, wellness:{l:"健康与水疗"},
     "water-sports":{l:"水上运动"}, "wildlife-safari":{l:"野生动物园"}, hiking:{l:"徒步与远足"}, "adventure-act":{l:"冒险运动"},
     "tuk-tuk":{l:"嘟嘟车",s:"地道有趣，适合短途出行"}, "private-car":{l:"私人轿车",s:"舒适灵活"},
@@ -1859,12 +1859,13 @@ function DestinationsPage({ setPage, onGuideOpen, savedItin, setSavedItin }) {
   const loadPlaces = async (catId) => {
     setLoading(true); setError(""); setPlaces([]);
     try {
-      if (catId === "hotels") {
-        // Query multiple regions so we get a good spread of hotels across the
-        // whole island and enough results per star tier, rather than one
-        // generic "hotels in Sri Lanka" search that just returns Colombo results.
+      if (catId === "hotels" || catId === "restaurants") {
+        // Query multiple regions so we get a good spread across the whole
+        // island, rather than one generic "X in Sri Lanka" search that
+        // Google caps around ~20 results and skews toward Colombo.
         const regions = ["Colombo","Kandy","Galle","Ella","Nuwara Eliya","Mirissa","Sigiriya","Negombo","Trincomalee","Bentota"];
-        const queries = regions.map(r => placesSearch(`hotels in ${r}, Sri Lanka`));
+        const queryPrefix = catId === "hotels" ? "hotels in" : "best restaurants in";
+        const queries = regions.map(r => placesSearch(`${queryPrefix} ${r}, Sri Lanka`));
         const results = await Promise.all(queries);
         if (results[0]?.error==="no_key") { setError("no_key"); setLoading(false); return; }
         // Merge + de-duplicate by place_id
@@ -2817,7 +2818,7 @@ const BUDGET_OPTS = [
   {v:"mid"},
   {v:"luxury"},
 ];
-const FOOD_OPT_KEYS = ["srilankan","seafood","vegetarian","vegan","western","southindian","streetfood","finedining"];
+const FOOD_OPT_KEYS = ["srilankan","seafood","vegetarian","vegan","western","southindian","streetfood","finedining","hoppers","bakery","halal","desserts"];
 const ACT_OPTS = [
   {v:"adventure",i:"🧗"},
   {v:"relaxation",i:"🌅"},
@@ -2887,15 +2888,19 @@ function StepDots({ cur, total }) {
 }
 
 // ─── MISMATCH WARNING ────────────────────────────────────────────────────────
-function MismatchWarning({ travel, activities }) {
-  if (!travel || !activities.length) return null;
+function MismatchWarning({ travelStyles, activities }) {
+  if (!travelStyles?.length || !activities.length) return null;
   const warnings = [];
   activities.forEach(act => {
     const compatStyles = ACT_COMPAT[act] || null;
-    if (compatStyles && !compatStyles.includes(travel)) {
-      const key = `${act}+${travel}`;
-      const info = MISMATCH_SUGGESTIONS[key];
-      if (info) warnings.push(info);
+    // Only warn if NONE of the selected styles support this activity —
+    // picking multiple styles (e.g. Beach + Adventure) means either being
+    // compatible is enough, no need to nag about every combination.
+    if (compatStyles && !travelStyles.some(t=>compatStyles.includes(t))) {
+      for (const t of travelStyles) {
+        const info = MISMATCH_SUGGESTIONS[`${act}+${t}`];
+        if (info) { warnings.push(info); break; }
+      }
     }
   });
   if (!warnings.length) return null;
@@ -3168,7 +3173,7 @@ function computeTripProgress(manualAns, manualDays, manualHotels, manualRestaura
 }
 
 // Destination picker card — real photo via the existing Pexels-backed hook.
-function ManualDestCard({ place, alreadyAdded, dayNum, onAdd }) {
+function ManualDestCard({ place, alreadyAdded, inThisDay, existingDay, dayNum, onAdd }) {
   const photo = useDestPhoto(place.name);
   return (
     <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:14, overflow:"hidden" }}>
@@ -3182,7 +3187,7 @@ function ManualDestCard({ place, alreadyAdded, dayNum, onAdd }) {
         <p style={{ fontSize:12, color:C.inkSoft, lineHeight:1.6, marginBottom:10 }}>{place.desc}</p>
         <button onClick={onAdd} disabled={alreadyAdded}
           style={{ width:"100%", padding:"8px", borderRadius:9, border:"none", background:alreadyAdded?C.tealLight:C.teal, color:alreadyAdded?C.teal:"#fff", fontSize:12, fontWeight:700, cursor:alreadyAdded?"default":"pointer", fontFamily:sans }}>
-          {alreadyAdded?`✓ Added to Day ${dayNum}`:`+ Add to Day ${dayNum}`}
+          {inThisDay?`✓ Added to Day ${dayNum}`:alreadyAdded?`Already in Day ${existingDay}`:`+ Add to Day ${dayNum}`}
         </button>
       </div>
     </div>
@@ -3226,7 +3231,7 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
     // Restore wizard answers from any previous session
     const saved = localStorage.getItem("ct_wizard_ans");
     if (saved) { try { return JSON.parse(saved); } catch {} }
-    return { days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true };
+    return { days:5, nights:4, travelStyles:[], food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true };
   });
   const [loading, setLoad] = useState(false);
   const [itin, setItin]    = useState(savedItin||null);
@@ -3254,8 +3259,69 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   const [manualRestaurants, setManualRestaurants] = useState({}); // { [dayIdx]: {breakfast,lunch,dinner each: {place,alternatives:[]}} }
   const [manualLoadingRecs, setManualLoadingRecs] = useState({}); // { [dayIdx]: true } while fetching
   const [manualStaleRecs, setManualStaleRecs] = useState({}); // { [dayIdx]: true } — places changed since last fetch, but keep showing the old suggestion rather than silently dropping it
+  const [budgetCurrency, setBudgetCurrency] = useState("USD");
   const [dragInfo, setDragInfo] = useState(null); // { fromDay, fromIdx }
   const [dragOverInfo, setDragOverInfo] = useState(null); // { day, idx }
+
+  // Native HTML5 drag-and-drop (draggable + dragstart/dragover/drop) never
+  // fires at all on touch devices — no event, no error, it just silently
+  // does nothing, which is exactly what "drag and drop doesn't work" looks
+  // like on a phone. Pointer Events work uniformly across mouse and touch,
+  // so dragging is driven by these instead, with the row's data-drop-day/
+  // data-drop-idx attributes used to figure out what's under the finger.
+  const performManualReorder = useCallback((toDay, toIdx) => {
+    setDragInfo(from => {
+      if (!from) return null;
+      setManualDays(days => {
+        const copy = days.map(d=>({ ...d, activities:[...d.activities] }));
+        const [moved] = copy[from.fromDay].activities.splice(from.fromIdx, 1);
+        const insertAt = from.fromDay===toDay && from.fromIdx<toIdx ? toIdx-1 : toIdx;
+        copy[toDay].activities.splice(insertAt, 0, moved);
+        return copy;
+      });
+      if (from.fromDay!==toDay) {
+        setManualStaleRecs(s=>{
+          const c={...s};
+          c[toDay]=true; c[from.fromDay]=true;
+          return c;
+        });
+      }
+      return null;
+    });
+    setDragOverInfo(null);
+  }, []);
+
+  useEffect(() => {
+    if (!dragInfo) return;
+    const findDropTarget = (clientX, clientY) => {
+      const el = document.elementFromPoint(clientX, clientY);
+      const row = el?.closest("[data-drop-day]");
+      if (!row) return null;
+      return { day: parseInt(row.dataset.dropDay,10), idx: parseInt(row.dataset.dropIdx,10) };
+    };
+    const onMove = (e) => {
+      const t = e.touches ? e.touches[0] : e;
+      const target = findDropTarget(t.clientX, t.clientY);
+      if (target) setDragOverInfo(target);
+    };
+    const onUp = (e) => {
+      const t = e.changedTouches ? e.changedTouches[0] : e;
+      const target = findDropTarget(t.clientX, t.clientY);
+      if (target) performManualReorder(target.day, target.idx);
+      else { setDragInfo(null); setDragOverInfo(null); }
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("touchmove", onMove, { passive:true });
+    window.addEventListener("touchend", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    };
+  }, [dragInfo, performManualReorder]);
+
   const [manualDraftId, setManualDraftId] = useState(null);
   const [manualDraftSaving, setManualDraftSaving] = useState(false);
   const [manualDraftSaved, setManualDraftSaved] = useState(false);
@@ -3289,17 +3355,22 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
   // planner with destinations, hotels, and restaurants pre-filled, so the
   // two planners feel like one continuous tool instead of separate features.
   const convertToManualPlanner = () => {
-    const srcDays = itinDays || itin.days;
-    const { days, hotels, restaurants } = deriveManualStateFromAIItin(itin, srcDays);
-    setManualAns({
-      startCity:"custom", customStart: itin.tripMeta?.startLocation || startLabel,
-      startDate: itin.tripMeta?.startDate || ans.startDate || "",
-      endDate: itin.tripMeta?.endDate || ans.endDate || "",
-      roundTrip: itin.tripMeta?.roundTrip ?? true,
-      title: itin.title || "",
-    });
-    setManualDays(days); setManualHotels(hotels); setManualRestaurants(restaurants);
-    setManualActiveDay(0); setPlanMode("manual"); setManualStep(1);
+    try {
+      const srcDays = itinDays || itin.days;
+      const { days, hotels, restaurants } = deriveManualStateFromAIItin(itin, srcDays);
+      setManualAns({
+        startCity:"custom", customStart: itin.tripMeta?.startLocation || startLabel,
+        startDate: itin.tripMeta?.startDate || ans.startDate || "",
+        endDate: itin.tripMeta?.endDate || ans.endDate || "",
+        roundTrip: itin.tripMeta?.roundTrip ?? true,
+        title: itin.title || "",
+      });
+      setManualDays(days); setManualHotels(hotels); setManualRestaurants(restaurants);
+      setManualActiveDay(0); setPlanMode("manual"); setManualStep(1);
+    } catch(e) {
+      console.error("convertToManualPlanner failed:", e);
+      alert("Couldn't load this itinerary into the manual planner: " + e.message + "\n\nYour AI itinerary is unaffected — please try again or let support know.");
+    }
   };
 
   // PDF download
@@ -3362,8 +3433,16 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
       rural:    { allowed:["Knuckles Villages","Mahiyanganaya","Belihuloya","Ratnapura","Weligama","Dambulla","Matale"], forbidden:[] },
       mixed:    { allowed:["Colombo","Kandy","Dambulla","Sigiriya","Ella","Galle","Mirissa"], forbidden:[] },
     };
-    const styleKey = ans.travel || "mixed";
-    const cities   = STYLE_CITIES[styleKey] || STYLE_CITIES.mixed;
+    const selectedStyles = ans.travelStyles?.length ? ans.travelStyles : ["mixed"];
+    const styleKey = selectedStyles[0];
+    // With one style selected this behaves exactly as before. With several,
+    // union their allowed cities (more region variety) and drop the
+    // forbidden-list filter entirely — it assumes one focused style, and
+    // forbidding a hill-country town because "beach" was also picked would
+    // fight against the traveler's own combined choice.
+    const cities = selectedStyles.length > 1
+      ? { allowed:[...new Set(selectedStyles.flatMap(s => (STYLE_CITIES[s]||STYLE_CITIES.mixed).allowed))], forbidden:[] }
+      : (STYLE_CITIES[styleKey] || STYLE_CITIES.mixed);
 
     const N   = Math.min(ans.days, 10);
     const uid = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
@@ -3458,7 +3537,7 @@ function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLo
 
 TRIP:
 - ${N} days, ${ans.nights} nights | ${ans.group||"solo"} | Budget: ${ans.budget||"mid-range"} (${hotelTier})
-- Style: ${styleKey} | Food: ${ans.food.map(fk=>optT("en",fk)).join(", ")||"open"} | Activities: ${ans.activities.join(", ")||"sightseeing"}
+- Style: ${selectedStyles.join(", ")} | Food: ${ans.food.map(fk=>optT("en",fk)).join(", ")||"open"} | Activities: ${ans.activities.join(", ")||"sightseeing"}
 - Transport: ${ans.transport||"private-car"} | Pace: ${ans.pace||"balanced"} (${actsPerDay} activities/day)
 - Starting from: ${customStart} at ${ans.startTime||"09:00"}
 ${customNote ? `- ${customNote}` : ""}
@@ -3675,18 +3754,24 @@ Return ONLY valid raw JSON — no markdown, no backticks:
               </button>
               {/* Google Maps multi-waypoint route */}
               <button onClick={()=>{
-                // Build Google Maps directions URL with all unique day locations as waypoints
+                // Real start/end points (airport, hotel, etc.) — not just the
+                // first and last sightseeing stop — with every activity as a
+                // waypoint in between, so the route actually reflects the
+                // whole journey door-to-door.
                 const stops = [];
                 (itinDays||itin.days).forEach(d=>{
-                  // Add each unique place that has a mapQuery
                   d.activities.filter(a=>a.mapQuery&&a.type!=="transport").forEach(a=>{
                     if (!stops.includes(a.mapQuery)) stops.push(a.mapQuery);
                   });
                 });
-                if (stops.length < 2) { alert("Not enough stops to build a route."); return; }
-                const origin   = encodeURIComponent(stops[0]);
-                const dest     = encodeURIComponent(stops[stops.length-1]);
-                const waypoints= stops.slice(1,-1).map(s=>encodeURIComponent(s)).join("|");
+                const startLoc = itin.tripMeta?.startLocation || startLabel;
+                const endLoc = itin.tripMeta?.roundTrip ? startLoc : (itin.tripMeta?.endLocation || stops[stops.length-1] || startLoc);
+                if (stops.length < 1 && !startLoc) { alert("Not enough stops to build a route."); return; }
+                const origin   = encodeURIComponent(startLoc);
+                const dest     = encodeURIComponent(endLoc);
+                // Waypoints = every stop except one matching the end location (avoid a duplicate final leg)
+                const waypointStops = stops.filter(s => s !== endLoc);
+                const waypoints = waypointStops.map(s=>encodeURIComponent(s)).join("|");
                 const mode = ans.transport==="train"?"transit":ans.transport==="bus"?"transit":"driving";
                 const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}${waypoints?`&waypoints=${waypoints}`:""}&travelmode=${mode}`;
                 window.open(url,"_blank");
@@ -3724,7 +3809,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             const srcDays = itinDays || itin.days;
             const { days, hotels, restaurants } = deriveManualStateFromAIItin(itin, srcDays);
             const budget = estimateTripBudget(days, hotels, restaurants);
-            return <BudgetPanel budget={budget} days={days}/>;
+            return <BudgetPanel budget={budget} days={days} currency={budgetCurrency} onCurrencyChange={setBudgetCurrency}/>;
           })()}
 
           {/* Route intelligence — flags days that could be reordered to drive less.
@@ -3782,7 +3867,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
               <Btn variant="outline" onClick={downloadPDF}>{t("res_pdf")}</Btn>
               <Btn variant="outline" onClick={convertToManualPlanner}>✏️ Continue editing manually</Btn>
               {itin.source!=="manual" && <Btn variant="outline" onClick={generate}>🔄 Regenerate with same details</Btn>}
-              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travel:"", food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true }); setPlanMode("choose"); setManualStep(0); setManualDays([]); setManualAns({ startCity:"airport", customStart:"", startDate:"", endDate:"", roundTrip:true, title:"" }); }}>↺ New itinerary</Btn>
+              <Btn variant="outline" onClick={()=>{ setStep(0); setItin(null); setItinDays(null); setStartLabel("Sri Lanka"); setAns({ days:5, nights:4, travelStyles:[], food:[], budget:"", group:"", activities:[], transport:"", pace:"balanced", hotelStyle:"multi", customPlaces:[], startCity:"airport", startTime:"09:00", startDate:"", endDate:"", roundTrip:true }); setPlanMode("choose"); setManualStep(0); setManualDays([]); setManualAns({ startCity:"airport", customStart:"", startDate:"", endDate:"", roundTrip:true, title:"" }); }}>↺ New itinerary</Btn>
             </div>
           </div>
         </div>
@@ -3993,28 +4078,10 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     const totalPicked = manualDays.reduce((s,d)=>s+d.activities.length, 0);
 
     // ── Drag and drop — reorder within a day, or move between days ──────────
+    // Starts a drag on pointer-down (works for mouse AND touch); the actual
+    // move/drop tracking lives in a top-level effect (performManualReorder)
+    // since native HTML5 drag events never fire on touch devices at all.
     const onDragStart = (dayIdx, idx) => setDragInfo({ fromDay:dayIdx, fromIdx:idx });
-    const onDragOverItem = (dayIdx, idx, e) => { e.preventDefault(); setDragOverInfo({ day:dayIdx, idx }); };
-    const onDropItem = (dayIdx, idx) => {
-      if (!dragInfo) return;
-      setManualDays(days => {
-        const copy = days.map(d=>({ ...d, activities:[...d.activities] }));
-        const [moved] = copy[dragInfo.fromDay].activities.splice(dragInfo.fromIdx, 1);
-        const insertAt = dragInfo.fromDay===dayIdx && dragInfo.fromIdx<idx ? idx-1 : idx;
-        copy[dayIdx].activities.splice(insertAt, 0, moved);
-        return copy;
-      });
-      if (dragInfo.fromDay!==dayIdx) {
-        setManualStaleRecs(s=>{
-          const c={...s};
-          if (manualHotels[dayIdx]||manualRestaurants[dayIdx]) c[dayIdx]=true;
-          if (manualHotels[dragInfo.fromDay]||manualRestaurants[dragInfo.fromDay]) c[dragInfo.fromDay]=true;
-          return c;
-        });
-      }
-      setDragInfo(null); setDragOverInfo(null);
-    };
-    const onDragEnd = () => { setDragInfo(null); setDragOverInfo(null); };
 
     // ── Route optimization ───────────────────────────────────────────────────
     const optimizeDay = (dayIdx) => {
@@ -4145,7 +4212,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
             return (
               <>
                 <PlanningProgress checks={progress.checks} pct={progress.pct}/>
-                {totalPicked>0 && <BudgetPanel budget={budget} days={manualDays}/>}
+                {totalPicked>0 && <BudgetPanel budget={budget} days={manualDays} currency={budgetCurrency} onCurrencyChange={setBudgetCurrency}/>}
               </>
             );
           })()}
@@ -4179,8 +4246,12 @@ Return ONLY valid raw JSON — no markdown, no backticks:
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }} className="info-2col">
                 {(DESTINATIONS[manualCat]||[]).map(place=>{
-                  const alreadyAdded = activeDayPlaces.some(a=>a.name===place.name);
-                  return <ManualDestCard key={place.name} place={place} alreadyAdded={alreadyAdded} dayNum={manualActiveDay+1} onAdd={()=>!alreadyAdded && addPlace(place)}/>;
+                  // Check the WHOLE trip, not just the active day — a place
+                  // shouldn't be added to two different days of the same trip.
+                  const existingDayIdx = manualDays.findIndex(d=>d.activities.some(a=>a.name===place.name));
+                  const alreadyAdded = existingDayIdx !== -1;
+                  const inThisDay = existingDayIdx === manualActiveDay;
+                  return <ManualDestCard key={place.name} place={place} alreadyAdded={alreadyAdded} inThisDay={inThisDay} existingDay={existingDayIdx+1} dayNum={manualActiveDay+1} onAdd={()=>!alreadyAdded && addPlace(place)}/>;
                 })}
               </div>
             </div>
@@ -4214,32 +4285,28 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 
                     {acts.length===0 && <p style={{ fontSize:12, color:C.inkSoft }}>No places yet — add some from the left while this day is selected.</p>}
 
-                    {/* Draggable activity list */}
+                    {/* Draggable activity list — works on touch via pointer events, see performManualReorder */}
                     {acts.map((a,i)=>(
                       <div key={i}
-                        draggable
-                        onDragStart={()=>onDragStart(dayIdx,i)}
-                        onDragOver={(e)=>onDragOverItem(dayIdx,i,e)}
-                        onDrop={()=>onDropItem(dayIdx,i)}
-                        onDragEnd={onDragEnd}
+                        data-drop-day={dayIdx} data-drop-idx={i}
                         style={{
                           display:"flex", alignItems:"center", gap:8, padding:"8px 6px",
                           borderTop: dragOverInfo?.day===dayIdx && dragOverInfo?.idx===i ? `2px solid ${C.teal}` : "2px solid transparent",
                           opacity: dragInfo?.fromDay===dayIdx && dragInfo?.fromIdx===i ? 0.35 : 1,
-                          cursor:"grab", transition:"opacity .15s, border-color .15s",
+                          transition:"opacity .15s, border-color .15s", touchAction: dragInfo ? "none" : "auto",
                         }}>
-                        <span style={{ color:C.inkSoft, fontSize:13, flexShrink:0 }}>⠿</span>
+                        <span onPointerDown={()=>onDragStart(dayIdx,i)} style={{ color:C.inkSoft, fontSize:16, flexShrink:0, cursor:"grab", padding:"4px 6px", touchAction:"none" }}>⠿</span>
                         <span style={{ fontSize:12.5, color:C.ink, fontWeight:600, flex:1 }}>{i+1}. {a.name}</span>
                         <button onClick={()=>removePlace(dayIdx,i)} style={{ background:"none", border:"none", color:C.coral, cursor:"pointer", fontSize:13, flexShrink:0 }}>✕</button>
                       </div>
                     ))}
                     {/* Drop zone at the end of the list, for dragging into an empty or shorter day */}
                     {acts.length>0 && (
-                      <div onDragOver={(e)=>onDragOverItem(dayIdx,acts.length,e)} onDrop={()=>onDropItem(dayIdx,acts.length)}
+                      <div data-drop-day={dayIdx} data-drop-idx={acts.length}
                         style={{ height:10, borderTop: dragOverInfo?.day===dayIdx && dragOverInfo?.idx===acts.length ? `2px solid ${C.teal}` : "2px solid transparent" }}/>
                     )}
                     {acts.length===0 && (
-                      <div onDragOver={(e)=>onDragOverItem(dayIdx,0,e)} onDrop={()=>onDropItem(dayIdx,0)}
+                      <div data-drop-day={dayIdx} data-drop-idx={0}
                         style={{ height:24, border:`1.5px dashed ${dragOverInfo?.day===dayIdx?C.teal:C.border}`, borderRadius:8, marginTop:4 }}/>
                     )}
 
@@ -4378,9 +4445,10 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     // 1: Travel style
     <>
       <StepDots cur={1} total={STEPS_TOTAL}/>
-            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:24 }}>{t("q_travel")}</h2>
+            <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>{t("q_travel")}</h2>
+      <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>Pick any that apply</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-        {TRAVEL_OPTS.map(o=><OptBtn key={o.v} sel={ans.travel===o.v} onClick={()=>upd("travel",o.v)} icon={o.i} label={ot(o.v).l} sub={ot(o.v).s}/>)}
+        {TRAVEL_OPTS.map(o=><OptBtn key={o.v} sel={ans.travelStyles.includes(o.v)} onClick={()=>tog("travelStyles",o.v)} icon={o.i} label={ot(o.v).l} sub={ot(o.v).s}/>)}
       </div>
     </>,
 
@@ -4392,7 +4460,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
         {ACT_OPTS.map(o=><OptBtn key={o.v} sel={ans.activities.includes(o.v)} onClick={()=>tog("activities",o.v)} icon={o.i} label={ot(o.v==="adventure"?"adventure-act":o.v).l}/>)}
       </div>
-      <MismatchWarning travel={ans.travel} activities={ans.activities}/>
+      <MismatchWarning travelStyles={ans.travelStyles} activities={ans.activities}/>
     </>,
 
     // 3: Food
@@ -4500,9 +4568,9 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     <>
       <StepDots cur={9} total={STEPS_TOTAL}/>
             <h2 style={{ fontFamily:serif, fontSize:26, fontWeight:700, color:C.ink, marginBottom:8 }}>
-        {ans.travel==="rural" ? t("q_rural_title") : t("q_final_title")}
+        {ans.travelStyles.includes("rural") ? t("q_rural_title") : t("q_final_title")}
       </h2>
-      {ans.travel==="rural" ? (
+      {ans.travelStyles.includes("rural") ? (
         <>
           <p style={{ fontSize:13, color:C.inkSoft, marginBottom:16 }}>{t("rural_sub")}</p>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
@@ -4550,7 +4618,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
               ["🕐",t("sum_starttime"),ans.startTime||"09:00"],
               ["📍",t("sum_startfrom"),ans.startCity==="airport"?ot("airport").l:ans.startCity==="colombo"?ot("colombo").l:ans.customStart||ot("colombo").l],
               ["🔁",t("sum_triptype"),ans.roundTrip?t("sum_roundtrip_full"):t("sum_oneway")],
-              ["🗺️",t("sum_style"),ans.travel?ot(ans.travel).l:t("sum_notselected")],
+              ["🗺️",t("sum_style"),ans.travelStyles.length?ans.travelStyles.map(s=>ot(s).l).join(", "):t("sum_notselected")],
               ["👥",t("sum_group"),ans.group?ot(ans.group).l:t("sum_notselected")],
               ["💰",t("sum_budget"),ans.budget?ot(ans.budget).l:t("sum_notselected")],
               ["🚗",t("sum_transport"),ans.transport?ot(ans.transport).l:t("sum_notselected")],
@@ -4645,24 +4713,46 @@ function PlanningProgress({ checks, pct }) {
   );
 }
 
+// Approximate, static conversion rates (relative to USD) — fine for a rough
+// trip-budget estimate, not meant to be a live forex feed.
+const CURRENCIES = [
+  { code:"USD", symbol:"$",  rate:1     },
+  { code:"LKR", symbol:"Rs", rate:300   },
+  { code:"EUR", symbol:"€",  rate:0.92  },
+  { code:"GBP", symbol:"£",  rate:0.79  },
+  { code:"AUD", symbol:"A$", rate:1.52  },
+  { code:"INR", symbol:"₹",  rate:83    },
+];
+function fmtMoney(usd, currency) {
+  const c = CURRENCIES.find(x=>x.code===currency) || CURRENCIES[0];
+  const val = usd * c.rate;
+  const rounded = val >= 1000 ? Math.round(val/10)*10 : Math.round(val);
+  return `${c.symbol}${rounded.toLocaleString()}`;
+}
+
 // Live-updating budget summary — real numbers where we have them (hotel/food
 // price_level from Google Places), clearly-labelled estimates elsewhere.
-function BudgetPanel({ budget, days }) {
+function BudgetPanel({ budget, days, currency, onCurrencyChange }) {
   return (
     <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:14, padding:"14px 16px", marginBottom:16 }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:10 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
         <span style={{ fontSize:12, fontWeight:700, color:C.ink }}>💰 Estimated trip budget</span>
-        <span style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.teal }}>${budget.total}</span>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <select value={currency} onChange={e=>onCurrencyChange(e.target.value)} style={{ fontSize:11, fontWeight:600, color:C.teal, background:C.tealLight, border:"none", borderRadius:8, padding:"4px 8px", cursor:"pointer", fontFamily:sans }}>
+            {CURRENCIES.map(c=><option key={c.code} value={c.code}>{c.code}</option>)}
+          </select>
+          <span style={{ fontFamily:serif, fontSize:20, fontWeight:700, color:C.teal }}>{fmtMoney(budget.total, currency)}</span>
+        </div>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(90px,1fr))", gap:8, marginBottom:8 }}>
         {[["🏨 Hotels",budget.hotelTotal],["🍽️ Food",budget.foodTotal],["⛽ Fuel",budget.fuelTotal],["🎟️ Entrance",budget.entranceTotal],["🅿️ Parking",budget.parkingTotal]].map(([l,v])=>(
           <div key={l} style={{ background:C.surface, borderRadius:9, padding:"7px 9px" }}>
             <div style={{ fontSize:10, color:C.inkSoft, marginBottom:2 }}>{l}</div>
-            <div style={{ fontSize:13, fontWeight:700, color:C.ink }}>${v}</div>
+            <div style={{ fontSize:13, fontWeight:700, color:C.ink }}>{fmtMoney(v, currency)}</div>
           </div>
         ))}
       </div>
-      <p style={{ fontSize:10.5, color:C.inkSoft, lineHeight:1.5 }}>Hotel/food costs use real pricing tiers where a place is picked. Fuel, entrance fees, and parking are rough estimates — actual costs vary by vehicle, group size, and specific attractions.</p>
+      <p style={{ fontSize:10.5, color:C.inkSoft, lineHeight:1.5 }}>Hotel/food costs use real pricing tiers where a place is picked. Fuel, entrance fees, and parking are rough estimates — actual costs vary by vehicle, group size, and specific attractions. Currency conversion is approximate.</p>
     </div>
   );
 }
@@ -4959,7 +5049,7 @@ function BookingManagementPanel({ req, role, user, onUpdate, onReviewGuide, onAd
   );
 }
 
-function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }) {
+function GuidesPage({ setPage, itin, user, onLoginNeeded, onReviewGuide }) {
   const [screen,    setScreen]   = useState("terms");
   const [termsOk,   setTermsOk]  = useState(false);
   const [selected,  setSelected] = useState(null);
@@ -4976,9 +5066,9 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
   const [approvedReviews, setApprovedReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
 
-  useEffect(()=>{
-    if(open){ setScreen("terms"); setTermsOk(false); setSelected(null); setShowReqs(false); }
-  },[open]);
+  // Reset to a clean first screen each time this page is navigated to
+  // (mirrors the old drawer's "reset on open" behavior).
+  useEffect(()=>{ setScreen("terms"); setTermsOk(false); setSelected(null); setShowReqs(false); },[]);
 
   // Load admin-approved reviews for whichever guide's portfolio is open —
   // this is where reviews the admin has moderated actually become visible
@@ -5087,35 +5177,32 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
   const g = selected;
 
   return (
-    <>
-      <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:600, backdropFilter:"blur(3px)" }}/>
-      <div style={{ position:"fixed", top:0, right:0, bottom:0, width:500, maxWidth:"100vw", background:C.white, zIndex:700, boxShadow:"-8px 0 48px rgba(0,0,0,.18)", display:"flex", flexDirection:"column", animation:"slideIn .25s ease" }}>
-        <style>{`@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}`}</style>
-
-        {/* Header */}
-        <div style={{ padding:"16px 20px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-          <div>
-            <div style={{ fontFamily:serif, fontSize:17, fontWeight:700, color:C.ink }}>
-              {screen==="terms"?"Before you continue":screen==="list"?"Find a Guide":screen==="portfolio"&&g?g.fullName||g.name:screen==="request"?"Send trip request":screen==="success"?"Request sent!":"Find a Guide"}
-            </div>
-            {screen==="list"&&<div style={{ fontSize:12, color:C.inkSoft, marginTop:2 }}>{guides.length} SLTDA-verified guides available</div>}
+    <div style={{ minHeight:"100vh", background:C.surface }}>
+      {/* Hero header — matches the Destinations page treatment */}
+      <div style={{ background:`linear-gradient(135deg,${C.teal},#0B3A30)`, padding:"2.4rem 2rem 2rem" }}>
+        <div style={{ maxWidth:1100, margin:"0 auto" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+            {screen==="portfolio" && <button onClick={()=>setScreen("list")} style={{ fontSize:12, fontWeight:600, color:"rgba(255,255,255,.8)", background:"rgba(255,255,255,.12)", border:"none", borderRadius:8, padding:"5px 12px", cursor:"pointer", fontFamily:sans }}>← All guides</button>}
+            {screen==="request" && <button onClick={()=>setScreen("portfolio")} style={{ fontSize:12, fontWeight:600, color:"rgba(255,255,255,.8)", background:"rgba(255,255,255,.12)", border:"none", borderRadius:8, padding:"5px 12px", cursor:"pointer", fontFamily:sans }}>← Back</button>}
           </div>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            {screen==="portfolio"&&<button onClick={()=>setScreen("list")} style={{ fontSize:12, fontWeight:600, color:C.teal, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>← All guides</button>}
-            {screen==="request"&&<button onClick={()=>setScreen("portfolio")} style={{ fontSize:12, fontWeight:600, color:C.teal, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>← Back</button>}
-            <button onClick={onClose} style={{ width:32, height:32, borderRadius:"50%", border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:15, color:C.inkSoft }}>✕</button>
-          </div>
+          <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,.6)", textTransform:"uppercase", letterSpacing:2, marginBottom:8 }}>SLTDA-certified network</div>
+          <h1 style={{ fontFamily:serif, fontSize:"clamp(24px,4vw,36px)", fontWeight:700, color:"#fff", marginBottom:6 }}>
+            {screen==="terms"?"Before you continue":screen==="list"?"Find a Guide":screen==="portfolio"&&g?g.fullName||g.name:screen==="request"?"Send trip request":screen==="success"?"Request sent!":"Find a Guide"}
+          </h1>
+          {screen==="list"&&<p style={{ fontSize:14, color:"rgba(255,255,255,.75)" }}>{guides.length} SLTDA-verified guides available across Sri Lanka</p>}
         </div>
+      </div>
 
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"1.5rem 2rem 3rem" }}>
         {/* My requests tab (when logged in) */}
         {screen==="list" && user && (
-          <div style={{ padding:"8px 20px", borderBottom:`1px solid ${C.border}`, display:"flex", gap:8 }}>
-            <button onClick={()=>setShowReqs(false)} style={{ flex:1, padding:"8px", background:!showReqs?C.teal:"transparent", color:!showReqs?"#fff":C.inkSoft, border:"none", borderRadius:8, cursor:"pointer", fontSize:13, fontWeight:600, fontFamily:sans }}>Browse guides</button>
-            <button onClick={()=>{ setShowReqs(true); loadMyRequests(); }} style={{ flex:1, padding:"8px", background:showReqs?C.teal:"transparent", color:showReqs?"#fff":C.inkSoft, border:"none", borderRadius:8, cursor:"pointer", fontSize:13, fontWeight:600, fontFamily:sans }}>My requests {myRequests.filter(r=>r.bid&&r.status!=="accepted").length>0&&`(${myRequests.filter(r=>r.bid&&r.status!=="accepted").length} bids)`}</button>
+          <div style={{ padding:"4px", marginBottom:20, display:"flex", gap:8, background:"#fff", border:`1px solid ${C.border}`, borderRadius:12 }}>
+            <button onClick={()=>setShowReqs(false)} style={{ flex:1, padding:"9px", background:!showReqs?C.teal:"transparent", color:!showReqs?"#fff":C.inkSoft, border:"none", borderRadius:9, cursor:"pointer", fontSize:13, fontWeight:600, fontFamily:sans }}>Browse guides</button>
+            <button onClick={()=>{ setShowReqs(true); loadMyRequests(); }} style={{ flex:1, padding:"9px", background:showReqs?C.teal:"transparent", color:showReqs?"#fff":C.inkSoft, border:"none", borderRadius:9, cursor:"pointer", fontSize:13, fontWeight:600, fontFamily:sans }}>My requests {myRequests.filter(r=>r.bid&&r.status!=="accepted").length>0&&`(${myRequests.filter(r=>r.bid&&r.status!=="accepted").length} bids)`}</button>
           </div>
         )}
 
-        <div style={{ flex:1, overflowY:"auto", padding:"20px" }}>
+        <div>
 
           {/* ── Terms ── */}
           {screen==="terms"&&(
@@ -5214,44 +5301,43 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
             <>
               {loadingG && <div style={{ textAlign:"center", padding:"3rem" }}><div style={{ width:36, height:36, border:`3px solid ${C.tealLight}`, borderTopColor:C.teal, borderRadius:"50%", animation:"spin .8s linear infinite", margin:"0 auto 12px" }}/><p style={{ fontSize:13, color:C.inkSoft }}>Loading certified guides…</p></div>}
               {!loadingG && guides.length===0 && <div style={{ textAlign:"center", padding:"3rem", color:C.inkSoft }}><div style={{ fontSize:40, marginBottom:12 }}>🧭</div><p>No approved guides yet. Check back soon!</p></div>}
-              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              <div className="dest-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1.2rem" }}>
                 {guides.map(g=>(
-                  <div key={g.uid||g.id} onClick={()=>{ setSelected(g); setScreen("portfolio"); }} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, padding:"14px 16px", cursor:"pointer", background:C.white, transition:"border-color .2s,box-shadow .2s" }}
-                    onMouseEnter={e=>{ e.currentTarget.style.borderColor=C.tealMid; e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,.08)"; }}
-                    onMouseLeave={e=>{ e.currentTarget.style.borderColor=C.border; e.currentTarget.style.boxShadow="none"; }}>
-                    <div style={{ display:"flex", gap:12, alignItems:"flex-start", marginBottom:10 }}>
-                      {/* Photo or avatar */}
+                  <div key={g.uid||g.id} onClick={()=>{ setSelected(g); setScreen("portfolio"); }} style={{ border:`1.5px solid ${C.border}`, borderRadius:16, overflow:"hidden", background:C.white, cursor:"pointer", transition:"transform .2s,box-shadow .2s" }}
+                    onMouseEnter={e=>{ e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,.1)"; }}
+                    onMouseLeave={e=>{ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow="none"; }}>
+                    <div style={{ height:160, background:`linear-gradient(135deg,${C.teal},#0B3A30)`, overflow:"hidden", position:"relative" }}>
                       {g.photo
-                        ? <img src={g.photo} alt={g.fullName||g.name} style={{ width:52, height:52, borderRadius:14, objectFit:"cover", flexShrink:0 }}/>
-                        : g.initials
-                          ? <Av g={g} size={52}/>
-                          : <div style={{ width:52, height:52, borderRadius:14, background:C.teal, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontFamily:serif, fontSize:18, fontWeight:700, flexShrink:0 }}>{(g.fullName||"G")[0]}</div>
+                        ? <img src={g.photo} alt={g.fullName||g.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                        : <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:serif, fontSize:44, fontWeight:700, color:"rgba(255,255,255,.9)" }}>{(g.fullName||g.name||"G")[0]}</div>
                       }
-                      <div style={{ flex:1 }}>
-                        <div style={{ fontSize:15, fontWeight:600, color:C.ink, marginBottom:2 }}>{g.fullName||g.name}</div>
-                        <div style={{ fontSize:12, color:C.inkSoft, marginBottom:6 }}>{g.specialty||(g.specialties||[]).slice(0,2).join(", ")}</div>
-                        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                          <Pill green>🛡️ SLTDA Verified</Pill>
-                          {(() => {
-                            const av = g.availability || "available";
-                            const map = {
-                              available:   { label:"✅ Available",  bg:C.tealLight,   fg:C.teal,   bd:"#B9CFC5" },
-                              "on-trip":   { label: g.freeDate ? `🚗 Free from ${new Date(g.freeDate).toLocaleDateString()}` : "🚗 On a trip", bg:C.amberLight, fg:C.amber, bd:"#DFCBA0" },
-                              unavailable: { label:"⏸ Unavailable", bg:"#F1F5F9",      fg:"#64748B", bd:"#E2E8F0" },
-                            };
-                            const m = map[av] || map.available;
-                            return <span style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20, background:m.bg, color:m.fg, border:`1px solid ${m.bd}` }}>{m.label}</span>;
-                          })()}
-                        </div>
+                      <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"8px 12px", background:"linear-gradient(to top,rgba(0,0,0,.65),transparent)" }}>
+                        <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:"#fff" }}>{g.fullName||g.name}</div>
                       </div>
-                      <div style={{ textAlign:"right", flexShrink:0 }}>
-                        {g.rating>0 && <div style={{ fontSize:13, fontWeight:600, color:C.ink }}><Stars n={Math.floor(g.rating)}/> {g.rating}</div>}
-                        <div style={{ fontSize:11, color:C.inkSoft, marginTop:2 }}>{g.experience} yrs exp</div>
-                      </div>
+                      {g.rating>0 && (
+                        <div style={{ position:"absolute", top:8, right:8, background:"rgba(255,255,255,.95)", borderRadius:20, padding:"3px 9px", fontSize:11.5, fontWeight:700, color:C.ink }}>★ {g.rating}</div>
+                      )}
                     </div>
-                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:C.inkSoft, paddingTop:10, borderTop:`1px solid ${C.border}`, flexWrap:"wrap", gap:4 }}>
-                      <span>🗣️ {Array.isArray(g.languages)?g.languages.slice(0,3).join(" · "):g.langs}</span>
-                      <span>📍 {Array.isArray(g.areas)?g.areas.slice(0,2).join(", "):g.areas?.slice(0,30)}</span>
+                    <div style={{ padding:"12px 14px" }}>
+                      <div style={{ fontSize:12, color:C.inkSoft, marginBottom:8, minHeight:16 }}>{g.specialty||(g.specialties||[]).slice(0,2).join(", ")}</div>
+                      <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
+                        <Pill green>🛡️ SLTDA Verified</Pill>
+                        {(() => {
+                          const av = g.availability || "available";
+                          const map = {
+                            available:   { label:"✅ Available",  bg:C.tealLight,   fg:C.teal,   bd:"#B9CFC5" },
+                            "on-trip":   { label: g.freeDate ? `🚗 Free from ${new Date(g.freeDate).toLocaleDateString()}` : "🚗 On a trip", bg:C.amberLight, fg:C.amber, bd:"#DFCBA0" },
+                            unavailable: { label:"⏸ Unavailable", bg:"#F1F5F9",      fg:"#64748B", bd:"#E2E8F0" },
+                          };
+                          const m = map[av] || map.available;
+                          return <span style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:20, background:m.bg, color:m.fg, border:`1px solid ${m.bd}` }}>{m.label}</span>;
+                        })()}
+                      </div>
+                      <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, color:C.inkSoft, paddingTop:10, borderTop:`1px solid ${C.border}`, flexWrap:"wrap", gap:4 }}>
+                        <span>🗣️ {Array.isArray(g.languages)?g.languages.slice(0,2).join(" · "):g.langs}</span>
+                        <span>{g.experience} yrs exp</span>
+                      </div>
+                      <div style={{ fontSize:11.5, color:C.inkSoft, marginTop:4 }}>📍 {Array.isArray(g.areas)?g.areas.slice(0,2).join(", "):g.areas?.slice(0,30)}</div>
                     </div>
                   </div>
                 ))}
@@ -5363,7 +5449,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
           )}
 
         </div>
-      </div>
+        </div>
 
       {/* Payment modal */}
       {payModal && (
@@ -5469,7 +5555,7 @@ function GuideDrawer({ open, onClose, itin, user, onLoginNeeded, onReviewGuide }
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 // ─── ROOT APP ────────────────────────────────────────────────────────────────
@@ -5486,6 +5572,10 @@ function useWishlist() {
 }
 
 // ─── GOOGLE PLACES EXPLORE PAGE ──────────────────────────────────────────────
+// Google's Text Search caps out around 20 results per query — "hotels in Sri
+// Lanka" alone barely scratches the surface of a whole country. Querying
+// several major regions and merging/deduping gives much broader real coverage.
+const GPLACES_REGIONS = ["Colombo","Kandy","Galle","Ella","Sigiriya","Nuwara Eliya","Mirissa","Negombo"];
 const GPLACES_CAT_QUERIES = {
   hotels:      "hotels in Sri Lanka",
   restaurants: "best restaurants in Sri Lanka",
@@ -5494,6 +5584,11 @@ const GPLACES_CAT_QUERIES = {
   beaches:     "best beaches Sri Lanka",
   cultural:    "cultural heritage sites Sri Lanka",
 };
+// Only these two categories get the multi-region treatment — "hotels" and
+// "restaurants" are dramatically undercovered by a single query, whereas the
+// others (beaches, cultural sites, etc.) are a naturally smaller, finite set
+// that one broad query already covers reasonably well.
+const GPLACES_MULTI_REGION_CATS = { hotels:"hotels in", restaurants:"restaurants in" };
 const GPLACES_CAT_LABELS = {
   hotels:"Hotels", restaurants:"Restaurants", places:"Places to Visit",
   adventure:"Adventure Sites", beaches:"Beaches", cultural:"Cultural Sites",
@@ -8617,7 +8712,7 @@ function TermsPage({ setPage }) {
 const PAGE_ROUTES = {
   home:"/", destinations:"/destinations", journey:"/journey", srilankamap:"/map",
   guideportal:"/guides/portal", myitineraries:"/my-trips", contact:"/contact",
-  about:"/about", privacy:"/privacy", terms:"/terms",
+  about:"/about", privacy:"/privacy", terms:"/terms", guides:"/guides",
 };
 const ROUTE_PAGES = Object.fromEntries(Object.entries(PAGE_ROUTES).map(([k,v])=>[v,k]));
 
@@ -8628,13 +8723,11 @@ function getPageFromUrl() {
 
 export default function App() {
   const [page, _setPage]        = useState(()=>getPageFromUrl());
-  const [guideOpen, setGuide]   = useState(false);
   const [savedItin, setSaved]   = useState(null);
   const [showLogin, setLogin]   = useState(false);
   const [loginIntent, setLoginIntent] = useState("tourist"); // "tourist" | "guide" — which sign-in flow to show
   const [showWelcome, setWelcome] = useState(false);
   const [welcomeUser, setWelcomeUser] = useState(null);
-  const openGuide = useCallback(()=>setGuide(true), []);
   const wishlist  = useWishlist();
 
   // Same account, switchable view — like Airbnb's "switch to hosting". Not a
@@ -8657,6 +8750,11 @@ export default function App() {
       window.history.pushState({ page: next }, "", path + window.location.search);
     }
   }, []);
+
+  // "Find a guide" now opens a full dedicated page instead of a slide-in
+  // drawer — every existing entry point (nav, footer, itinerary results,
+  // etc.) already calls this same function, so nothing else needs to change.
+  const openGuide = useCallback(()=>setPage("guides"), [setPage]);
 
   useEffect(()=>{
     const onPopState = (e) => {
@@ -8682,7 +8780,7 @@ export default function App() {
       <AuthProvider>
         <AppInner
           page={page} setPage={setPage}
-          guideOpen={guideOpen} setGuide={setGuide} openGuide={openGuide}
+          openGuide={openGuide}
           savedItin={savedItin} setSaved={setSaved}
           showLogin={showLogin} setLogin={setLogin}
           loginIntent={loginIntent} setLoginIntent={setLoginIntent}
@@ -8886,7 +8984,7 @@ function SharedItineraryPage({ shareId, onGoHome }) {
   );
 }
 
-function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, setSaved, showLogin, setLogin, loginIntent, setLoginIntent, viewMode, setViewMode, showWelcome, setWelcome, welcomeUser, handleLoginSuccess, wishlist }) {
+function AppInner({ page, setPage, openGuide, savedItin, setSaved, showLogin, setLogin, loginIntent, setLoginIntent, viewMode, setViewMode, showWelcome, setWelcome, welcomeUser, handleLoginSuccess, wishlist }) {
   const { user, signOut } = useAuth();
   const premium = usePremium();
   const [showAdmin,  setShowAdmin]  = useState(()=>window.location.search.includes("admin"));
@@ -8933,8 +9031,8 @@ function AppInner({ page, setPage, guideOpen, setGuide, openGuide, savedItin, se
       {page==="about"         && <AboutPage setPage={setPage}/>}
       {page==="privacy"       && <PrivacyPolicyPage setPage={setPage}/>}
       {page==="terms"         && <TermsPage setPage={setPage}/>}
+      {page==="guides"        && <GuidesPage setPage={setPage} itin={savedItin} user={user} onLoginNeeded={()=>openSignIn("tourist")} onReviewGuide={(prefill)=>{ setReviewPrefill(prefill); setShowReview(true); }}/>}
 
-      <GuideDrawer open={guideOpen} onClose={()=>setGuide(false)} itin={savedItin} user={user} onLoginNeeded={()=>openSignIn("tourist")} onReviewGuide={(prefill)=>{ setReviewPrefill(prefill); setShowReview(true); }}/>
       <WishlistPanel wishlist={wishlist} savedItin={savedItin} setSavedItin={setSaved}/>
       <EmergencyButton/>
 
