@@ -2645,7 +2645,21 @@ function SwapModal({ act, dayLocation, onSwap, onClose }) {
   useEffect(()=>{
     async function fetch_alts() {
       try {
-        const prompt = `You are a Sri Lanka travel expert. Suggest 4 alternative places to replace "${act.place}" (type: ${act.type}) in ${dayLocation}, Sri Lanka.
+        // The AI was previously just told the type as a hint ("type: checkin")
+        // and would sometimes ignore it — offering a museum as a replacement
+        // for a hotel check-in, which is nonsensical (you can't sleep at a
+        // museum). This makes the constraint an explicit, hard rule per
+        // category instead of a soft hint.
+        const categoryRule = {
+          checkin:    "Every alternative MUST be a real place to STAY OVERNIGHT — a hotel, guesthouse, resort, or homestay. Do NOT suggest attractions, restaurants, or anything you can't actually sleep at.",
+          breakfast:  "Every alternative MUST be a real restaurant, café, or hotel breakfast spot open in the morning. Do NOT suggest attractions or activities.",
+          lunch:      "Every alternative MUST be a real restaurant or eatery. Do NOT suggest attractions or activities.",
+          dinner:     "Every alternative MUST be a real restaurant or eatery open in the evening. Do NOT suggest attractions or activities.",
+          cafe:       "Every alternative MUST be a real café or coffee spot. Do NOT suggest attractions or activities.",
+          transport:  "Every alternative MUST be a real transport leg or route option (train, bus, tuk-tuk, private car) covering a similar journey. Do NOT suggest a sightseeing destination in its place.",
+        }[act.type] || "Every alternative MUST be the same kind of experience as the original (an attraction, activity, or viewpoint) — not a restaurant or hotel unless the original was one.";
+        const prompt = `You are a Sri Lanka travel expert. Suggest 4 alternative places to replace "${act.place}" (category: ${act.type}) in ${dayLocation}, Sri Lanka.
+STRICT RULE: ${categoryRule}
 Return ONLY a raw JSON array of 4 objects, no markdown:
 [{"place":"Real Name","area":"Street, City","text":"One sentence what to do","why":"Why it's a great alternative","hours":"Opening hours","price":"Price range","mapQuery":"Place Name, City, Sri Lanka"}]`;
         const data = await callClaude({ model:"claude-sonnet-4-6", max_tokens:1000, temperature:1, messages:[{role:"user",content:prompt}] });
@@ -4671,7 +4685,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
         <div className="wizard-card" style={{ background:C.white, borderRadius:24, padding:"2.5rem", border:`1px solid ${C.border}`, boxShadow:"0 4px 24px rgba(0,0,0,.06)" }}>
           {steps[step]}
           <div className="wizard-btn-row" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:28, paddingTop:20, borderTop:`1px solid ${C.border}`, gap:12 }}>
-            {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>{t("wiz_back")}</Btn> : <span/>}
+            {step>0 ? <Btn variant="outline" onClick={()=>setStep(s=>s-1)}>{t("wiz_back")}</Btn> : <Btn variant="outline" onClick={()=>setPlanMode("choose")}>← Trip options</Btn>}
             {step<9
               ? <Btn onClick={()=>{
                   if (step===0) {
@@ -6126,39 +6140,40 @@ function SriLankaMapPage({ setPage, savedItin, setSavedItin }) {
                     📍 Open in Google Maps
                   </a>
                 </div>
-
-                {/* Other things to do nearby, ranked by real distance */}
-                {(()=>{
-                  const nearby = Object.values(DESTINATIONS).flat()
-                    .filter(d => d.lat!=null && d.name!==selectedPin.name)
-                    .map(d => ({ ...d, _dist: haversineKm({lat:selectedPin.lat,lng:selectedPin.lng}, {lat:d.lat,lng:d.lng}) }))
-                    .filter(d => d._dist!=null && d._dist < 45)
-                    .sort((a,b)=>a._dist-b._dist)
-                    .slice(0,6);
-                  if (!nearby.length) return null;
-                  return (
-                    <div style={{ marginTop:16, paddingTop:16, borderTop:`1px solid ${C.border}` }}>
-                      <div style={{ fontSize:11, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.6, marginBottom:10 }}>Also worth visiting nearby</div>
-                      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                        {nearby.map(d=>(
-                          <div key={d.name} onClick={()=>setSelectedPin({ id:d.name, lat:d.lat, lng:d.lng, emoji:"📍", name:d.name, fact:d.desc, color:C.teal })}
-                            style={{ padding:"9px 10px", borderRadius:10, border:`1px solid ${C.border}`, cursor:"pointer" }}
-                            onMouseEnter={e=>e.currentTarget.style.borderColor=C.tealMid} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
-                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:6 }}>
-                              <span style={{ fontSize:12.5, fontWeight:700, color:C.ink }}>{d.name}</span>
-                              <span style={{ fontSize:10.5, color:C.inkSoft, flexShrink:0 }}>{d._dist.toFixed(0)}km</span>
-                            </div>
-                            <div style={{ fontSize:11, color:C.teal, fontWeight:600, marginTop:1 }}>{d.tag}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
               </div>
             </div>
           )}
         </div>
+
+        {/* Other things to do nearby — full-width row below the map, not
+            crammed into the narrow sidebar */}
+        {selectedPin && (()=>{
+          const nearby = Object.values(DESTINATIONS).flat()
+            .filter(d => d.lat!=null && d.name!==selectedPin.name)
+            .map(d => ({ ...d, _dist: haversineKm({lat:selectedPin.lat,lng:selectedPin.lng}, {lat:d.lat,lng:d.lng}) }))
+            .filter(d => d._dist!=null && d._dist < 45)
+            .sort((a,b)=>a._dist-b._dist)
+            .slice(0,8);
+          if (!nearby.length) return null;
+          return (
+            <div style={{ marginTop:20, background:"#fff", border:`1px solid ${C.border}`, borderRadius:16, padding:"1.2rem 1.4rem" }}>
+              <div style={{ fontSize:11, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.6, marginBottom:12 }}>Also worth visiting near {selectedPin.name}</div>
+              <div className="dest-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
+                {nearby.map(d=>(
+                  <div key={d.name} onClick={()=>setSelectedPin({ id:d.name, lat:d.lat, lng:d.lng, emoji:"📍", name:d.name, fact:d.desc, color:C.teal })}
+                    style={{ padding:"10px 12px", borderRadius:12, border:`1px solid ${C.border}`, cursor:"pointer" }}
+                    onMouseEnter={e=>e.currentTarget.style.borderColor=C.tealMid} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:6 }}>
+                      <span style={{ fontSize:12.5, fontWeight:700, color:C.ink }}>{d.name}</span>
+                      <span style={{ fontSize:10.5, color:C.inkSoft, flexShrink:0 }}>{d._dist.toFixed(0)}km</span>
+                    </div>
+                    <div style={{ fontSize:11, color:C.teal, fontWeight:600, marginTop:1 }}>{d.tag}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Clickable legend */}
         <div style={{ marginTop:16, display:"flex", flexWrap:"wrap", gap:8 }}>
