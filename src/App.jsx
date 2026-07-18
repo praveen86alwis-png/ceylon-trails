@@ -3027,18 +3027,22 @@ function routeTotalMinutes(activities) {
 }
 // Builds a full departure→arrival timeline for one day, including meal
 // breaks and hotel check-in, from a plain list of picked activities.
-function computeDayTimeline(activities, startTime="09:00", hotel=null) {
+function computeDayTimeline(activities, startTime="09:00", hotel=null, restaurants=null) {
   const [sh,sm] = startTime.split(":").map(Number);
   let mins = sh*60+sm;
   const blocks = [];
   const addBlock = (b) => { blocks.push(b); };
   let mealsInserted = { breakfast:false, lunch:false, dinner:false };
 
+  const mealBlock = (meal, emoji, defaultLabel) => {
+    const place = restaurants?.[meal]?.place;
+    addBlock({ type:"meal", meal, label: place ? `${emoji} ${defaultLabel} — ${place.name}` : `${emoji} ${defaultLabel}`, time:fmtHM(mins), mealPlace: place||null });
+  };
   const maybeInsertMeal = () => {
     const hr = mins/60;
-    if (!mealsInserted.breakfast && hr>=7 && hr<9.5) { addBlock({ type:"meal", label:"🍳 Breakfast", time:fmtHM(mins) }); mealsInserted.breakfast=true; mins+=40; }
-    else if (!mealsInserted.lunch && hr>=12 && hr<14.5) { addBlock({ type:"meal", label:"🍛 Lunch", time:fmtHM(mins) }); mealsInserted.lunch=true; mins+=50; }
-    else if (!mealsInserted.dinner && hr>=18.5 && hr<21) { addBlock({ type:"meal", label:"🍽️ Dinner", time:fmtHM(mins) }); mealsInserted.dinner=true; mins+=60; }
+    if (!mealsInserted.breakfast && hr>=7 && hr<9.5) { mealBlock("breakfast","🍳","Breakfast"); mealsInserted.breakfast=true; mins+=40; }
+    else if (!mealsInserted.lunch && hr>=12 && hr<14.5) { mealBlock("lunch","🍛","Lunch"); mealsInserted.lunch=true; mins+=50; }
+    else if (!mealsInserted.dinner && hr>=18.5 && hr<21) { mealBlock("dinner","🍽️","Dinner"); mealsInserted.dinner=true; mins+=60; }
   };
 
   activities.forEach((a,i) => {
@@ -3137,11 +3141,11 @@ function estimateTripBudget(days, hotels={}, restaurants={}) {
     if (hotel) hotelTotal += hotel.price_level!=null ? PRICE_LEVEL_HOTEL_USD[hotel.price_level] : 65;
     else if (d.hotel) hotelTotal += 65; // AI-suggested hotel, no price_level available
     const rest = restaurants[i];
-    ["lunch","dinner"].forEach(meal => {
+    ["breakfast","lunch","dinner"].forEach(meal => {
       const p = rest?.[meal]?.place;
-      if (p) foodTotal += p.price_level!=null ? PRICE_LEVEL_MEAL_USD[p.price_level] : 10;
+      if (p) foodTotal += p.price_level!=null ? PRICE_LEVEL_MEAL_USD[p.price_level] : (meal==="breakfast"?5:10);
+      else if (meal==="breakfast") foodTotal += 5; // no pick yet — small flat estimate
     });
-    foodTotal += 5; // breakfast, small flat estimate (usually included or cheap)
   });
   fuelTotal = Math.round(fuelTotal * FUEL_USD_PER_KM);
   const total = Math.round(hotelTotal+foodTotal+fuelTotal+entranceTotal+parkingTotal);
@@ -4093,19 +4097,23 @@ Return ONLY valid raw JSON — no markdown, no backticks:
     const fetchDayRecommendations = async (dayIdx) => {
       const acts = manualDays[dayIdx]?.activities || [];
       if (!acts.length) return;
-      const last = acts[acts.length-1];
+      const first = acts[0], last = acts[acts.length-1];
       if (last.lat==null) return;
       setManualLoadingRecs(r=>({ ...r, [dayIdx]:true }));
       try {
-        const [hotels, restaurants] = await Promise.all([
+        const [hotels, restaurantsNearEnd, restaurantsNearStart] = await Promise.all([
           placesNearby(last.lat, last.lng, "lodging", 8000),
           placesNearby(last.lat, last.lng, "restaurant", 4000),
+          // Breakfast happens before the day's first stop, so it needs its
+          // own search near wherever the day actually begins, not the end.
+          first.lat!=null ? placesNearby(first.lat, first.lng, "restaurant", 4000) : Promise.resolve([]),
         ]);
-        const withDist = (arr) => arr.map(p => ({ ...p, _distKm: mbDistKm(last, { lat:p.geometry?.location?.lat, lng:p.geometry?.location?.lng }) }))
+        const withDist = (arr, ref) => arr.map(p => ({ ...p, _distKm: mbDistKm(ref, { lat:p.geometry?.location?.lat, lng:p.geometry?.location?.lng }) }))
           .sort((a,b)=>(a._distKm??999)-(b._distKm??999));
-        const h = withDist(hotels), r = withDist(restaurants);
+        const h = withDist(hotels, last), r = withDist(restaurantsNearEnd, last), b = withDist(restaurantsNearStart, first);
         setManualHotels(prev=>({ ...prev, [dayIdx]: { place:h[0]||null, alternatives:h.slice(1,6) } }));
         setManualRestaurants(prev=>({ ...prev, [dayIdx]: {
+          breakfast: { place:b[0]||null, alternatives:b.slice(1,5) },
           lunch:  { place:r[0]||null, alternatives:r.slice(1,5) },
           dinner: { place:r[1]||r[0]||null, alternatives:r.slice(2,6) },
         } }));
@@ -4130,7 +4138,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
 
     // ── Timeline + warnings, recomputed on every change ──────────────────────
     const dayTimelines = manualDays.map((d,i)=> d.activities.length
-      ? computeDayTimeline(d.activities, i===0?(manualAns.startTime||"09:00"):"08:00", manualHotels[i]?.place ? { name:manualHotels[i].place.name } : null)
+      ? computeDayTimeline(d.activities, i===0?(manualAns.startTime||"09:00"):"08:00", manualHotels[i]?.place ? { name:manualHotels[i].place.name } : null, manualRestaurants[i])
       : null);
 
     // ── Save trip draft (separate system, per your request) ─────────────────
@@ -4155,13 +4163,24 @@ Return ONLY valid raw JSON — no markdown, no backticks:
       const days = manualDays.map((d,i) => {
         const rec = manualRestaurants[i];
         const hotelRec = manualHotels[i]?.place;
-        const acts = d.activities.map(a => ({
-          time: "", place: a.name, area: a.name, type: "sightseeing",
-          text: a.desc || "", why: a.tag || "", mapQuery: `${a.name}, Sri Lanka`,
-          hours: "", price: "", travelFromPrev: "",
-        }));
-        if (rec?.lunch?.place) acts.push({ time:"", place:rec.lunch.place.name, area:rec.lunch.place.vicinity||"", type:"food", text:`Lunch stop`, why:"Recommended nearby", mapQuery:`${rec.lunch.place.name}, Sri Lanka`, hours:"", price: rec.lunch.place.price_level?"$".repeat(rec.lunch.place.price_level):"", travelFromPrev:"" });
-        if (rec?.dinner?.place) acts.push({ time:"", place:rec.dinner.place.name, area:rec.dinner.place.vicinity||"", type:"food", text:`Dinner stop`, why:"Recommended nearby", mapQuery:`${rec.dinner.place.name}, Sri Lanka`, hours:"", price: rec.dinner.place.price_level?"$".repeat(rec.dinner.place.price_level):"", travelFromPrev:"" });
+        // Walk the same chronological timeline the live builder shows, and
+        // turn it back into real itinerary activities — this is what makes
+        // breakfast/lunch/dinner land at their correct time instead of
+        // always being tacked onto the end of the day regardless of when
+        // they'd actually happen.
+        const startTime = i===0 ? (manualAns.startTime||"09:00") : "08:00";
+        const timeline = computeDayTimeline(d.activities, startTime, hotelRec?{name:hotelRec.name}:null, rec);
+        const acts = [];
+        timeline.blocks.forEach(b => {
+          if (b.type==="activity") {
+            const src = d.activities.find(a=>a.name===b.label);
+            acts.push({ time:b.time, place:b.label, area:b.label, type:"sightseeing", text:src?.desc||"", why:src?.tag||"", mapQuery:`${b.label}, Sri Lanka`, hours:"", price:"", travelFromPrev:"" });
+          } else if (b.type==="meal") {
+            const p = b.mealPlace;
+            const mealName = b.meal.charAt(0).toUpperCase()+b.meal.slice(1);
+            acts.push({ time:b.time, place: p?p.name:mealName, area:p?.vicinity||"", type:"food", text:`${mealName} stop`, why:p?"Recommended nearby":"", mapQuery: p?`${p.name}, Sri Lanka`:"", hours:"", price: p?.price_level?"$".repeat(p.price_level):"", travelFromPrev:"" });
+          }
+        });
         return {
           day: i+1,
           location: d.location || customStart,
@@ -4352,7 +4371,7 @@ Return ONLY valid raw JSON — no markdown, no backticks:
                     {restRec && (
                       <div style={{ marginTop:12, borderTop:`1px solid ${C.border}`, paddingTop:12 }}>
                         <div style={{ fontSize:11, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.6, marginBottom:8 }}>🍽️ Suggested food</div>
-                        {["lunch","dinner"].map(meal => restRec[meal]?.place && (
+                        {["breakfast","lunch","dinner"].map(meal => restRec[meal]?.place && (
                           <div key={meal} style={{ marginBottom:10 }}>
                             <div style={{ fontSize:11, fontWeight:600, color:C.inkSoft, marginBottom:5, textTransform:"capitalize" }}>{meal}</div>
                             <PlaceRecCard place={restRec[meal].place} kind="restaurant"/>
@@ -6107,6 +6126,35 @@ function SriLankaMapPage({ setPage, savedItin, setSavedItin }) {
                     📍 Open in Google Maps
                   </a>
                 </div>
+
+                {/* Other things to do nearby, ranked by real distance */}
+                {(()=>{
+                  const nearby = Object.values(DESTINATIONS).flat()
+                    .filter(d => d.lat!=null && d.name!==selectedPin.name)
+                    .map(d => ({ ...d, _dist: haversineKm({lat:selectedPin.lat,lng:selectedPin.lng}, {lat:d.lat,lng:d.lng}) }))
+                    .filter(d => d._dist!=null && d._dist < 45)
+                    .sort((a,b)=>a._dist-b._dist)
+                    .slice(0,6);
+                  if (!nearby.length) return null;
+                  return (
+                    <div style={{ marginTop:16, paddingTop:16, borderTop:`1px solid ${C.border}` }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.6, marginBottom:10 }}>Also worth visiting nearby</div>
+                      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                        {nearby.map(d=>(
+                          <div key={d.name} onClick={()=>setSelectedPin({ id:d.name, lat:d.lat, lng:d.lng, emoji:"📍", name:d.name, fact:d.desc, color:C.teal })}
+                            style={{ padding:"9px 10px", borderRadius:10, border:`1px solid ${C.border}`, cursor:"pointer" }}
+                            onMouseEnter={e=>e.currentTarget.style.borderColor=C.tealMid} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:6 }}>
+                              <span style={{ fontSize:12.5, fontWeight:700, color:C.ink }}>{d.name}</span>
+                              <span style={{ fontSize:10.5, color:C.inkSoft, flexShrink:0 }}>{d._dist.toFixed(0)}km</span>
+                            </div>
+                            <div style={{ fontSize:11, color:C.teal, fontWeight:600, marginTop:1 }}>{d.tag}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
