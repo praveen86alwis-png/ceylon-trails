@@ -1681,20 +1681,42 @@ function HomePage({ setPage, onGuideOpen }) {
 
 // ─── DESTINATIONS PAGE ───────────────────────────────────────────────────────
 // ─── WISHLIST PANEL (floating) ────────────────────────────────────────────────
+function WishlistItemThumb({ p }) {
+  const fallbackPhoto = useDestPhoto(p.name);
+  const googlePhoto = p.photos?.[0]?.photo_reference
+    ? `${import.meta.env.PROD?"/api/places":"http://localhost:3001/api/places"}/photo?ref=${encodeURIComponent(p.photos[0].photo_reference)}&maxwidth=120`
+    : null;
+  const src = googlePhoto || fallbackPhoto;
+  return (
+    <div style={{ width:56, height:56, borderRadius:10, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#0B3A30)` }}>
+      {src && <img src={src} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
+    </div>
+  );
+}
+
 function WishlistPanel({ wishlist, savedItin, setSavedItin }) {
   const [open, setOpen] = useState(false);
+  const [dayPicker, setDayPicker] = useState(null); // the place waiting for a day choice
 
-  const addToItin = (place) => {
-    if (!savedItin) { alert("Create an itinerary first from 'Plan a trip'."); return; }
+  const addToItinDay = (place, dayIdx) => {
     const newAct = {
       time:"10:00", type:"sightseeing",
-      place: place.name, area: place.formatted_address||"Sri Lanka",
-      text: `Visit ${place.name}`, why:"From your wishlist",
+      place: place.name, area: place.formatted_address || place.area || "Sri Lanka",
+      text: place.desc || `Visit ${place.name}`, why: place.tag || "From your wishlist",
       hours:"", price: place.price_level?"$".repeat(place.price_level):"",
       mapQuery:`${place.name}, Sri Lanka`,
     };
-    setSavedItin({ ...savedItin, days: savedItin.days.map((d,i)=>i===0?{...d,activities:[...d.activities,newAct]}:d) });
-    alert(`✅ Added ${place.name} to Day 1 of your itinerary!`);
+    setSavedItin({ ...savedItin, days: savedItin.days.map((d,i)=>i===dayIdx?{...d,activities:[...d.activities,newAct]}:d) });
+    setDayPicker(null);
+  };
+
+  const addToItin = (place) => {
+    if (!savedItin) { alert("Create an itinerary first from 'Plan a trip'."); return; }
+    // More than one day already planned — ask which day rather than
+    // guessing, since silently dropping it into Day 1 is often wrong.
+    if (savedItin.days.length > 1) { setDayPicker(place); return; }
+    addToItinDay(place, 0);
+    alert(`✅ Added ${place.name} to your itinerary!`);
   };
 
   return (
@@ -1719,33 +1741,50 @@ function WishlistPanel({ wishlist, savedItin, setSavedItin }) {
         )}
       </button>
 
+      {/* Day picker mini-modal */}
+      {dayPicker && (
+        <div onClick={e=>e.target===e.currentTarget&&setDayPicker(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.5)", zIndex:900, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div style={{ background:"#fff", borderRadius:18, padding:"1.4rem", width:"100%", maxWidth:340 }}>
+            <div style={{ fontSize:15, fontWeight:700, color:C.ink, marginBottom:4 }}>Add {dayPicker.name} to which day?</div>
+            <p style={{ fontSize:12, color:C.inkSoft, marginBottom:14 }}>Pick the day it makes sense for.</p>
+            <div style={{ display:"flex", flexDirection:"column", gap:6, maxHeight:280, overflowY:"auto" }}>
+              {savedItin.days.map((d,i)=>(
+                <button key={i} onClick={()=>addToItinDay(dayPicker,i)} style={{ textAlign:"left", padding:"10px 12px", borderRadius:10, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontFamily:sans }}>
+                  <span style={{ fontSize:13, fontWeight:700, color:C.ink }}>Day {i+1}</span>
+                  <span style={{ fontSize:12, color:C.inkSoft, marginLeft:8 }}>{d.location}</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={()=>setDayPicker(null)} style={{ width:"100%", marginTop:12, padding:"9px", background:"none", border:"none", color:C.inkSoft, fontSize:12.5, cursor:"pointer", fontFamily:sans }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
       {/* Panel */}
       {open && (
         <div className="wishlist-panel" style={{ position:"fixed", bottom:90, right:24, zIndex:500, width:340, maxWidth:"calc(100vw - 48px)", background:"#fff", borderRadius:20, boxShadow:"0 12px 48px rgba(0,0,0,.2)", border:`1px solid ${C.border}`, display:"flex", flexDirection:"column", maxHeight:"60vh" }}>
           <div style={{ padding:"14px 16px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
             <div>
-              <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:C.ink }}>♡ Wishlist</div>
+              <div style={{ fontFamily:serif, fontSize:16, fontWeight:700, color:C.ink }}>♡ Saved places</div>
               <div style={{ fontSize:11, color:C.inkSoft, marginTop:2 }}>{wishlist.items.length} saved {wishlist.items.length===1?"place":"places"}</div>
             </div>
-            {wishlist.items.length>0 && <button onClick={()=>{ if(window.confirm("Clear wishlist?")) wishlist.items.forEach(i=>wishlist.remove(i.place_id)); }} style={{ fontSize:11, color:C.coral, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>Clear all</button>}
+            {wishlist.items.length>0 && <button onClick={()=>{ if(window.confirm("Clear saved places?")) wishlist.items.forEach(i=>wishlist.remove(wishlist.keyOf(i))); }} style={{ fontSize:11, color:C.coral, background:"none", border:"none", cursor:"pointer", fontFamily:sans }}>Clear all</button>}
           </div>
           <div style={{ flex:1, overflowY:"auto", padding:12 }}>
             {wishlist.items.length===0 ? (
               <div style={{ textAlign:"center", padding:"2rem 1rem", color:C.inkSoft }}>
                 <div style={{ fontSize:36, marginBottom:10 }}>♡</div>
-                <p style={{ fontSize:13, lineHeight:1.6 }}>No saved places yet.<br/>Browse destinations and tap ♡ to save.</p>
+                <p style={{ fontSize:13, lineHeight:1.6 }}>No saved places yet.<br/>Browse destinations or the map and tap ♡ to save.</p>
               </div>
             ) : wishlist.items.map(p=>(
-              <div key={p.place_id} style={{ display:"flex", gap:10, padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
-                <div style={{ width:56, height:56, borderRadius:10, overflow:"hidden", flexShrink:0, background:`linear-gradient(135deg,${C.teal},#0B3A30)` }}>
-                  {p.photos?.[0] && <img src={`${import.meta.env.PROD?"/api/places":"http://localhost:3001/api/places"}/photo?ref=${encodeURIComponent(p.photos[0].photo_reference)}&maxwidth=120`} alt={p.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.display="none"}/>}
-                </div>
+              <div key={wishlist.keyOf(p)} style={{ display:"flex", gap:10, padding:"10px 0", borderBottom:`1px solid ${C.border}` }}>
+                <WishlistItemThumb p={p}/>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:13, fontWeight:600, color:C.ink, marginBottom:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</div>
-                  <div style={{ fontSize:11, color:C.inkSoft, marginBottom:6 }}>{p.rating}★ · {(p.formatted_address||"").split(",").slice(-2).join(",")}</div>
+                  <div style={{ fontSize:11, color:C.inkSoft, marginBottom:6 }}>{p.rating ? `${p.rating}★ · ` : ""}{(p.formatted_address||p.tag||"").split(",").slice(-2).join(",")}</div>
                   <div style={{ display:"flex", gap:6 }}>
                     <button onClick={()=>addToItin(p)} style={{ fontSize:11, fontWeight:600, padding:"4px 10px", background:C.teal, color:"#fff", border:"none", borderRadius:8, cursor:"pointer", fontFamily:sans }}>+ Itinerary</button>
-                    <button onClick={()=>wishlist.remove(p.place_id)} style={{ fontSize:11, fontWeight:600, padding:"4px 10px", background:"none", color:C.coral, border:`1px solid ${C.coral}`, borderRadius:8, cursor:"pointer", fontFamily:sans }}>Remove</button>
+                    <button onClick={()=>wishlist.remove(wishlist.keyOf(p))} style={{ fontSize:11, fontWeight:600, padding:"4px 10px", background:"none", color:C.coral, border:`1px solid ${C.coral}`, borderRadius:8, cursor:"pointer", fontFamily:sans }}>Remove</button>
                   </div>
                 </div>
               </div>
@@ -3238,7 +3277,7 @@ function PlaceRecCard({ place, kind }) {
   );
 }
 
-function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLoginNeeded, premium }) {
+function JourneyPage({ setPage, savedItin, setSavedItin, onGuideOpen, user, onLoginNeeded, premium, wishlist }) {
   const { t, ot, lang } = useLang();
   const [step, setStep]    = useState(()=>{
     // Restore step from any previous session (refresh, login redirect, accidental close)
@@ -4238,6 +4277,27 @@ Return ONLY valid raw JSON — no markdown, no backticks:
         </div>
 
         <div style={{ maxWidth:1200, margin:"0 auto", padding:"1.5rem" }}>
+          {/* Add from saved places (map/destinations wishlist) */}
+          {wishlist && wishlist.items.length > 0 && (()=>{
+            const unplaced = wishlist.items.filter(p => !manualDays.some(d=>d.activities.some(a=>a.name===p.name)));
+            if (!unplaced.length) return null;
+            return (
+              <div style={{ background:"#fff", border:`1px solid ${C.border}`, borderRadius:14, padding:"14px 16px", marginBottom:16 }}>
+                <p style={{ fontSize:12.5, fontWeight:700, color:C.ink, marginBottom:10 }}>♡ Add from your saved places — tap to add to Day {manualActiveDay+1}</p>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                  {unplaced.map(p=>(
+                    <button key={wishlist.keyOf(p)} onClick={()=>addPlace({
+                        name:p.name, tag:p.tag||"", desc:p.desc||p.text||"",
+                        lat: p.lat ?? p.geometry?.location?.lat, lng: p.lng ?? p.geometry?.location?.lng,
+                      })}
+                      style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 12px", borderRadius:20, border:`1.5px solid ${C.border}`, background:C.surface, color:C.ink, fontSize:12.5, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
+                      + {p.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           {/* Progress + Budget — recomputed live on every itinerary change */}
           {(()=>{
             const progress = computeTripProgress(manualAns, manualDays, manualHotels, manualRestaurants, false);
@@ -4590,6 +4650,20 @@ Return ONLY valid raw JSON — no markdown, no backticks:
         <div style={{ padding:"16px", background:C.surface, border:`1px solid ${C.border}`, borderRadius:12, fontSize:13, color:C.inkSoft, textAlign:"center", lineHeight:1.6 }}>
           {t("places_empty")}<br/>
           <span style={{ fontSize:12, opacity:.7 }}>{t("places_optional")}</span>
+        </div>
+      )}
+      {/* Quick-add from saved places (map/destinations wishlist) */}
+      {wishlist && wishlist.items.filter(p=>!ans.customPlaces.includes(p.name)).length > 0 && (
+        <div style={{ marginTop:16 }}>
+          <p style={{ fontSize:12, fontWeight:600, color:C.inkSoft, marginBottom:8 }}>♡ From your saved places</p>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+            {wishlist.items.filter(p=>!ans.customPlaces.includes(p.name)).map(p=>(
+              <button key={wishlist.keyOf(p)} onClick={()=>setAns(a=>({...a,customPlaces:[...a.customPlaces,p.name]}))}
+                style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 12px", borderRadius:20, border:`1.5px solid ${C.border}`, background:"#fff", color:C.ink, fontSize:12.5, fontWeight:600, cursor:"pointer", fontFamily:sans }}>
+                + {p.name}
+              </button>
+            ))}
+          </div>
         </div>
       )}
       <div style={{ background:C.amberLight, border:`1px solid #DFCBA0`, borderRadius:12, padding:"10px 14px", fontSize:12, color:C.amber, marginTop:16, lineHeight:1.6 }}>
@@ -5240,9 +5314,25 @@ function GuidesPage({ setPage, itin, user, onLoginNeeded, onReviewGuide }) {
           {/* ── Terms ── */}
           {screen==="terms"&&(
             <>
-              <p style={{ fontSize:14, color:C.inkSoft, marginBottom:16, lineHeight:1.7 }}>Please read and accept the following before browsing certified guides.</p>
-              <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:12, padding:"14px 16px", maxHeight:220, overflowY:"auto", fontSize:13, color:C.inkSoft, lineHeight:1.7, marginBottom:16 }}>
-                {[["1. Guide verification","All guides are SLTDA-verified. Certifications reviewed annually."],["2. Booking & payment","Payments processed through CeylonTrails. 15% commission applies. No hidden fees to tourists."],["3. Bid requests","Guides respond within 24 hours. No obligation to accept any bid."],["4. Cancellation","48+ hours before trip: full refund. Within 48 hours: 25% fee may apply."],["5. Liability","CeylonTrails is an intermediary. Guides carry SLTDA-mandated insurance."],["6. Reviews","Honest reviews encouraged. Fraudulent reviews will be removed."],["7. Privacy","Your details only shared with guides you explicitly select."]].map(([t,d])=><p key={t} style={{ marginBottom:10 }}><strong style={{ color:C.ink }}>{t}</strong> — {d}</p>)}
+              <p style={{ fontSize:14, color:C.inkSoft, marginBottom:20, lineHeight:1.7 }}>Please read and accept the following before browsing certified guides.</p>
+              <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:20 }}>
+                {[
+                  ["✅","Guide verification","All guides are SLTDA-verified. Certifications reviewed annually."],
+                  ["💳","Booking & payment","Payments processed through CeylonTrails. 15% commission applies. No hidden fees to tourists."],
+                  ["⏱️","Bid requests","Guides respond within 24 hours. No obligation to accept any bid."],
+                  ["↩️","Cancellation","48+ hours before trip: full refund. Within 48 hours: 25% fee may apply."],
+                  ["🛡️","Liability","CeylonTrails is an intermediary. Guides carry SLTDA-mandated insurance."],
+                  ["⭐","Reviews","Honest reviews encouraged. Fraudulent reviews will be removed."],
+                  ["🔒","Privacy","Your details only shared with guides you explicitly select."],
+                ].map(([icon,t,d])=>(
+                  <div key={t} style={{ display:"flex", gap:12, padding:"12px 14px", background:C.surface, border:`1px solid ${C.border}`, borderRadius:12 }}>
+                    <span style={{ width:34, height:34, borderRadius:10, background:C.tealLight, color:C.teal, display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, flexShrink:0 }}>{icon}</span>
+                    <div>
+                      <div style={{ fontSize:13.5, fontWeight:700, color:C.ink, marginBottom:2 }}>{t}</div>
+                      <div style={{ fontSize:12.5, color:C.inkSoft, lineHeight:1.6 }}>{d}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
               <label style={{ display:"flex", alignItems:"center", gap:10, fontSize:14, color:C.ink, cursor:"pointer", padding:"12px 14px", border:`1px solid ${C.border}`, borderRadius:12, background:C.surface, marginBottom:20 }}>
                 <input type="checkbox" checked={termsOk} onChange={e=>setTermsOk(e.target.checked)} style={{ accentColor:C.teal, width:16, height:16 }}/>
@@ -5598,10 +5688,13 @@ function useWishlist() {
     try { return JSON.parse(localStorage.getItem("ct_wishlist")||"[]"); } catch { return []; }
   });
   const save = (newItems) => { setItems(newItems); localStorage.setItem("ct_wishlist", JSON.stringify(newItems)); };
-  const add    = (item) => { if (!items.find(i=>i.place_id===item.place_id)) save([...items, item]); };
-  const remove = (id)   => save(items.filter(i=>i.place_id!==id));
-  const has    = (id)   => items.some(i=>i.place_id===id);
-  return { items, add, remove, has };
+  // Google Places results have a real place_id; map pins and curated
+  // destinations don't, so fall back to the name as a stable-enough key.
+  const keyOf = (item) => item.place_id || item.name;
+  const add    = (item) => { const k=keyOf(item); if (!items.find(i=>keyOf(i)===k)) save([...items, item]); };
+  const remove = (id)   => save(items.filter(i=>keyOf(i)!==id));
+  const has    = (id)   => items.some(i=>keyOf(i)===id);
+  return { items, add, remove, has, keyOf };
 }
 
 // ─── GOOGLE PLACES EXPLORE PAGE ──────────────────────────────────────────────
@@ -5993,11 +6086,43 @@ const MAP_PINS = [
 ];
 
 
-function SriLankaMapPage({ setPage, savedItin, setSavedItin }) {
+// Card for the "also worth visiting nearby" row — real thumbnail, tap the
+// image to open the full gallery, tap the heart to save without navigating
+// away, tap the rest of the card to jump the map to that place.
+function NearbyPlaceCard({ d, wishlist, onSelect, onOpenGallery }) {
+  const photo = useDestPhoto(d.name);
+  const saved = wishlist?.has(wishlist.keyOf(d));
+  return (
+    <div style={{ borderRadius:12, border:`1px solid ${C.border}`, overflow:"hidden", cursor:"pointer" }}
+      onMouseEnter={e=>e.currentTarget.style.borderColor=C.tealMid} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+      <div onClick={onOpenGallery} style={{ width:"100%", aspectRatio:"16/10", background:C.surface, position:"relative" }}>
+        {photo ? <img src={photo} alt={d.name} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+          : <div style={{ width:"100%", height:"100%", background:`linear-gradient(135deg,${C.tealLight},${C.surface})` }}/>}
+        <div style={{ position:"absolute", bottom:6, right:6, background:"rgba(0,0,0,.55)", color:"#fff", fontSize:9.5, fontWeight:600, padding:"2px 7px", borderRadius:10 }}>📷 Gallery</div>
+        {wishlist && (
+          <button onClick={e=>{ e.stopPropagation(); saved ? wishlist.remove(wishlist.keyOf(d)) : wishlist.add(d); }}
+            style={{ position:"absolute", top:6, right:6, width:26, height:26, borderRadius:"50%", border:"none", background:"rgba(255,255,255,.9)", color:saved?C.coral:C.inkSoft, fontSize:13, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            {saved?"♥":"♡"}
+          </button>
+        )}
+      </div>
+      <div onClick={onSelect} style={{ padding:"9px 11px" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:6 }}>
+          <span style={{ fontSize:12.5, fontWeight:700, color:C.ink }}>{d.name}</span>
+          <span style={{ fontSize:10.5, color:C.inkSoft, flexShrink:0 }}>{d._dist.toFixed(0)}km</span>
+        </div>
+        <div style={{ fontSize:11, color:C.teal, fontWeight:600, marginTop:1 }}>{d.tag}</div>
+      </div>
+    </div>
+  );
+}
+
+function SriLankaMapPage({ setPage, savedItin, setSavedItin, wishlist }) {
   const mapRef    = useRef(null);
   const mapObj    = useRef(null);
   const [selectedPin, setSelectedPin] = useState(null);
   const [addedToast, setAddedToast]   = useState(false);
+  const [gallery, setGallery] = useState(null); // nearby place currently shown in the lightbox
 
   const addPinToItin = (pin) => {
     const newAct = {
@@ -6147,6 +6272,7 @@ function SriLankaMapPage({ setPage, savedItin, setSavedItin }) {
 
         {/* Other things to do nearby — full-width row below the map, not
             crammed into the narrow sidebar */}
+        {gallery && <GalleryLightbox place={gallery} onClose={()=>setGallery(null)}/>}
         {selectedPin && (()=>{
           const nearby = Object.values(DESTINATIONS).flat()
             .filter(d => d.lat!=null && d.name!==selectedPin.name)
@@ -6160,15 +6286,9 @@ function SriLankaMapPage({ setPage, savedItin, setSavedItin }) {
               <div style={{ fontSize:11, fontWeight:700, color:C.inkSoft, textTransform:"uppercase", letterSpacing:.6, marginBottom:12 }}>Also worth visiting near {selectedPin.name}</div>
               <div className="dest-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
                 {nearby.map(d=>(
-                  <div key={d.name} onClick={()=>setSelectedPin({ id:d.name, lat:d.lat, lng:d.lng, emoji:"📍", name:d.name, fact:d.desc, color:C.teal })}
-                    style={{ padding:"10px 12px", borderRadius:12, border:`1px solid ${C.border}`, cursor:"pointer" }}
-                    onMouseEnter={e=>e.currentTarget.style.borderColor=C.tealMid} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:6 }}>
-                      <span style={{ fontSize:12.5, fontWeight:700, color:C.ink }}>{d.name}</span>
-                      <span style={{ fontSize:10.5, color:C.inkSoft, flexShrink:0 }}>{d._dist.toFixed(0)}km</span>
-                    </div>
-                    <div style={{ fontSize:11, color:C.teal, fontWeight:600, marginTop:1 }}>{d.tag}</div>
-                  </div>
+                  <NearbyPlaceCard key={d.name} d={d} wishlist={wishlist}
+                    onSelect={()=>setSelectedPin({ id:d.name, lat:d.lat, lng:d.lng, emoji:"📍", name:d.name, fact:d.desc, color:C.teal })}
+                    onOpenGallery={()=>setGallery(d)}/>
                 ))}
               </div>
             </div>
@@ -9086,8 +9206,8 @@ function AppInner({ page, setPage, openGuide, savedItin, setSaved, showLogin, se
 
       {page==="home"         && <HomePage         setPage={setPage} onGuideOpen={openGuide}/>}
       {page==="destinations" && <DestinationsPage setPage={setPage} onGuideOpen={openGuide} savedItin={savedItin} setSavedItin={setSaved}/>}
-      {page==="journey"      && <JourneyPage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} onGuideOpen={openGuide} user={user} onLoginNeeded={()=>openSignIn("tourist")} premium={premium}/>}
-      {page==="srilankamap" && <SriLankaMapPage  setPage={setPage} savedItin={savedItin} setSavedItin={setSaved}/>}
+      {page==="journey"      && <JourneyPage      setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} onGuideOpen={openGuide} user={user} onLoginNeeded={()=>openSignIn("tourist")} premium={premium} wishlist={wishlist}/>}
+      {page==="srilankamap" && <SriLankaMapPage  setPage={setPage} savedItin={savedItin} setSavedItin={setSaved} wishlist={wishlist}/>}
       {page==="guideportal"  && <GuidePortalPage  setPage={setPage} setViewMode={setViewMode}/>}
       {page==="myitineraries" && <MyItinerariesPage user={user} setPage={setPage} setSavedItin={setSaved} onLoginNeeded={()=>openSignIn("tourist")}/>}
       {page==="contact"       && <ContactPage setPage={setPage}/>}
